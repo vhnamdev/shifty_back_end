@@ -1,0 +1,34 @@
+package domain
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
+
+type User struct {
+	ID                uuid.UUID   `gorm:"type:uuid;primary_key;" json:"id"`
+	FullName          string      `gorm:"type:varchar(100);not null" json:"full_name"`
+	Email             string      `gorm:"type:varchar(100);uniqueIndex;not null" json:"email"`
+	Password          string      `gorm:"not null" json:"-"`
+	Phone             string      `gorm:"type:varchar(20)" json:"phone"`
+	Role              string      `gorm:"type:varchar(20);default:'user'" json:"role"`
+	Address           string      `gorm:"type:varchar(150)" json:"address"`
+	Status            bool        `gorm:"default:false" json:"status"`
+	Avatar            string      `gorm:"type:varchar(255);default:'https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg'" json:"avatar"`
+	RefreshToken      string      `gorm:"type:text" json:"-"`
+	PositionID        *uuid.UUID  `gorm:"type:uuid" json:"position_id,omitempty"`
+	Position          *Position   `gorm:"foreignKey:PositionID" json:"position,omitempty"`
+	RestaurantID      *uuid.UUID  `gorm:"type:uuid" json:"restaurant_id,omitempty"`
+	Restaurant        *Restaurant `gorm:"foreignKey:RestaurantID" json:"restaurant,omitempty"`
+	ReceivedFeedbacks []Feedback  `gorm:"foreignKey:MemberID" json:"received_feedbacks,omitempty"`
+	GivenFeedbacks    []Feedback  `gorm:"foreignKey:ReviewerID" json:"given_feedbacks,omitempty"`
+	CreatedAt         time.Time   `json:"created_at"`
+	UpdatedAt         time.Time   `json:"updated_at"`
+}
+
+func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
+	u.ID = uuid.New()
+	return
+}
