@@ -1,0 +1,16 @@
+.env
+*.pem
+*.key
+shifty-backend
+shifty-backend.exe
+main
+main.exe
+*.exe
+*.test
+*.out
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

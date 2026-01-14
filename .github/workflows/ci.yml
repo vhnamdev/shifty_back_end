@@ -1,0 +1,36 @@
+name: Shifty CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    name: Build & Check Code
+    runs-on: ubuntu-latest 
+
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+
+
+    - name: Install dependencies
+      run: |
+        go mod tidy
+        go mod download
+
+
+    - name: Build Application
+      run: go build -v ./...
+
+
+    - name: Run Unit Tests
+      run: go test -v ./...
