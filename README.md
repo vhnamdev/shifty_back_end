@@ -15,16 +15,16 @@
 
 **Shifty** is a comprehensive backend solution designed for the F&B and Retail industries. It moves beyond traditional HRM systems by integrating an **Internal Social Network**, **Real-time Chat**, and **AI Agents** to automate scheduling and improve employee engagement.
 
-The system is built on a **Microservices-ready Monolith** architecture using **Golang (Fiber)**, leveraging a hybrid database approach (Polyglot Persistence) and hybrid API protocols to optimize for speed, scalability, and data integrity.
+The system is built on a **Robust Monolithic Architecture** using **Golang (Fiber)** and follows **Clean Architecture** principles. It leverages a hybrid database approach (Polyglot Persistence) and hybrid API protocols to optimize for speed, scalability, and maintainability.
 
 ---
 
 ## 🏗 System Architecture
 
 ### 1. Polyglot Persistence (Database Strategy)
-We use the right tool for the right job:
+We use the right tool for the right job to maximize performance:
 
-* **PostgreSQL (Source of Truth):** Handles highly structured data requiring ACID compliance (Users, Shifts, Salaries, Social Graph).
+* **PostgreSQL (Source of Truth):** Handles highly structured data requiring ACID compliance and complex relationships (Users, Shifts, Salaries, Social Graph).
 * **MongoDB (High Volume):** Stores unstructured data like Chat History and System Logs (`ai_logs`, `notifications`).
 * **Redis (Speed Layer):** Manages Session Caching, Real-time Presence (`user:online`), and expensive calculation caches.
 * **Qdrant (Vector DB):** Powers the AI RAG pipeline, storing embeddings for knowledge bases and shift patterns.
@@ -42,7 +42,7 @@ Shifty implements a **Hybrid API Architecture** to balance performance and flexi
     * **Use Cases:** Social Newsfeed (Post + User + Comments + Reactions), Shift Assignment Views.
     * **Library:** gqlgen.
 
-* **🔌 gRPC (Internal Communication - Optional):**
+* **🔌 gRPC (AI Integration):**
     * Used for low-latency communication between the Core Backend and the Python AI Agent Service.
 
 ---
@@ -75,6 +75,7 @@ Shifty implements a **Hybrid API Architecture** to balance performance and flexi
 | :--- | :--- |
 | **Language** | Go (Golang) 1.22+ |
 | **Web Framework** | Fiber v2 |
+| **Architecture** | Clean Architecture / Monolith |
 | **GraphQL** | gqlgen |
 | **Databases** | PostgreSQL, MongoDB, Redis, Qdrant |
 | **ORM / Drivers** | GORM (SQL), Official Mongo Driver, Go-Redis |
@@ -86,16 +87,16 @@ Shifty implements a **Hybrid API Architecture** to balance performance and flexi
 
 ## 🗄 Database Schema Highlights
 
-The database design implements several advanced patterns:
+The database design implements several advanced relational patterns:
 * **UUID Primary Keys:** Ensures global uniqueness and security.
 * **Cascade Deletion:** Logic implemented at the DB level (e.g., Deleting a Post automatically cleans up all related Comments and Reactions).
-* **Optional Relationships:** Uses Pointer types (e.g., `*uuid.UUID`) for nullable Foreign Keys (e.g., A User not yet assigned to a Restaurant).
+* **Optional Relationships:** Uses Pointer types (e.g., `*uuid.UUID`) for nullable Foreign Keys.
 
 ---
 
 ## 📂 Project Structure
 
-The project follows **Clean Architecture / Domain-Driven Design (DDD)**:
+The project strictly follows **Clean Architecture** to ensure separation of concerns:
 
 ```bash
 shifty-backend/
@@ -125,8 +126,8 @@ Docker & Docker Compose
 
 Installation
 1. Clone the repository
-git clone [https://github.com/your-username/shifty-backend.git](https://github.com/your-username/shifty-backend.git)
-cd shifty-backend
+git clone git@github-shifty:NoCodeNoLife-Dev/Shifty_Back_End.git
+cd shifty-back_end
 
 2. Environment Setup Create a .env file based on the env example
 
