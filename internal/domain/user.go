@@ -8,13 +8,13 @@ import (
 )
 
 type User struct {
-	ID                uuid.UUID   `gorm:"type:uuid;primary_key;" json:"id"`
+	ID                uuid.UUID   `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 	FullName          string      `gorm:"type:varchar(100);not null" json:"full_name"`
 	Email             string      `gorm:"type:varchar(100);uniqueIndex;not null" json:"email"`
 	Password          string      `gorm:"not null" json:"-"`
-	Phone             string      `gorm:"type:varchar(20)" json:"phone"`
+	Phone             *string     `gorm:"type:varchar(20)" json:"phone"`
 	Role              string      `gorm:"type:varchar(20);default:'user'" json:"role"`
-	Address           string      `gorm:"type:varchar(150)" json:"address"`
+	Address           *string     `gorm:"type:varchar(150)" json:"address"`
 	Status            bool        `gorm:"default:false" json:"status"`
 	Avatar            string      `gorm:"type:varchar(255);default:'https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg'" json:"avatar"`
 	RefreshToken      string      `gorm:"type:text" json:"-"`

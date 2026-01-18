@@ -8,8 +8,8 @@ import (
 
 type Config struct {
 	// ------- App Configuration--------
-	Port   string `mapstructure:"PORT"`
-	AppEnv string `mapstructure:"APP_ENV"`
+	AppPort string `mapstructure:"APP_PORT"`
+	AppEnv  string `mapstructure:"APP_ENV"`
 
 	// --------Postgres Database Configuration-----------
 	DBHost     string `mapstructure:"DB_HOST"`

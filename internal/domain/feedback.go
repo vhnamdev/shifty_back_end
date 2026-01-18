@@ -8,7 +8,7 @@ import (
 )
 
 type Feedback struct {
-	ID         uuid.UUID `gorm:"type:uuid;primary_key;" json:"id"`
+	ID         uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 	Content    string    `gorm:"type:text;not null" json:"content"`
 	MemberID   uuid.UUID `gorm:"type:uuid;not null" json:"member_id,omitempty"`
 	Member     User      `gorm:"foreignKey:MemberID" json:"member,omitempty"`
