@@ -12,8 +12,8 @@ import (
 )
 
 func ConnectPostgres(cfg *configs.Config) *gorm.DB {
-
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZoe=Asia/Ho_Chi_Minh",
+	// create dsn
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=Asia/Ho_Chi_Minh",
 		cfg.DBHost,
 		cfg.DBUser,
 		cfg.DBPassword,
@@ -21,13 +21,14 @@ func ConnectPostgres(cfg *configs.Config) *gorm.DB {
 		cfg.DBPort,
 		cfg.DBSSLMode,
 	)
+	// Create Gorm Logger to log in terminal
 	var gormLogger logger.Interface
 	if cfg.AppEnv == "development" {
 		gormLogger = logger.Default.LogMode(logger.Info)
 	} else {
 		gormLogger = logger.Default.LogMode(logger.Error)
 	}
-
+	// Open Connection
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: gormLogger,
 	})
@@ -41,8 +42,8 @@ func ConnectPostgres(cfg *configs.Config) *gorm.DB {
 		log.Fatal("Error when get SQL.DB: ", err)
 	}
 
-	sqlDB.SetMaxIdleConns(10)
-	sqlDB.SetMaxOpenConns(100)
+	sqlDB.SetMaxIdleConns(10)   // Set 10 connections
+	sqlDB.SetMaxOpenConns(1000) // Set max connections
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
 	log.Println("Connect to Postgres database successful!")

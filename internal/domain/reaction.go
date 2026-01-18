@@ -8,7 +8,7 @@ import (
 )
 
 type Reaction struct {
-	ID        uuid.UUID `gorm:"type:uuid;primary_key;" json:"id"`
+	ID        uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 	Type      string    `gorm:"type:varchar(20);not null" json:"type"`
 	PostID    uuid.UUID `gorm:"type:uuid;not null" json:"post_id"`
 	Post      Post      `gorm:"foreignKey:PostID" json:"post,omitempty"`
