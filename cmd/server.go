@@ -9,7 +9,9 @@ import (
 	"shifty-backend/internal/delivery/http/route"
 	"shifty-backend/internal/domain"
 	"shifty-backend/pkg/database"
+	"shifty-backend/pkg/token"
 	"syscall"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -61,6 +63,16 @@ func main() {
 	}
 	log.Println("Database Migration Successfully!")
 
+	accessDuration, err := time.ParseDuration(cfg.AcessTokenExpiry)
+	if err != nil {
+		log.Fatal("Invalid access token duration")
+	}
+
+	refreshDuration, err := time.ParseDuration(cfg.RefreshTokenExpiry)
+	if err != nil {
+		log.Fatal("Invalid refresh token duration")
+	}
+
 	app := fiber.New(fiber.Config{
 		AppName:      "Shifty Backend API",
 		ErrorHandler: handler.GlobalErrorHandler,
@@ -74,8 +86,14 @@ func main() {
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 		AllowMethods: "GET, POST, HEAD, PUT, DELETE, PATCH",
 	}))
+	tokenMaster := token.NewToken(
+		cfg.JWTAccessSecret,
+		cfg.JWTRefreshSecret,
+		accessDuration,
+		refreshDuration,
+	)
 	handlers := &route.AppHandlers{}
-	route.SetupRoutes(app, handlers)
+	route.SetupRoutes(app, handlers, tokenMaster)
 	go func() {
 		port := cfg.AppPort
 		if port == "" {
