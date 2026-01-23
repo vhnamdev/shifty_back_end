@@ -57,7 +57,6 @@ func main() {
 		&domain.Participant{},
 		&domain.Feedback{},
 	)
-
 	if err != nil {
 		log.Fatal("Database Migration Failed: ", err)
 	}
@@ -72,7 +71,6 @@ func main() {
 	if err != nil {
 		log.Fatal("Invalid refresh token duration")
 	}
-
 	app := fiber.New(fiber.Config{
 		AppName:      "Shifty Backend API",
 		ErrorHandler: handler.GlobalErrorHandler,
