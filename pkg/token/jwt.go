@@ -58,12 +58,17 @@ func (m *TokenMaster) GenerateRefreshToken(userID string, role string) (string, 
 	return token.SignedString([]byte(m.refreshSecret))
 }
 
+// Verify Access Token
 func (m *TokenMaster) VerifyAccessToken(tokenString string) (*UserClaims, error) {
 	return m.parseToken(tokenString, m.accessSecret)
 }
+
+// Verify Refresh Token
 func (m *TokenMaster) VerifyRefreshToken(tokenString string) (*UserClaims, error) {
 	return m.parseToken(tokenString, m.refreshSecret)
 }
+
+// parseToken is a private helper to validate whether the token is valid using a specific secret key
 func (m *TokenMaster) parseToken(tokenString string, secretKey string) (*UserClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &UserClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
