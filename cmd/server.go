@@ -7,7 +7,7 @@ import (
 	"shifty-backend/configs"
 	handler "shifty-backend/internal/delivery/http"
 	"shifty-backend/internal/delivery/http/route"
-	"shifty-backend/internal/domain"
+	"shifty-backend/internal/entity"
 	"shifty-backend/pkg/database"
 	"shifty-backend/pkg/token"
 	"syscall"
@@ -41,21 +41,21 @@ func main() {
 	// Run Auto Migrate
 	log.Println("Loading Auto Migrations")
 	err = db.AutoMigrate(
-		&domain.Restaurant{},
-		&domain.Position{},
-		&domain.User{},
-		&domain.ShiftRule{},
-		&domain.Schedule{},
-		&domain.Shift{},
-		&domain.ShiftRequirement{},
-		&domain.ShiftRequest{},
-		&domain.ShiftAssignment{},
-		&domain.Post{},
-		&domain.Comment{},
-		&domain.Reaction{},
-		&domain.Conversation{},
-		&domain.Participant{},
-		&domain.Feedback{},
+		&entity.Restaurant{},
+		&entity.Position{},
+		&entity.User{},
+		&entity.ShiftRule{},
+		&entity.Schedule{},
+		&entity.Shift{},
+		&entity.ShiftRequirement{},
+		&entity.ShiftRequest{},
+		&entity.ShiftAssignment{},
+		&entity.Post{},
+		&entity.Comment{},
+		&entity.Reaction{},
+		&entity.Conversation{},
+		&entity.Participant{},
+		&entity.Feedback{},
 	)
 
 	if err != nil {

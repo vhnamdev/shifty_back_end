@@ -1,4 +1,4 @@
-package domain
+package entity
 
 import (
 	"time"
@@ -12,13 +12,12 @@ type User struct {
 	FullName          string      `gorm:"type:varchar(100);not null" json:"full_name"`
 	Email             string      `gorm:"type:varchar(100);uniqueIndex;not null" json:"email"`
 	Password          string      `gorm:"not null" json:"-"`
-	Phone             *string     `gorm:"type:varchar(20)" json:"phone"`
+	PhoneNumber             *string     `gorm:"type:varchar(20)" json:"phone_number"`
 	Role              string      `gorm:"type:varchar(20);default:'user'" json:"role"`
 	Address           *string     `gorm:"type:varchar(150)" json:"address"`
 	Status            bool        `gorm:"default:false" json:"status"`
 	AccountType       string      `gorm:"default:'Local'" json:"account_type"`
 	Avatar            string      `gorm:"type:varchar(255);default:'https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg'" json:"avatar"`
-	RefreshToken      string      `gorm:"type:text" json:"-"`
 	PositionID        *uuid.UUID  `gorm:"type:uuid" json:"position_id,omitempty"`
 	Position          *Position   `gorm:"foreignKey:PositionID" json:"position,omitempty"`
 	RestaurantID      *uuid.UUID  `gorm:"type:uuid" json:"restaurant_id,omitempty"`
