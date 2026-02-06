@@ -12,7 +12,7 @@ type User struct {
 	FullName          string      `gorm:"type:varchar(100);not null" json:"full_name"`
 	Email             string      `gorm:"type:varchar(100);uniqueIndex;not null" json:"email"`
 	Password          string      `gorm:"not null" json:"-"`
-	PhoneNumber             *string     `gorm:"type:varchar(20)" json:"phone_number"`
+	PhoneNumber       *string     `gorm:"type:varchar(20)" json:"phone_number"`
 	Role              string      `gorm:"type:varchar(20);default:'user'" json:"role"`
 	Address           *string     `gorm:"type:varchar(150)" json:"address"`
 	Status            bool        `gorm:"default:false" json:"status"`

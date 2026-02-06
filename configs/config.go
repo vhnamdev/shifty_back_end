@@ -41,6 +41,21 @@ type Config struct {
 	GoogleClientID     string `mapstructure:"GOOGLE_CLIENT_ID"`
 	GoogleSecret       string `mapstructure:"GOOGLE_CLIENT_SECRET"`
 	GoogleCallBackUrl  string `mapstructure:"GOOGLE_CALLBACK_URL"`
+
+	// --------Cloudinary Configuration-----------
+	CloudName            string `mapstructure:"CLOUDINARY_NAME"`
+	CloudinaryAPIKey     string `mapstructure:"CLOUDINARY_API_KEY"`
+	CloudinaryAPISecret  string `mapstructure:"CLOUDINARY_API_SECRET"`
+	CloudinaryFolderName string `mapstructure:"CLOUDINARY_FOLDER_NAME"`
+
+	// --------Gmail Configuration-----------
+	GmailUser     string `mapstructure:"GMAIL_USER"`
+	GmailPassword string `mapstructure:"GMAIL_PASSWORD"`
+	SMTPPort      int    `mapstructure:"SMTP_PORT"`
+	SMTPHost      string `mapstructure:"SMTP_HOST"`
+
+	// --------Context Configuration-----------
+	ContextTimeout int `mapstructure:"CONTEXT_TIMEOUT"`
 }
 
 func LoadConfig() (config *Config, err error) {

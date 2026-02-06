@@ -5,11 +5,15 @@ import (
 	"os"
 	"os/signal"
 	"shifty-backend/configs"
-	handler "shifty-backend/internal/delivery/http"
+	"shifty-backend/internal/delivery/http/handler"
 	"shifty-backend/internal/delivery/http/route"
 	"shifty-backend/internal/entity"
+	"shifty-backend/internal/repository"
+	"shifty-backend/internal/usecase"
 	"shifty-backend/pkg/database"
+	"shifty-backend/pkg/mailer"
 	"shifty-backend/pkg/token"
+	"shifty-backend/pkg/uploader"
 	"syscall"
 	"time"
 
@@ -38,6 +42,9 @@ func main() {
 			log.Fatal("Can not disconnect PostgresSQL Database!")
 		}
 	}()
+
+	// Connect to Redis Database
+	redisClient := database.ConnectRedis(cfg)
 	// Run Auto Migrate
 	log.Println("Loading Auto Migrations")
 	err = db.AutoMigrate(
@@ -86,14 +93,46 @@ func main() {
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 		AllowMethods: "GET, POST, HEAD, PUT, DELETE, PATCH",
 	}))
+
+	// Token
 	tokenMaster := token.NewToken(
 		cfg.JWTAccessSecret,
 		cfg.JWTRefreshSecret,
 		accessDuration,
 		refreshDuration,
 	)
-	handlers := &route.AppHandlers{}
+
+	// Set default timeout if missing
+	timeoutInt := cfg.ContextTimeout
+	if timeoutInt <= 0 {
+		timeoutInt = 5 // Default 5 seconds
+	}
+	timeoutContext := time.Duration(timeoutInt) * time.Second
+	// ----------------------- INFRASTRUCTURE--------------------------------
+
+	emailService := mailer.NewGoMail(cfg.SMTPHost, cfg.SMTPPort, cfg.GmailUser, cfg.GmailPassword)
+	cloudinaryService, err := uploader.NewCloudinary(cfg.CloudName, cfg.CloudinaryAPIKey, cfg.CloudinaryAPISecret, cfg.CloudinaryFolderName)
+
+	// -----------------------REPOSITORY-------------------------------------
+	redisRepo := repository.NewRedisRepo(redisClient)
+	userRepo := repository.NewUserRepository(db)
+
+	// ------------------------------USECASE----------------------------------
+
+	authUseCase := usecase.NewAuthUseCase(userRepo, tokenMaster, timeoutContext, redisRepo)
+
+	// ------------------------------HANDLER----------------------------------
+
+	authHandler := handler.NewAuthHandler(authUseCase, cloudinaryService, emailService)
+
+	handlers := &route.AppHandlers{
+		AuthHandler: authHandler,
+	}
+
+	// Setup routes
 	route.SetupRoutes(app, handlers, tokenMaster)
+
+	// Start server
 	go func() {
 		port := cfg.AppPort
 		if port == "" {
