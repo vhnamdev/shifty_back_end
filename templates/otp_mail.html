@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>OTP Verification</title>
+</head>
+<body style="font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; margin-top: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05);">
+        
+        <tr>
+            <td align="center" style="padding: 24px 0; background-color: #4CAF50; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold;">🌟 My App Name</h1>
+            </td>
+        </tr>
+
+        <tr>
+            <td style="padding: 40px 30px; text-align: center;">
+                <h2 style="color: #333333; margin-top: 0; font-size: 22px;">Verify Your Account</h2>
+                <p style="color: #555555; font-size: 16px; line-height: 1.6;">
+                    Hello <b>{{.Name}}</b>,<br>
+                    Thank you for signing up. To complete your registration, please use the verification code below:
+                </p>
+                
+                <div style="margin: 30px 0;">
+                    <span style="display: inline-block; background-color: #f8f9fa; color: #2c3e50; font-size: 32px; font-weight: bold; letter-spacing: 6px; padding: 16px 36px; border-radius: 6px; border: 1px dashed #4CAF50;">
+                        {{.OTP}}
+                    </span>
+                </div>
+
+                <p style="color: #777777; font-size: 14px;">
+                    This code will expire in <b>5 minutes</b>.
+                    <br>If you did not request this code, please ignore this email.
+                </p>
+            </td>
+        </tr>
+
+        <tr>
+            <td style="padding: 24px; background-color: #f8f9fa; text-align: center; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; border-top: 1px solid #eeeeee;">
+                <p style="color: #999999; font-size: 12px; margin: 0; line-height: 1.5;">
+                    Need help? <a href="#" style="color: #4CAF50; text-decoration: none;">Contact Support</a>
+                    <br>
+                    &copy; 2026 My App Name. All rights reserved.
+                </p>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

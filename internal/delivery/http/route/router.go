@@ -1,6 +1,7 @@
 package route
 
 import (
+	"shifty-backend/internal/delivery/http/handler"
 	"shifty-backend/internal/delivery/http/middleware"
 	"shifty-backend/pkg/token"
 
@@ -8,10 +9,11 @@ import (
 )
 
 type AppHandlers struct {
+	AuthHandler *handler.AuthHandler
 }
 
-func SetupRoutes(app *fiber.App, handlers *AppHandlers, tokenMaster *token.TokenMaster) {
-	api := app.Group("/api/v1", middleware.Protected(tokenMaster))
+func SetupRoutes(app *fiber.App, h *AppHandlers, tokenMaster *token.TokenMaster) {
+	api := app.Group("/api/v1")
 	api.Get("/health", func(c *fiber.Ctx) error {
 		return c.Status(200).JSON(fiber.Map{
 			"status":  "success",
@@ -19,4 +21,12 @@ func SetupRoutes(app *fiber.App, handlers *AppHandlers, tokenMaster *token.Token
 		})
 	})
 
+	// -----------------------------AUTH GROUP----------------------------------
+	auth := api.Group("/auth")
+	auth.Post("/register", h.AuthHandler.RegisterLocal)
+	auth.Post("/login", h.AuthHandler.LoginLocal)
+	auth.Post("/send-otp", h.AuthHandler.SendOTP)
+
+	protected := api.Group("/", middleware.Protected(tokenMaster))
+	protected.Get("/pofile")
 }
