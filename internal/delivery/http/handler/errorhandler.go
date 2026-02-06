@@ -7,7 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// / GlobalErrorHandler centralized error handling for all services and controllers.
+// GlobalErrorHandler centralized error handling for all services and controllers.
 // This prevents the need for repetitive error checks in every function.
 func GlobalErrorHandler(c *fiber.Ctx, err error) error {
 	code := fiber.StatusInternalServerError

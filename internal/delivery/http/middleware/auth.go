@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// Check auth
 func Protected(tokenMaster *token.TokenMaster) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		authHeader := c.Get("Authorization")
@@ -34,11 +35,12 @@ func Protected(tokenMaster *token.TokenMaster) fiber.Handler {
 	}
 }
 
+// Check role
 func AllowRoles(allowedRoles ...string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		userRole := c.Locals("role")
 
-		if userRole != nil {
+		if userRole == nil {
 			return xerror.Unauthorized("Role not found in context")
 		}
 
@@ -49,7 +51,7 @@ func AllowRoles(allowedRoles ...string) fiber.Handler {
 
 		for _, role := range allowedRoles {
 			if role == roleStr {
-				c.Next()
+				return c.Next()
 			}
 		}
 		return xerror.Forbidden("You do not have permit to access this resource")
