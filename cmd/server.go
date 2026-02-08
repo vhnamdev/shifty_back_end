@@ -110,6 +110,7 @@ func main() {
 
 	emailService := mailer.NewGoMail(cfg.SMTPHost, cfg.SMTPPort, cfg.GmailUser, cfg.GmailPassword)
 	cloudinaryService, err := uploader.NewCloudinary(cfg.CloudName, cfg.CloudinaryAPIKey, cfg.CloudinaryAPISecret, cfg.CloudinaryFolderName)
+	googleService := configs.NewGoogleConfig(cfg.GoogleClientID, cfg.GoogleSecret, "postmessage")
 
 	// -----------------------REPOSITORY-------------------------------------
 	redisRepo := repository.NewRedisRepo(redisClient)
@@ -117,7 +118,7 @@ func main() {
 
 	// ------------------------------USECASE----------------------------------
 
-	authUseCase := usecase.NewAuthUseCase(userRepo, tokenMaster, timeoutContext, redisRepo)
+	authUseCase := usecase.NewAuthUseCase(userRepo, tokenMaster, timeoutContext, redisRepo, emailService, googleService)
 
 	// ------------------------------HANDLER----------------------------------
 

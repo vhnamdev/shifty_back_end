@@ -6,3 +6,7 @@ func GetString(s *string) string {
 	}
 	return *s
 }
+
+func IsRecordNotFoundError(err error) bool {
+	return err != nil
+}
