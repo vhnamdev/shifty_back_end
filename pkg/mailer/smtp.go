@@ -8,6 +8,9 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
+type EmailSender interface {
+	SendOTP(toEmail string, userName string, otp string) error
+}
 type EmailService struct {
 	Dialer *gomail.Dialer
 	User   string
