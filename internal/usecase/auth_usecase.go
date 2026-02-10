@@ -20,7 +20,6 @@ type AuthUseCase interface {
 	RegisterLocal(ctx context.Context, user *entity.User) error
 	LoginLocal(ctx context.Context, email string, password string, userAgent, clientIP string) (string, string, *entity.User, error)
 	LoginGoogle(ctx context.Context, code string, userAgent, clientIP string) (string, string, *entity.User, error)
-	FindUserByEmail(ctx context.Context, email string) (*entity.User, error)
 	SaveOTP(ctx context.Context, email, otp string, purpose constants.OTPPurpose) error
 	SendOTP(ctx context.Context, email string, purpose string) error
 	ResetPassword(ctx context.Context, email, password string) error
@@ -31,12 +30,12 @@ type authUseCase struct {
 	tokenMaster    *token.TokenMaster
 	contextTimeout time.Duration
 	redisRepo      repository.RedisRepository
-	emailService   *mailer.EmailService
+	emailService   mailer.EmailSender
 	googleConfig   *configs.GoogleConfig
 }
 
-func NewAuthUseCase(repo repository.UserRepository, tokenMaster *token.TokenMaster, timeout time.Duration, redisRepo repository.RedisRepository, emailService *mailer.EmailService, googleConfig *configs.GoogleConfig) AuthUseCase {
-	return &authUseCase{
+func NewAuthUseCase(repo repository.UserRepository, tokenMaster *token.TokenMaster, timeout time.Duration, redisRepo repository.RedisRepository, emailService mailer.EmailSender, googleConfig *configs.GoogleConfig) AuthUseCase {
+	useCase := &authUseCase{
 		userRepo:       repo,
 		tokenMaster:    tokenMaster,
 		contextTimeout: timeout,
@@ -44,6 +43,7 @@ func NewAuthUseCase(repo repository.UserRepository, tokenMaster *token.TokenMast
 		emailService:   emailService,
 		googleConfig:   googleConfig,
 	}
+	return useCase
 }
 
 // Register with password and email
@@ -55,7 +55,6 @@ func (u *authUseCase) RegisterLocal(ctx context.Context, user *entity.User) erro
 func (u *authUseCase) LoginLocal(ctx context.Context, email string, password string, userAgent, clientIP string) (string, string, *entity.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
-
 	// Get user by email
 	user, err := u.userRepo.GetByEmail(ctx, email)
 	if err != nil {
@@ -65,7 +64,7 @@ func (u *authUseCase) LoginLocal(ctx context.Context, email string, password str
 		return "", "", nil, xerror.Internal("Database error")
 	}
 
-	if user.AccountType != "Local" || user.GoogleID == "" {
+	if user.AccountType != "Local" {
 		return "", "", nil, xerror.BadRequest("Please login via " + user.AccountType)
 	}
 
@@ -125,7 +124,7 @@ func (u *authUseCase) LoginLocal(ctx context.Context, email string, password str
 // Login By Google
 func (u *authUseCase) LoginGoogle(ctx context.Context, code string, userAgent, clientIP string) (string, string, *entity.User, error) {
 
-	// 
+	//
 	token, err := u.googleConfig.GoogleLoginConfig.Exchange(ctx, code)
 	if err != nil {
 		return "", "", nil, xerror.Unauthorized("Failed to exchange token with Google")
@@ -193,22 +192,6 @@ func (u *authUseCase) LoginGoogle(ctx context.Context, code string, userAgent, c
 
 	return accessToken, refreshToken, user, nil
 
-}
-
-// Find user by email
-func (u *authUseCase) FindUserByEmail(ctx context.Context, email string) (*entity.User, error) {
-
-	// Get user
-	user, err := u.userRepo.GetByEmail(ctx, email)
-
-	if err != nil {
-		if utils.IsRecordNotFoundError(err) {
-			return nil, xerror.NotFound("User not found")
-		}
-		return nil, xerror.Internal("Database error")
-	}
-
-	return user, nil
 }
 
 // Save otp into redis

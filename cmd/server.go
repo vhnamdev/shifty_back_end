@@ -119,13 +119,14 @@ func main() {
 	// ------------------------------USECASE----------------------------------
 
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenMaster, timeoutContext, redisRepo, emailService, googleService)
-
+	userUseCase := usecase.NewUserUseCase(userRepo)
 	// ------------------------------HANDLER----------------------------------
 
 	authHandler := handler.NewAuthHandler(authUseCase, cloudinaryService, emailService)
-
+	userHandler := handler.NewUserHandler(userUseCase)
 	handlers := &route.AppHandlers{
 		AuthHandler: authHandler,
+		UserHandler: userHandler,
 	}
 
 	// Setup routes
