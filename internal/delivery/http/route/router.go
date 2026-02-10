@@ -10,6 +10,7 @@ import (
 
 type AppHandlers struct {
 	AuthHandler *handler.AuthHandler
+	UserHandler *handler.UserHandler
 }
 
 func SetupRoutes(app *fiber.App, h *AppHandlers, tokenMaster *token.TokenMaster) {
@@ -28,5 +29,5 @@ func SetupRoutes(app *fiber.App, h *AppHandlers, tokenMaster *token.TokenMaster)
 	auth.Post("/send-otp", h.AuthHandler.SendOTP)
 
 	protected := api.Group("/", middleware.Protected(tokenMaster))
-	protected.Get("/pofile")
+	protected.Get("/pofile", h.UserHandler.GetProfile)
 }
