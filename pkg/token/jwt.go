@@ -31,45 +31,45 @@ type UserClaims struct {
 }
 
 // create new access token function
-func (m *TokenMaster) GenerateAccessToken(userId string, role string) (string, error) {
+func (t *TokenMaster) GenerateAccessToken(userId string, role string) (string, error) {
 	claims := UserClaims{
 		UserID: userId, // Add userid and role to create access token
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.accessDuration)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(t.accessDuration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(m.accessSecret))
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &claims)
+	return token.SignedString([]byte(t.accessSecret))
 }
 
 // create new refresh token function
-func (m *TokenMaster) GenerateRefreshToken(userID string, role string) (string, error) {
+func (t *TokenMaster) GenerateRefreshToken(userID string, role string) (string, error) {
 	claims := UserClaims{
 		UserID: userID, // Add userid and role to create refresh token
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.refreshDuration)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(t.refreshDuration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(m.refreshSecret))
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &claims)
+	return token.SignedString([]byte(t.refreshSecret))
 }
 
 // Verify Access Token
-func (m *TokenMaster) VerifyAccessToken(tokenString string) (*UserClaims, error) {
-	return m.parseToken(tokenString, m.accessSecret)
+func (t *TokenMaster) VerifyAccessToken(tokenString string) (*UserClaims, error) {
+	return t.parseToken(tokenString, t.accessSecret)
 }
 
 // Verify Refresh Token
-func (m *TokenMaster) VerifyRefreshToken(tokenString string) (*UserClaims, error) {
-	return m.parseToken(tokenString, m.refreshSecret)
+func (t *TokenMaster) VerifyRefreshToken(tokenString string) (*UserClaims, error) {
+	return t.parseToken(tokenString, t.refreshSecret)
 }
 
 // parseToken is a private helper to validate whether the token is valid using a specific secret key
-func (m *TokenMaster) parseToken(tokenString string, secretKey string) (*UserClaims, error) {
+func (t *TokenMaster) parseToken(tokenString string, secretKey string) (*UserClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &UserClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, xerror.New(401, "Unexpected signing method")
