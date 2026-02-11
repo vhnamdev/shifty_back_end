@@ -19,3 +19,7 @@ func NewUserHandler(userUC usecase.UserUseCase) *UserHandler {
 func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 	return nil
 }
+
+func (h *UserHandler) DeleteUser(c *fiber.Ctx) error{
+	return nil
+}
