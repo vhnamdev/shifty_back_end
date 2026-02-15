@@ -260,9 +260,10 @@ func TestAuthUseCase_SendOTP(t *testing.T) {
 func TestAuthUseCase_ResetPassword(t *testing.T) {
 	email := "test@gmail.com"
 	newPassword := "NewPass123@"
+	userID := uuid.New()
 
-	// Mock User tìm thấy trong DB
 	mockUser := &entity.User{
+		ID:       userID,
 		Email:    email,
 		Password: "old_hashed_password",
 	}
@@ -279,12 +280,8 @@ func TestAuthUseCase_ResetPassword(t *testing.T) {
 			email:    email,
 			password: newPassword,
 			mockSetup: func(u *MockUserRepo) {
-				
 				u.On("GetByEmail", mock.Anything, email).Return(mockUser, nil)
-
-				u.On("Update", mock.Anything, mock.MatchedBy(func(user *entity.User) bool {
-					return user.Email == email && user.Password != "old_hashed_password"
-				})).Return(nil)
+				u.On("UpdatePassword", mock.Anything, userID.String(), mock.Anything).Return(nil)
 			},
 			expectedError: false,
 		},
@@ -307,12 +304,12 @@ func TestAuthUseCase_ResetPassword(t *testing.T) {
 			expectedError: true,
 		},
 		{
-			name:     "Fail - Database Error on Update",
+			name:     "Fail - Database Error on UpdatePassword",
 			email:    email,
 			password: newPassword,
 			mockSetup: func(u *MockUserRepo) {
 				u.On("GetByEmail", mock.Anything, email).Return(mockUser, nil)
-				u.On("Update", mock.Anything, mock.Anything).Return(xerror.Internal("Update Error"))
+				u.On("UpdatePassword", mock.Anything, userID.String(), mock.Anything).Return(xerror.Internal("Update Error"))
 			},
 			expectedError: true,
 		},
