@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"shifty-backend/internal/dto"
 	"shifty-backend/internal/entity"
 	"shifty-backend/pkg/constants"
 	"shifty-backend/pkg/token"
@@ -49,9 +50,12 @@ func (m *MockUserRepo) Update(ctx context.Context, user *entity.User) error {
 	args := m.Called(ctx, user)
 	return args.Error(0)
 }
-
-func (m *MockUserRepo) Delete(ctx context.Context, id string) error {
-	args := m.Called(ctx, id)
+func (m *MockUserRepo) UpdatePassword(ctx context.Context, id, newPassword string) error {
+	args := m.Called(ctx, id, newPassword)
+	return args.Error(0)
+}
+func (m *MockUserRepo) Delete(ctx context.Context, user *entity.User) error {
+	args := m.Called(ctx, user)
 	return args.Error(0)
 }
 
@@ -59,7 +63,7 @@ func (m *MockUserRepo) GetByGoogleID(ctx context.Context, id string) (*entity.Us
 	return nil, nil
 }
 
-func (m *MockUserRepo) List(ctx context.Context, page int, limit int) ([]entity.User, int64, error) {
+func (m *MockUserRepo) GetRestaurantMembers(ctx context.Context, page int, limit int, restaurantID string, filter *dto.UserFilter) ([]entity.User, int64, error) {
 	args := m.Called(ctx, page, limit)
 	if args.Get(0) == nil {
 		return nil, 0, args.Error(2)
