@@ -29,5 +29,5 @@ func SetupRoutes(app *fiber.App, h *AppHandlers, tokenMaster *token.TokenMaster)
 	auth.Post("/send-otp", h.AuthHandler.SendOTP)
 
 	protected := api.Group("/", middleware.Protected(tokenMaster))
-	protected.Get("/pofile", h.UserHandler.GetProfile)
+	protected.Get("/pofile", h.UserHandler.UpdateAvatar)
 }

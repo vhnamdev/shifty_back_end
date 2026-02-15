@@ -285,11 +285,8 @@ func (u *authUseCase) ResetPassword(ctx context.Context, email, password string)
 		return xerror.BadRequest("Failed to hash password")
 	}
 
-	// Replace old password by new hashed passowrd
-	user.Password = hashedPassword
-
 	// Update password
-	if err := u.userRepo.Update(ctx, user); err != nil {
+	if err := u.userRepo.UpdatePassword(ctx, user.ID.String(), hashedPassword); err != nil {
 		return xerror.Internal("Failed to update password")
 	}
 	return nil
