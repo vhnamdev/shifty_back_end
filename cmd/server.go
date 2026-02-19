@@ -5,9 +5,9 @@ import (
 	"os"
 	"os/signal"
 	"shifty-backend/configs"
+	"shifty-backend/graph"
 	"shifty-backend/internal/delivery/http/handler"
 	"shifty-backend/internal/delivery/http/route"
-	"shifty-backend/internal/entity"
 	"shifty-backend/internal/repository"
 	"shifty-backend/internal/usecase"
 	"shifty-backend/pkg/database"
@@ -45,29 +45,9 @@ func main() {
 
 	// Connect to Redis Database
 	redisClient := database.ConnectRedis(cfg)
+
 	// Run Auto Migrate
-	log.Println("Loading Auto Migrations")
-	err = db.AutoMigrate(
-		&entity.Restaurant{},
-		&entity.Position{},
-		&entity.User{},
-		&entity.ShiftRule{},
-		&entity.Schedule{},
-		&entity.Shift{},
-		&entity.ShiftRequirement{},
-		&entity.ShiftRequest{},
-		&entity.ShiftAssignment{},
-		&entity.Post{},
-		&entity.Comment{},
-		&entity.Reaction{},
-		&entity.Conversation{},
-		&entity.Participant{},
-		&entity.Feedback{},
-	)
-	if err != nil {
-		log.Fatal("Database Migration Failed: ", err)
-	}
-	log.Println("Database Migration Successfully!")
+	database.RunAutoMigrate(db)
 
 	accessDuration, err := time.ParseDuration(cfg.AcessTokenExpiry)
 	if err != nil {
@@ -115,11 +95,13 @@ func main() {
 	// -----------------------REPOSITORY-------------------------------------
 	redisRepo := repository.NewRedisRepo(redisClient)
 	userRepo := repository.NewUserRepository(db)
+	userRestaurantRepo := repository.NewUserRestaurantRepository(db)
 
 	// ------------------------------USECASE----------------------------------
 
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenMaster, timeoutContext, redisRepo, emailService, googleService)
-	userUseCase := usecase.NewUserUseCase(userRepo)
+	userUseCase := usecase.NewUserUseCase(userRepo, userRestaurantRepo)
+	userRestaurantUseCase := usecase.NewUserRestaurantUseCase(userRestaurantRepo)
 	// ------------------------------HANDLER----------------------------------
 
 	authHandler := handler.NewAuthHandler(authUseCase, cloudinaryService, emailService)
@@ -128,9 +110,12 @@ func main() {
 		AuthHandler: authHandler,
 		UserHandler: userHandler,
 	}
-
+	gqlResolver := &graph.Resolver{
+		UserUseCase:           userUseCase,
+		UserRestaurantUseCase: userRestaurantUseCase,
+	}
 	// Setup routes
-	route.SetupRoutes(app, handlers, tokenMaster)
+	route.SetupRoutes(app, handlers, tokenMaster, gqlResolver)
 
 	// Start server
 	go func() {

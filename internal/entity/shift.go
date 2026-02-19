@@ -17,11 +17,11 @@ type Shift struct {
 	Schedule        Schedule  `gorm:"foreignKey:ScheduleID" json:"schedule,omitempty"`
 	IsHoliday       bool      `gorm:"default:false" json:"is_holiday"`
 	WageMultiplier  float64   `gorm:"type:decimal(3,2);default:1.0" json:"wage_multiplier"`
-	CreatedAt       time.Time `json:"created_at"`
+	CreatedAt       time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 }
 
-func (r *Shift) BeforeCreate(tx *gorm.DB) (err error) {
-	r.ID = uuid.New()
+func (s *Shift) BeforeCreate(tx *gorm.DB) (err error) {
+	s.ID = uuid.New()
 	return
 }

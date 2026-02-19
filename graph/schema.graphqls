@@ -1,0 +1,6 @@
+type Query {
+  _empty: String
+}
+type Mutatio{
+  _empty: String
+}

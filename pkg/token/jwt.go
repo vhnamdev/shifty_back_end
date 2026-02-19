@@ -1,6 +1,7 @@
 package token
 
 import (
+	"shifty-backend/pkg/constants"
 	"shifty-backend/pkg/xerror"
 	"time"
 
@@ -25,13 +26,13 @@ func NewToken(accessSecret, refreshSecret string, accessDuration, refreshDuratio
 }
 
 type UserClaims struct {
-	UserID string `json:"user_id"`
-	Role   string `json:"role"`
+	UserID string             `json:"user_id"`
+	Role   constants.UserRole `json:"role"`
 	jwt.RegisteredClaims
 }
 
 // create new access token function
-func (t *TokenMaster) GenerateAccessToken(userId string, role string) (string, error) {
+func (t *TokenMaster) GenerateAccessToken(userId string, role constants.UserRole) (string, error) {
 	claims := UserClaims{
 		UserID: userId, // Add userid and role to create access token
 		Role:   role,
@@ -45,7 +46,7 @@ func (t *TokenMaster) GenerateAccessToken(userId string, role string) (string, e
 }
 
 // create new refresh token function
-func (t *TokenMaster) GenerateRefreshToken(userID string, role string) (string, error) {
+func (t *TokenMaster) GenerateRefreshToken(userID string, role constants.UserRole) (string, error) {
 	claims := UserClaims{
 		UserID: userID, // Add userid and role to create refresh token
 		Role:   role,
