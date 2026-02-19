@@ -34,6 +34,30 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, input *model.UpdateUs
 	return MapUserEntityToModel(updatedUser), nil
 }
 
+// UpdateStaffByManager is the resolver for the updateStaffByManager field.
+func (r *mutationResolver) UpdateStaffByManager(ctx context.Context, input *model.UpdateStaffByManagerInput) (*model.UserRestaurant, error) {
+	userID, ok := ctx.Value("user_id").(string)
+
+	if !ok || userID == "" {
+		return nil, xerror.BadRequest("You are not logged in")
+	}
+	if input.Restaurant == nil || input.StaffID == nil {
+		return nil, xerror.BadRequest("Restaurant ID and Staff ID are required")
+	}
+	updateData, err := MapStaffUpdateToMap(input)
+	if err != nil {
+		return nil, err
+	}
+
+	updatedStaff, err := r.UserRestaurantUseCase.UpdateStaffByManager(ctx, userID, *input.StaffID, *input.Restaurant, updateData)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return MapUserRestaurantEntityToModel(updatedStaff), nil
+}
+
 // Delete is the resolver for the delete field.
 func (r *mutationResolver) Delete(ctx context.Context) (bool, error) {
 	userID, ok := ctx.Value("user_id").(string)
@@ -62,6 +86,14 @@ func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 	if err != nil {
 		return nil, err
 	}
+	var jobs []*model.UserJob
+	for _, contract := range user.UserRestaurants {
+		jobs = append(jobs, &model.UserJob{
+			RestaurantID:   contract.RestaurantID.String(),
+			RestaurantName: contract.Restaurant.Name,
+			Position:       contract.Position.Name,
+		})
+	}
 	return &model.User{
 		ID:          user.ID.String(),
 		FullName:    user.FullName,
@@ -69,9 +101,8 @@ func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 		PhoneNumber: user.PhoneNumber,
 		Avatar:      user.Avatar,
 		Address:     user.Address,
-		Role:        user.Role,
-		Position:    user.Position.Name,
-		Restaurant:  user.Restaurant.Name,
+		Role:        string(user.Role),
+		Jobs:        jobs,
 		CreatedAt:   user.CreatedAt,
 	}, nil
 }
@@ -83,15 +114,15 @@ func (r *queryResolver) RestaurantMembers(ctx context.Context, restaurantID stri
 	if page != nil {
 		p = *page
 	}
-	l := 1
+	l := 10
 	if limit != nil {
 		l = *limit
 	}
 	var filterDTO *dto.UserFilter
 	if filter != nil {
 		filterDTO = &dto.UserFilter{
-			Search: filter.Search,
-			Role:   filter.Role,
+			Search:   filter.Search,
+			Position: filter.Position,
 		}
 	}
 	if !ok || userID == "" {
@@ -111,26 +142,27 @@ func (r *queryResolver) RestaurantMembers(ctx context.Context, restaurantID stri
 		return nil, err
 	}
 
-	var listUserModels []*model.User
+	listUserModels := make([]*model.User, 0, len(users))
 	for _, u := range users {
-		posName := ""
-		if u.Position != nil {
-			posName = u.Position.Name
-		}
-		resName := ""
-		if u.Restaurant != nil {
-			resName = u.Restaurant.Name
+		var jobs []*model.UserJob
+		if len(u.UserRestaurants) > 0 {
+			contract := u.UserRestaurants[0]
+
+			jobs = append(jobs, &model.UserJob{
+				RestaurantID:   contract.Restaurant.ID.String(),
+				RestaurantName: contract.Restaurant.Name,
+				Position:       contract.Position.Name,
+			})
 		}
 		listUserModels = append(listUserModels, &model.User{
 			ID:          u.ID.String(),
 			FullName:    u.FullName,
 			Email:       u.Email,
-			Role:        u.Role,
+			Role:        string(u.Role),
 			Avatar:      u.Avatar,
 			PhoneNumber: u.PhoneNumber,
 			Address:     u.Address,
-			Position:    posName,
-			Restaurant:  resName,
+			Jobs:        jobs,
 			CreatedAt:   u.CreatedAt,
 		})
 	}
@@ -145,10 +177,4 @@ func (r *queryResolver) RestaurantMembers(ctx context.Context, restaurantID stri
 		TotalPages:  totalPages,
 		Total:       int(total),
 	}, nil
-
 }
-
-// Mutation returns MutationResolver implementation.
-func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
-
-type mutationResolver struct{ *Resolver }

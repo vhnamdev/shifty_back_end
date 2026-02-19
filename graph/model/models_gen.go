@@ -6,6 +6,14 @@ import (
 	"time"
 )
 
+type CreateRestaurantInput struct {
+	Name        string  `json:"name"`
+	Email       string  `json:"email"`
+	Avatar      *string `json:"avatar,omitempty"`
+	PhoneNumber *string `json:"phoneNumber,omitempty"`
+	Address     *string `json:"address,omitempty"`
+}
+
 type Mutatio struct {
 	Empty *string `json:"_empty,omitempty"`
 }
@@ -16,31 +24,64 @@ type Mutation struct {
 type Query struct {
 }
 
+type Restaurant struct {
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	Email       string    `json:"email"`
+	Avatar      *string   `json:"avatar,omitempty"`
+	Status      bool      `json:"status"`
+	PhoneNumber *string   `json:"phoneNumber,omitempty"`
+	Address     *string   `json:"address,omitempty"`
+	CreatedAt   time.Time `json:"createdAt"`
+}
+
+type UpdateRestaurantInput struct {
+	RestaurantID string  `json:"restaurantID"`
+	Name         *string `json:"name,omitempty"`
+	Email        *string `json:"email,omitempty"`
+	Avatar       *string `json:"avatar,omitempty"`
+	Status       *bool   `json:"status,omitempty"`
+	PhoneNumber  *string `json:"phoneNumber,omitempty"`
+	Address      *string `json:"address,omitempty"`
+}
+
+type UpdateStaffByManagerInput struct {
+	StaffID    *string `json:"staffID,omitempty"`
+	Position   *string `json:"position,omitempty"`
+	Restaurant *string `json:"restaurant,omitempty"`
+	IsBanned   *bool   `json:"isBanned,omitempty"`
+}
+
 type UpdateUserInput struct {
 	FullName    *string `json:"fullName,omitempty"`
 	PhoneNumber *string `json:"phoneNumber,omitempty"`
 	Address     *string `json:"address,omitempty"`
-	Role        *string `json:"role,omitempty"`
-	Position    *string `json:"Position,omitempty"`
-	Restaurant  *string `json:"Restaurant,omitempty"`
+	Position    *string `json:"position,omitempty"`
+	Restaurant  *string `json:"restaurant,omitempty"`
 }
 
 type User struct {
-	ID          string    `json:"id"`
-	FullName    string    `json:"fullName"`
-	Email       string    `json:"email"`
-	Role        string    `json:"role"`
-	Avatar      string    `json:"avatar"`
-	PhoneNumber *string   `json:"phoneNumber,omitempty"`
-	Address     *string   `json:"address,omitempty"`
-	Position    string    `json:"Position"`
-	Restaurant  string    `json:"Restaurant"`
-	CreatedAt   time.Time `json:"createdAt"`
+	ID          string     `json:"id"`
+	FullName    string     `json:"fullName"`
+	Email       string     `json:"email"`
+	Role        string     `json:"role"`
+	Avatar      string     `json:"avatar"`
+	PhoneNumber *string    `json:"phoneNumber,omitempty"`
+	Address     *string    `json:"address,omitempty"`
+	Jobs        []*UserJob `json:"jobs"`
+	Status      bool       `json:"status"`
+	CreatedAt   time.Time  `json:"createdAt"`
 }
 
 type UserFilterInput struct {
-	Search *string `json:"search,omitempty"`
-	Role   *string `json:"role,omitempty"`
+	Search   *string `json:"search,omitempty"`
+	Position *string `json:"position,omitempty"`
+}
+
+type UserJob struct {
+	RestaurantID   string `json:"restaurant_id"`
+	RestaurantName string `json:"restaurant_name"`
+	Position       string `json:"position"`
 }
 
 type UserPagination struct {
@@ -48,4 +89,12 @@ type UserPagination struct {
 	Total       int     `json:"total"`
 	CurrentPage int     `json:"currentPage"`
 	TotalPages  int     `json:"totalPages"`
+}
+
+type UserRestaurant struct {
+	UserID     string    `json:"userID"`
+	Restaurant string    `json:"restaurant"`
+	Position   string    `json:"position"`
+	IsBanned   bool      `json:"IsBanned"`
+	JoinedAt   time.Time `json:"JoinedAt"`
 }

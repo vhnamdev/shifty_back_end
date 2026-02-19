@@ -4,6 +4,7 @@ import (
 	"shifty-backend/internal/dto"
 	"shifty-backend/internal/entity"
 	"shifty-backend/internal/usecase"
+	"shifty-backend/pkg/constants"
 	"shifty-backend/pkg/mailer"
 	"shifty-backend/pkg/uploader"
 	"shifty-backend/pkg/xerror"
@@ -52,7 +53,7 @@ func (h *AuthHandler) RegisterLocal(c *fiber.Ctx) error {
 		Email:    req.Email,
 		Password: req.Password,
 		Avatar:   avatarURL,
-		Role:     "User",
+		Role:     constants.User,
 	}
 	err = h.authUC.RegisterLocal(ctx, newUser)
 

@@ -17,7 +17,7 @@ type Post struct {
 	User         User       `gorm:"foreignKey:AuthorID" json:"user,omitempty"`
 	Reactions    []Reaction `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE" json:"reactions,omitempty"`
 	Comments     []Comment  `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE" json:"comments,omitempty"`
-	CreatedAt    time.Time  `json:"created_at"`
+	CreatedAt    time.Time  `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt    time.Time  `json:"updated_at"`
 }
 

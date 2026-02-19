@@ -5,25 +5,28 @@ import (
 	"shifty-backend/internal/dto"
 	"shifty-backend/internal/entity"
 	"shifty-backend/internal/repository"
+	"shifty-backend/pkg/constants"
 	"shifty-backend/pkg/utils"
 	"shifty-backend/pkg/xerror"
 )
 
 type UserUseCase interface {
 	FindUserByEmail(ctx context.Context, email string) (*entity.User, error)
-	FindUserByID(ctx context.Context, ID string) (*entity.User, error)
-	DeleteUser(ctx context.Context, ID string) error
+	FindUserByID(ctx context.Context, id string) (*entity.User, error)
+	DeleteUser(ctx context.Context, id string) error
 	UpdateUser(ctx context.Context, user *entity.User) (*entity.User, error)
-	GetRestaurantMembers(ctx context.Context, page, limit int, restaurantID string, filter *dto.UserFilter) ([]entity.User, int64, error)
+	GetRestaurantMembers(ctx context.Context, page, limit int, restaurantID string, filter *dto.UserFilter) ([]*entity.User, int64, error)
 	ValidateRestaurantAccess(ctx context.Context, currentUserID, TargetRestaurantID string) (bool, error)
 }
 type userUseCase struct {
-	userRepo repository.UserRepository
+	userRepo           repository.UserRepository
+	userRestaurantRepo repository.UserRestaurantRepository
 }
 
-func NewUserUseCase(userRepo repository.UserRepository) UserUseCase {
+func NewUserUseCase(userRepo repository.UserRepository, userRestaurantRepo repository.UserRestaurantRepository) UserUseCase {
 	return &userUseCase{
-		userRepo: userRepo,
+		userRepo:           userRepo,
+		userRestaurantRepo: userRestaurantRepo,
 	}
 }
 
@@ -44,8 +47,8 @@ func (u *userUseCase) FindUserByEmail(ctx context.Context, email string) (*entit
 }
 
 // Find user by ID
-func (u *userUseCase) FindUserByID(ctx context.Context, ID string) (*entity.User, error) {
-	user, err := u.userRepo.GetByID(ctx, ID)
+func (u *userUseCase) FindUserByID(ctx context.Context, id string) (*entity.User, error) {
+	user, err := u.userRepo.GetByID(ctx, id)
 
 	if err != nil {
 		if utils.IsRecordNotFoundError(err) {
@@ -58,19 +61,9 @@ func (u *userUseCase) FindUserByID(ctx context.Context, ID string) (*entity.User
 }
 
 // Delete User by ID, change IsDeleted field to true
-func (u *userUseCase) DeleteUser(ctx context.Context, ID string) error {
-	user, err := u.userRepo.GetByID(ctx, ID)
-
-	if err != nil {
-		if utils.IsRecordNotFoundError(err) {
-			return xerror.NotFound("User not found")
-		}
-		return xerror.Internal("Database failed")
-	}
-	user.IsDeleted = true
-
-	if err := u.userRepo.Delete(ctx, user); err != nil {
-		return xerror.Internal("Failed to delete user")
+func (u *userUseCase) DeleteUser(ctx context.Context, id string) error {
+	if err := u.userRepo.Delete(ctx, id); err != nil {
+		return xerror.Internal("Can not delete this user")
 	}
 	return nil
 }
@@ -81,17 +74,11 @@ func (u *userUseCase) UpdateUser(ctx context.Context, user *entity.User) (*entit
 	if err := u.userRepo.Update(ctx, user); err != nil {
 		return nil, xerror.Internal("Can not update user")
 	}
-
-	updatedUser, err := u.userRepo.GetByID(ctx, user.ID.String())
-
-	if err != nil {
-		return nil, xerror.Internal("Update success but failed to retrieve new data")
-	}
-	return updatedUser, nil
+	return user, nil
 }
 
 // Get restaurant's members
-func (u *userUseCase) GetRestaurantMembers(ctx context.Context, page, limit int, restaurantID string, filter *dto.UserFilter) ([]entity.User, int64, error) {
+func (u *userUseCase) GetRestaurantMembers(ctx context.Context, page, limit int, restaurantID string, filter *dto.UserFilter) ([]*entity.User, int64, error) {
 	users, total, err := u.userRepo.GetRestaurantMembers(ctx, page, limit, restaurantID, filter)
 
 	if err != nil {
@@ -115,13 +102,17 @@ func (u *userUseCase) ValidateRestaurantAccess(ctx context.Context, currentUserI
 		return false, xerror.Internal("Database failed")
 	}
 	// If this is super admin
-	if user.Role == "admin" {
+	if user.Role == constants.Admin {
 		// accept access to restaurant
 		return true, nil
 	}
 	// Check if user's restaurantID is equal target restaurantID
-	if user.RestaurantID.String() == targetRestaurantID {
+	isMember, err := u.userRestaurantRepo.CheckUserInRestaurant(ctx, user.ID.String(), targetRestaurantID)
 
+	if err != nil {
+		return false, xerror.Internal("Check membership failed")
+	}
+	if isMember {
 		return true, nil
 	}
 	// if not member in restaurant return false

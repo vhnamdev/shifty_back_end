@@ -8,18 +8,21 @@ import (
 )
 
 type Position struct {
-	ID               uuid.UUID          `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
-	Name             string             `gorm:"type:varchar(100);not null" json:"name"`
-	Description      string             `gorm:"type:text;not null" json:"description"`
-	Salary           int64              `gorm:"type:bigint" json:"salary"`
-	RestaurantID     uuid.UUID          `gorm:"type:uuid;not null" json:"restaurant_id"`
-	Restaurant       Restaurant         `gorm:"foreignKey:RestaurantID" json:"restaurant,omitempty"`
-	User             []User             `gorm:"foreignKey:PositionID" json:"user_id,omitempty"`
-	ShiftRequirement []ShiftRequirement `gorm:"foreignKey:PositionID" json:"shift_requirement,omitempty"`
-	ShiftRequest     []ShiftRequest     `gorm:"foreignKey:PositionID" json:"shift_request,omitempty"`
-	ShiftAssignment  []ShiftAssignment  `gorm:"foreignKey:PositionID" json:"shift_assignment,omitempty"`
-	CreatedAt        time.Time          `json:"created_at"`
-	UpdatedAt        time.Time          `json:"updated_at"`
+	ID                  uuid.UUID          `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
+	Name                string             `gorm:"type:varchar(100);not null" json:"name"`
+	Description         string             `gorm:"type:text;not null" json:"description"`
+	Rank                int                `gorm:"default:5;not null" json:"rank"`
+	CanUpdateRestaurant bool               `gorm:"default:false"` 
+	CanDeleteRestaurant bool               `gorm:"default:false"` 
+	Salary              int64              `gorm:"type:bigint" json:"salary"`
+	RestaurantID        uuid.UUID          `gorm:"type:uuid;not null" json:"restaurant_id"`
+	Restaurant          Restaurant         `gorm:"foreignKey:RestaurantID" json:"restaurant,omitempty"`
+	UserRestaurants     []UserRestaurant   `gorm:"foreignKey:PositionID" json:"users,omitempty"`
+	ShiftRequirement    []ShiftRequirement `gorm:"foreignKey:PositionID" json:"shift_requirement,omitempty"`
+	ShiftRequest        []ShiftRequest     `gorm:"foreignKey:PositionID" json:"shift_request,omitempty"`
+	ShiftAssignment     []ShiftAssignment  `gorm:"foreignKey:PositionID" json:"shift_assignment,omitempty"`
+	CreatedAt           time.Time          `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt           time.Time          `json:"updated_at"`
 }
 
 func (p *Position) BeforeCreate(tx *gorm.DB) (err error) {

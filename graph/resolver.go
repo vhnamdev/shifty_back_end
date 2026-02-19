@@ -8,5 +8,6 @@ import "shifty-backend/internal/usecase"
 // here.
 
 type Resolver struct {
-	UserUseCase usecase.UserUseCase
+	UserUseCase           usecase.UserUseCase
+	UserRestaurantUseCase usecase.UserRestaurantUseCase
 }
