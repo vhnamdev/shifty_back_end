@@ -48,6 +48,23 @@ func NewAuthUseCase(repo repository.UserRepository, tokenMaster *token.TokenMast
 
 // Register with password and email
 func (u *authUseCase) RegisterLocal(ctx context.Context, user *entity.User) error {
+	emailIsExist, err := u.userRepo.IsEmailExist(ctx, user.Email)
+
+	if err != nil {
+		return err
+	}
+
+	if emailIsExist {
+		return xerror.BadRequest("Email is exist")
+	}
+
+	hashedPassword, err := utils.HashPassword(user.Password)
+	if err != nil {
+		return xerror.BadRequest("Hash password failed")
+	}
+
+	user.Password = hashedPassword
+
 	return u.userRepo.Create(ctx, user) // Send ctx and user data to repository
 }
 
@@ -109,8 +126,6 @@ func (u *authUseCase) LoginLocal(ctx context.Context, email string, password str
 		Email:        user.Email,
 		PhoneNumber:  utils.GetString(user.PhoneNumber),
 		Address:      utils.GetString(user.Address),
-		PositionID:   user.PositionID.String(),
-		RestaurantID: user.RestaurantID.String(),
 		CreatedAt:    time.Now(),
 	})
 
@@ -285,11 +300,8 @@ func (u *authUseCase) ResetPassword(ctx context.Context, email, password string)
 		return xerror.BadRequest("Failed to hash password")
 	}
 
-	// Replace old password by new hashed passowrd
-	user.Password = hashedPassword
-
 	// Update password
-	if err := u.userRepo.Update(ctx, user); err != nil {
+	if err := u.userRepo.UpdatePassword(ctx, user.ID.String(), hashedPassword); err != nil {
 		return xerror.Internal("Failed to update password")
 	}
 	return nil

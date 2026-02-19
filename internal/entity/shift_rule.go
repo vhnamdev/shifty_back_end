@@ -25,11 +25,11 @@ type ShiftRule struct {
 	IsActive     bool           `gorm:"default:true" json:"is_active"`
 	RestaurantID uuid.UUID      `gorm:"type:uuid;not null" json:"restaurant_id"`
 	Restaurant   Restaurant     `gorm:"foreignKey:RestaurantID" json:"restaurant,omitempty"`
-	CreatedAt    time.Time      `json:"created_at"`
+	CreatedAt    time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt    time.Time      `json:"updated_at"`
 }
 
-func (r *ShiftRule) BeforeCreate(tx *gorm.DB) (err error) {
-	r.ID = uuid.New()
+func (s *ShiftRule) BeforeCreate(tx *gorm.DB) (err error) {
+	s.ID = uuid.New()
 	return
 }

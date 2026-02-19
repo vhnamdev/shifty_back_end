@@ -16,6 +16,8 @@ func NewUserHandler(userUC usecase.UserUseCase) *UserHandler {
 	}
 }
 
-func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
+
+
+func (h *UserHandler) UpdateAvatar(c *fiber.Ctx) error {
 	return nil
 }

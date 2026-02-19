@@ -14,11 +14,11 @@ type Feedback struct {
 	Member     User      `gorm:"foreignKey:MemberID" json:"member,omitempty"`
 	ReviewerID uuid.UUID `gorm:"type:uuid;not null" json:"reviewer_id,omitempty"`
 	Reviewer   User      `gorm:"foreignKey:ReviewerID" json:"reviewer,omitempty"`
-	CreatedAt  time.Time `json:"created_at"`
+	CreatedAt  time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 }
 
-func (r *Feedback) BeforeCreate(tx *gorm.DB) (err error) {
-	r.ID = uuid.New()
+func (f *Feedback) BeforeCreate(tx *gorm.DB) (err error) {
+	f.ID = uuid.New()
 	return
 }

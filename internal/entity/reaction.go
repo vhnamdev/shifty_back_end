@@ -14,7 +14,7 @@ type Reaction struct {
 	Post      Post      `gorm:"foreignKey:PostID" json:"post,omitempty"`
 	AuthorID  uuid.UUID `gorm:"type:uuid;not null" json:"author_id"`
 	User      User      `gorm:"foreignKey:AuthorID" json:"user,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
 

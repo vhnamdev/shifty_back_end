@@ -17,11 +17,11 @@ type ShiftRequirement struct {
 	PositionID *uuid.UUID `gorm:"type:uuid" json:"position_id"`
 	Position   Position   `gorm:"foreignKey:PositionID" json:"position,omitempty"`
 	Note       *string    `gorm:"type:text" json:"note"`
-	CreatedAt  time.Time  `json:"created_at"`
+	CreatedAt  time.Time  `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt  time.Time  `json:"updated_at"`
 }
 
-func (r *ShiftRequirement) BeforeCreate(tx *gorm.DB) (err error) {
-	r.ID = uuid.New()
+func (s *ShiftRequirement) BeforeCreate(tx *gorm.DB) (err error) {
+	s.ID = uuid.New()
 	return
 }
