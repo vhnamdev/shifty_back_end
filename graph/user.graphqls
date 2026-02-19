@@ -1,5 +1,11 @@
 scalar Time
 
+type UserJob {
+  restaurant_id: String!
+  restaurant_name: String!
+  position: String!
+}
+
 type User {
   id:ID!
   fullName: String!
@@ -8,15 +14,23 @@ type User {
   avatar: String!
   phoneNumber: String
   address: String
-  Position: String!
-  Restaurant: String!
+  jobs:[UserJob!]!
+  status: Boolean!
   createdAt: Time!
 }
-input UserFilterInput {
-  search: String
-  role: String
+
+type UserRestaurant{
+  userID      : String!
+	restaurant: String!
+  position: String!
+	IsBanned: Boolean!
+	JoinedAt:     Time!
 }
 
+input UserFilterInput {
+  search: String
+  position: String
+}
 
 type UserPagination {
   data: [User!]!
@@ -24,13 +38,20 @@ type UserPagination {
   currentPage: Int!
   totalPages: Int!
 }
+
 input UpdateUserInput {
   fullName: String
   phoneNumber: String
   address: String
-  role: String
-  Position: String
-  Restaurant: String
+  position: String
+  restaurant: String
+}
+
+input UpdateStaffByManagerInput {
+  staffID: String
+  position: String
+  restaurant: String
+  isBanned: Boolean
 }
 
 extend type Query {
@@ -40,5 +61,6 @@ extend type Query {
 
 extend type Mutation {
   updateUser(input: UpdateUserInput): User!
+  updateStaffByManager(input: UpdateStaffByManagerInput) : UserRestaurant!
   delete: Boolean!
 }

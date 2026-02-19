@@ -17,7 +17,7 @@ type Comment struct {
 	User      User       `gorm:"foreignKey:AuthorID" json:"user,omitempty"`
 	ParentID  *uuid.UUID `gorm:"type:uuid" json:"parent_id,omitempty"`
 	Replies   []Comment  `gorm:"foreignKey:ParentID;constraint:OnDelete:CASCADE" json:"replies,omitempty"`
-	CreatedAt time.Time  `json:"created_at"`
+	CreatedAt time.Time  `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
 }
 

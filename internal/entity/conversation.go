@@ -19,11 +19,11 @@ type Conversation struct {
 	Avatar        *string       `gorm:"type:text" json:"image_url,omitempty"`
 	LastMessageAt *time.Time    `gorm:"index" json:"last_message_at"`
 	Participants  []Participant `gorm:"foreignKey:ConversationID" json:"participants,omitempty"`
-	CreatedAt     time.Time     `json:"created_at"`
+	CreatedAt     time.Time     `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt     time.Time     `json:"updated_at"`
 }
 
-func (p *Conversation) BeforeCreate(tx *gorm.DB) (err error) {
-	p.ID = uuid.New()
+func (c *Conversation) BeforeCreate(tx *gorm.DB) (err error) {
+	c.ID = uuid.New()
 	return
 }
