@@ -80,18 +80,16 @@ func (r *RestaurantRepo) GetByID(ctx context.Context, id string) (*entity.Restau
 // Get User's Restaurants
 func (r *RestaurantRepo) GetMyRestaurants(ctx context.Context, userID string) ([]*entity.Restaurant, error) {
 	var restaurants []*entity.Restaurant
-
-	if err := r.db.
-		WithContext(ctx).
-		Joins("Join users ON users.restaurant_id = restaurants.id").
-		Where("users.id = ?", userID).
-		Preload("Positions").
-		Preload("Laws").
-		Preload("Users").
-		Find(&restaurants).
-		Error; err != nil {
-		return nil, err
-	}
+if err := r.db.
+        WithContext(ctx).
+        Model(&entity.Restaurant{}).
+        Joins("JOIN user_restaurants ON user_restaurants.restaurant_id = restaurants.id").
+        Where("user_restaurants.user_id = ?", userID).
+        Preload("Positions").
+        Find(&restaurants).
+        Error; err != nil {
+        return nil, err
+    }
 
 	return restaurants, nil
 }

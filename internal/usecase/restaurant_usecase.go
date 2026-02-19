@@ -10,7 +10,7 @@ import (
 
 type RestaurantUseCase interface {
 	Create(ctx context.Context, restaurant *entity.Restaurant) (*entity.Restaurant, error)
-	Update(ctx context.Context, userID string, restaurant *entity.Restaurant) error
+	Update(ctx context.Context, userID string, restaurant *entity.Restaurant) (*entity.Restaurant, error)
 	Delete(ctx context.Context, userID, resID string) error
 	GetByID(ctx context.Context, userID, resID string) (*entity.Restaurant, error)
 	GetMyRestaurants(ctx context.Context, userID string) ([]*entity.Restaurant, error)
@@ -100,3 +100,15 @@ func (u *restaurantUseCase) GetByID(ctx context.Context, userID, resID string) (
 	return restaurant, nil
 }
 
+func (u *restaurantUseCase) GetMyRestaurants(ctx context.Context, userID string) ([]*entity.Restaurant, error) {
+	restaurants, err := u.RestaurantRepo.GetMyRestaurants(ctx, userID)
+
+	if err != nil {
+		if utils.IsRecordNotFoundError(err) {
+			return nil, xerror.NotFound("Restaurants not found")
+		}
+		return nil, xerror.Internal("Database failed")
+	}
+
+	return restaurants, nil
+}
