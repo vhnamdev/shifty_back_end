@@ -7,36 +7,103 @@ package graph
 
 import (
 	"context"
-	"fmt"
 	"shifty-backend/graph/model"
+	"shifty-backend/pkg/xerror"
 )
 
 // CreateRestaurant is the resolver for the createRestaurant field.
 func (r *mutationResolver) CreateRestaurant(ctx context.Context, input model.CreateRestaurantInput) (*model.Restaurant, error) {
-	panic(fmt.Errorf("not implemented: CreateRestaurant - createRestaurant"))
+	userID, ok := ctx.Value("user_id").(string)
+
+	if !ok || userID == "" {
+		return nil, xerror.BadRequest("You are not logged in")
+	}
+
+	mapRestaurant := MapRestaurantModelToEntity(&input)
+
+	newRestaurant, err := r.RestaurantUseCase.Create(ctx, userID, mapRestaurant)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return MapRestaurantEntityToModel(newRestaurant), nil
 }
 
 // UpdateRestaurant is the resolver for the updateRestaurant field.
 func (r *mutationResolver) UpdateRestaurant(ctx context.Context, input model.UpdateRestaurantInput) (*model.Restaurant, error) {
-	panic(fmt.Errorf("not implemented: UpdateRestaurant - updateRestaurant"))
+	userID, ok := ctx.Value("user_id").(string)
+
+	if !ok || userID == "" {
+		return nil, xerror.BadRequest("You are not logged in")
+	}
+
+	updateData, err := MapRestaurantUpdateToMap(&input)
+
+	if err != nil {
+		return nil, xerror.Internal("Can not map restaurant data")
+	}
+
+	updatedRestaurant, err := r.RestaurantUseCase.Update(ctx, userID, input.RestaurantID, updateData)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return MapRestaurantEntityToModel(updatedRestaurant), nil
 }
 
 // DeleteRestaurant is the resolver for the deleteRestaurant field.
-func (r *mutationResolver) DeleteRestaurant(ctx context.Context, id string) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteRestaurant - deleteRestaurant"))
+func (r *mutationResolver) DeleteRestaurant(ctx context.Context, resID string) (bool, error) {
+	userID, ok := ctx.Value("user_id").(string)
+	if !ok || userID == "" {
+		return false, xerror.BadRequest("You are not logged in")
+	}
+
+	if err := r.RestaurantUseCase.Delete(ctx, userID, resID); err != nil {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 // Restaurant is the resolver for the restaurant field.
-func (r *queryResolver) Restaurant(ctx context.Context, id string) (*model.Restaurant, error) {
-	panic(fmt.Errorf("not implemented: Restaurant - restaurant"))
+func (r *queryResolver) Restaurant(ctx context.Context, resID string) (*model.Restaurant, error) {
+	userID, ok := ctx.Value("user_id").(string)
+
+	if !ok || userID == "" {
+		return nil, xerror.BadRequest("You are not logged in")
+	}
+
+	restaurant, err := r.RestaurantUseCase.GetByID(ctx, userID, resID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	mapRestaurant := MapRestaurantEntityToModel(restaurant)
+
+	return mapRestaurant, nil
 }
 
 // MyRestaurants is the resolver for the myRestaurants field.
 func (r *queryResolver) MyRestaurants(ctx context.Context) ([]*model.Restaurant, error) {
-	panic(fmt.Errorf("not implemented: MyRestaurants - myRestaurants"))
+	userID, ok := ctx.Value("user_id").(string)
+
+	if !ok || userID == "" {
+		return nil, xerror.BadRequest("You are not logged in")
+	}
+
+	restaurants, err := r.RestaurantUseCase.GetMyRestaurants(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	myRestaurants := make([]*model.Restaurant, 0, len(restaurants))
+
+	for _, restaurant := range restaurants {
+		mappedRestaurant := MapRestaurantEntityToModel(restaurant)
+		myRestaurants = append(myRestaurants, mappedRestaurant)
+	}
+	return myRestaurants, nil
+
 }
-
-// Mutation returns MutationResolver implementation.
-func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
-
-type mutationResolver struct{ *Resolver }

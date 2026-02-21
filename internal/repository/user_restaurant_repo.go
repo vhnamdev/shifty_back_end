@@ -5,9 +5,11 @@ import (
 	"shifty-backend/internal/entity"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type UserRestaurantRepository interface {
+	Create(ctx context.Context, userRes *entity.UserRestaurant) (*entity.UserRestaurant, error)
 	CheckUserInRestaurant(ctx context.Context, userID, resID string) (bool, error)
 	CheckAuthority(ctx context.Context, targetID, requestID, resID string) (bool, error)
 	CheckAuthorityToUpdate(ctx context.Context, userID, resID string) (bool, error)
@@ -23,6 +25,18 @@ func NewUserRestaurantRepository(db *gorm.DB) UserRestaurantRepository {
 	return &userRestaurantRepo{
 		db: db,
 	}
+}
+
+func (r *userRestaurantRepo) Create(ctx context.Context, userRes *entity.UserRestaurant) (*entity.UserRestaurant, error) {
+	db := Extract(ctx, r.db)
+
+	result := db.WithContext(ctx).Clauses(clause.Returning{}).Create(userRes)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return userRes, nil
 }
 
 // Check user if user want to get informations the staff or members in their restaurant
