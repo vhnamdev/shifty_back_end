@@ -12,15 +12,15 @@ type Position struct {
 	Name                string             `gorm:"type:varchar(100);not null" json:"name"`
 	Description         string             `gorm:"type:text;not null" json:"description"`
 	Rank                int                `gorm:"default:5;not null" json:"rank"`
-	CanUpdateRestaurant bool               `gorm:"default:false"` 
-	CanDeleteRestaurant bool               `gorm:"default:false"` 
-	Salary              int64              `gorm:"type:bigint" json:"salary"`
+	CanUpdateRestaurant bool               `gorm:"default:false" json:"can_update_restaurant"`
+	CanDeleteRestaurant bool               `gorm:"default:false" json:"can_delete_restaurant"`
+	Salary              *int64             `gorm:"type:bigint" json:"salary"`
 	RestaurantID        uuid.UUID          `gorm:"type:uuid;not null" json:"restaurant_id"`
 	Restaurant          Restaurant         `gorm:"foreignKey:RestaurantID" json:"restaurant,omitempty"`
 	UserRestaurants     []UserRestaurant   `gorm:"foreignKey:PositionID" json:"users,omitempty"`
-	ShiftRequirement    []ShiftRequirement `gorm:"foreignKey:PositionID" json:"shift_requirement,omitempty"`
-	ShiftRequest        []ShiftRequest     `gorm:"foreignKey:PositionID" json:"shift_request,omitempty"`
-	ShiftAssignment     []ShiftAssignment  `gorm:"foreignKey:PositionID" json:"shift_assignment,omitempty"`
+	ShiftRequirements   []ShiftRequirement `gorm:"foreignKey:PositionID" json:"shift_requirement,omitempty"`
+	ShiftRequests       []ShiftRequest     `gorm:"foreignKey:PositionID" json:"shift_request,omitempty"`
+	ShiftAssignments    []ShiftAssignment  `gorm:"foreignKey:PositionID" json:"shift_assignment,omitempty"`
 	CreatedAt           time.Time          `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt           time.Time          `json:"updated_at"`
 }

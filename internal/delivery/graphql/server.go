@@ -3,7 +3,6 @@ package graphql
 import (
 	"context"
 	"shifty-backend/graph"
-	"shifty-backend/internal/usecase"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -11,12 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
 )
 
-func NewGraphQLHandler(userUC usecase.UserUseCase) (fiber.Handler, fiber.Handler) {
-
-	// Inject the logic of the use case files.
-	resolver := &graph.Resolver{
-		UserUseCase: userUC,
-	}
+func NewGraphQLHandler(resolver *graph.Resolver) (fiber.Handler, fiber.Handler) {
 
 	// Initialize GraphQL Server Core
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
