@@ -11,7 +11,7 @@ type ShiftRequirement struct {
 	ID         uuid.UUID  `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 	StartTime  time.Time  `json:"start_time"`
 	EndTime    time.Time  `json:"end_time"`
-	Quantity   *int       `gorm:"type:int;not null" json:"number_of_members"`
+	Quantity   int        `gorm:"type:int;not null" json:"number_of_members"`
 	ShiftID    uuid.UUID  `gorm:"type:uuid;not null" json:"shift_id"`
 	Shift      Shift      `gorm:"foreignKey:ShiftID" json:"shift,omitempty"`
 	PositionID *uuid.UUID `gorm:"type:uuid" json:"position_id"`

@@ -2,37 +2,38 @@ type Restaurant {
   id:ID!
   name: String!
   email: String!
-  avatar: String
+  avatar: String!
   status: Boolean!
-  phoneNumber: String
-  address: String
+  laws: [Law!]       
+  positions: [Position!] 
+  members: [User!]
+  phoneNumber: String!
+  address: String!
   createdAt: Time!
 }
 
 input CreateRestaurantInput{
     name: String!
     email: String!
-    avatar: String
-    phoneNumber: String
-    address: String
+    phoneNumber: String!
+    address: String!
 }
 input UpdateRestaurantInput{
     restaurantID: ID!
     name: String
     email: String
-    avatar: String
     status: Boolean
     phoneNumber: String
     address: String
 }
 
 extend type Query {
-  restaurant(id:ID!): Restaurant!
+  restaurant(resID:ID!): Restaurant!
   myRestaurants:[Restaurant!]!
 }
 
 extend type Mutation{
     createRestaurant(input: CreateRestaurantInput!): Restaurant!
     updateRestaurant(input: UpdateRestaurantInput!): Restaurant!
-    deleteRestaurant(id:ID!):Boolean!
+    deleteRestaurant(resID:ID!):Boolean!
 }

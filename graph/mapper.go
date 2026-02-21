@@ -33,9 +33,9 @@ func MapStaffUpdateToMap(input *model.UpdateStaffByManagerInput) (map[string]int
 		if err != nil {
 			return nil, xerror.BadRequest("Invalid Position ID format")
 		}
-		updateData["position_id"] = posID 
+		updateData["position_id"] = posID
 	}
-	
+
 	if input.IsBanned != nil {
 		updateData["is_banned"] = *input.IsBanned
 	}
@@ -106,4 +106,92 @@ func MapUserRestaurantEntityToModel(ur *entity.UserRestaurant) *model.UserRestau
 		IsBanned:   ur.IsBanned,
 		JoinedAt:   ur.JoinedAt,
 	}
+}
+
+func MapRestaurantModelToEntity(input *model.CreateRestaurantInput) *entity.Restaurant {
+	restaurant := &entity.Restaurant{}
+
+	if input.Address != "" {
+		restaurant.Address = input.Address
+	}
+
+	if input.Name != "" {
+		restaurant.Name = input.Name
+	}
+
+	if input.PhoneNumber != "" {
+		restaurant.Phone = input.PhoneNumber
+	}
+
+	if input.Email != "" {
+		restaurant.Email = input.Email
+	}
+
+	return restaurant
+}
+
+func MapRestaurantEntityToModel(restaurant *entity.Restaurant) *model.Restaurant {
+	if restaurant == nil {
+		return nil
+	}
+	
+	modelLaws := make([]*model.Law, 0, len(restaurant.Laws))
+
+	for _, lawEntity := range restaurant.Laws {
+		mappedLaw := MapLawEntityToModel(&lawEntity)
+		modelLaws = append(modelLaws, mappedLaw)
+	}
+	return &model.Restaurant{
+		ID:          restaurant.ID.String(),
+		Name:        restaurant.Name,
+		Avatar:      restaurant.Avatar,
+		Status:      restaurant.Status,
+		Laws:        modelLaws,
+		Address:     restaurant.Address,
+		PhoneNumber: restaurant.Phone,
+		Email:       restaurant.Email,
+		CreatedAt:   restaurant.CreatedAt,
+	}
+
+}
+
+func MapLawEntityToModel(law *entity.Law) *model.Law {
+	if law == nil {
+		return nil
+	}
+
+	return &model.Law{
+		ID:            law.ID.String(),
+		Name:          law.Name,
+		Description:   law.Description,
+		SeverityLevel: string(law.SeverityLevel),
+		RestaurantID:  law.Restaurant.ID.String(),
+	}
+
+}
+
+func MapRestaurantUpdateToMap(input *model.UpdateRestaurantInput) (map[string]interface{}, error) {
+	updateData := make(map[string]interface{})
+
+	if input.Name != nil {
+		updateData["name"] = *input.Name
+	}
+
+	if input.Address != nil {
+		updateData["address"] = *input.Address
+	}
+
+	if input.Email != nil {
+		updateData["email"] = *input.Email
+	}
+
+	if input.PhoneNumber != nil {
+		updateData["phone"] = *input.PhoneNumber
+	}
+
+	if input.Status != nil {
+		updateData["status"] = *input.Status
+	}
+
+	return updateData, nil
 }
