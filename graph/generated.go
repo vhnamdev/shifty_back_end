@@ -48,25 +48,52 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Law struct {
+		CreatedAt     func(childComplexity int) int
+		Description   func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Name          func(childComplexity int) int
+		RestaurantID  func(childComplexity int) int
+		SeverityLevel func(childComplexity int) int
+	}
+
 	Mutatio struct {
 		Empty func(childComplexity int) int
 	}
 
 	Mutation struct {
+		CreatePosition       func(childComplexity int, input model.CreatePositionInput) int
 		CreateRestaurant     func(childComplexity int, input model.CreateRestaurantInput) int
 		Delete               func(childComplexity int) int
-		DeleteRestaurant     func(childComplexity int, id string) int
+		DeletePosition       func(childComplexity int, id string) int
+		DeleteRestaurant     func(childComplexity int, resID string) int
+		UpdatePosition       func(childComplexity int, input model.UpdatePositionInput) int
 		UpdateRestaurant     func(childComplexity int, input model.UpdateRestaurantInput) int
 		UpdateStaffByManager func(childComplexity int, input *model.UpdateStaffByManagerInput) int
 		UpdateUser           func(childComplexity int, input *model.UpdateUserInput) int
 	}
 
+	Position struct {
+		CanDeleteRestaurant func(childComplexity int) int
+		CanUpdateRestaurant func(childComplexity int) int
+		CreatedAt           func(childComplexity int) int
+		Description         func(childComplexity int) int
+		ID                  func(childComplexity int) int
+		Name                func(childComplexity int) int
+		Rank                func(childComplexity int) int
+		RestaurantID        func(childComplexity int) int
+		Salary              func(childComplexity int) int
+		UpdatedAt           func(childComplexity int) int
+	}
+
 	Query struct {
-		Empty             func(childComplexity int) int
-		Me                func(childComplexity int) int
-		MyRestaurants     func(childComplexity int) int
-		Restaurant        func(childComplexity int, id string) int
-		RestaurantMembers func(childComplexity int, restaurantID string, limit *int, page *int, filter *model.UserFilterInput) int
+		Empty                 func(childComplexity int) int
+		Me                    func(childComplexity int) int
+		MyRestaurants         func(childComplexity int) int
+		Position              func(childComplexity int, id string) int
+		PositionsByRestaurant func(childComplexity int, restaurantID string) int
+		Restaurant            func(childComplexity int, resID string) int
+		RestaurantMembers     func(childComplexity int, restaurantID string, limit *int, page *int, filter *model.UserFilterInput) int
 	}
 
 	Restaurant struct {
@@ -75,8 +102,11 @@ type ComplexityRoot struct {
 		CreatedAt   func(childComplexity int) int
 		Email       func(childComplexity int) int
 		ID          func(childComplexity int) int
+		Laws        func(childComplexity int) int
+		Members     func(childComplexity int) int
 		Name        func(childComplexity int) int
 		PhoneNumber func(childComplexity int) int
+		Positions   func(childComplexity int) int
 		Status      func(childComplexity int) int
 	}
 
@@ -116,16 +146,21 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
+	CreatePosition(ctx context.Context, input model.CreatePositionInput) (*model.Position, error)
+	UpdatePosition(ctx context.Context, input model.UpdatePositionInput) (*model.Position, error)
+	DeletePosition(ctx context.Context, id string) (bool, error)
 	CreateRestaurant(ctx context.Context, input model.CreateRestaurantInput) (*model.Restaurant, error)
 	UpdateRestaurant(ctx context.Context, input model.UpdateRestaurantInput) (*model.Restaurant, error)
-	DeleteRestaurant(ctx context.Context, id string) (bool, error)
+	DeleteRestaurant(ctx context.Context, resID string) (bool, error)
 	UpdateUser(ctx context.Context, input *model.UpdateUserInput) (*model.User, error)
 	UpdateStaffByManager(ctx context.Context, input *model.UpdateStaffByManagerInput) (*model.UserRestaurant, error)
 	Delete(ctx context.Context) (bool, error)
 }
 type QueryResolver interface {
 	Empty(ctx context.Context) (*string, error)
-	Restaurant(ctx context.Context, id string) (*model.Restaurant, error)
+	Position(ctx context.Context, id string) (*model.Position, error)
+	PositionsByRestaurant(ctx context.Context, restaurantID string) ([]*model.Position, error)
+	Restaurant(ctx context.Context, resID string) (*model.Restaurant, error)
 	MyRestaurants(ctx context.Context) ([]*model.Restaurant, error)
 	Me(ctx context.Context) (*model.User, error)
 	RestaurantMembers(ctx context.Context, restaurantID string, limit *int, page *int, filter *model.UserFilterInput) (*model.UserPagination, error)
@@ -150,6 +185,43 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	_ = ec
 	switch typeName + "." + field {
 
+	case "Law.createdAt":
+		if e.complexity.Law.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Law.CreatedAt(childComplexity), true
+	case "Law.description":
+		if e.complexity.Law.Description == nil {
+			break
+		}
+
+		return e.complexity.Law.Description(childComplexity), true
+	case "Law.id":
+		if e.complexity.Law.ID == nil {
+			break
+		}
+
+		return e.complexity.Law.ID(childComplexity), true
+	case "Law.name":
+		if e.complexity.Law.Name == nil {
+			break
+		}
+
+		return e.complexity.Law.Name(childComplexity), true
+	case "Law.restaurantID":
+		if e.complexity.Law.RestaurantID == nil {
+			break
+		}
+
+		return e.complexity.Law.RestaurantID(childComplexity), true
+	case "Law.severityLevel":
+		if e.complexity.Law.SeverityLevel == nil {
+			break
+		}
+
+		return e.complexity.Law.SeverityLevel(childComplexity), true
+
 	case "Mutatio._empty":
 		if e.complexity.Mutatio.Empty == nil {
 			break
@@ -157,6 +229,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Mutatio.Empty(childComplexity), true
 
+	case "Mutation.createPosition":
+		if e.complexity.Mutation.CreatePosition == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createPosition_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreatePosition(childComplexity, args["input"].(model.CreatePositionInput)), true
 	case "Mutation.createRestaurant":
 		if e.complexity.Mutation.CreateRestaurant == nil {
 			break
@@ -174,6 +257,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.Delete(childComplexity), true
+	case "Mutation.deletePosition":
+		if e.complexity.Mutation.DeletePosition == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deletePosition_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeletePosition(childComplexity, args["id"].(string)), true
 	case "Mutation.deleteRestaurant":
 		if e.complexity.Mutation.DeleteRestaurant == nil {
 			break
@@ -184,7 +278,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteRestaurant(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.DeleteRestaurant(childComplexity, args["resID"].(string)), true
+	case "Mutation.updatePosition":
+		if e.complexity.Mutation.UpdatePosition == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updatePosition_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdatePosition(childComplexity, args["input"].(model.UpdatePositionInput)), true
 	case "Mutation.updateRestaurant":
 		if e.complexity.Mutation.UpdateRestaurant == nil {
 			break
@@ -219,6 +324,67 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Mutation.UpdateUser(childComplexity, args["input"].(*model.UpdateUserInput)), true
 
+	case "Position.canDeleteRestaurant":
+		if e.complexity.Position.CanDeleteRestaurant == nil {
+			break
+		}
+
+		return e.complexity.Position.CanDeleteRestaurant(childComplexity), true
+	case "Position.canUpdateRestaurant":
+		if e.complexity.Position.CanUpdateRestaurant == nil {
+			break
+		}
+
+		return e.complexity.Position.CanUpdateRestaurant(childComplexity), true
+	case "Position.createdAt":
+		if e.complexity.Position.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Position.CreatedAt(childComplexity), true
+	case "Position.description":
+		if e.complexity.Position.Description == nil {
+			break
+		}
+
+		return e.complexity.Position.Description(childComplexity), true
+	case "Position.id":
+		if e.complexity.Position.ID == nil {
+			break
+		}
+
+		return e.complexity.Position.ID(childComplexity), true
+	case "Position.name":
+		if e.complexity.Position.Name == nil {
+			break
+		}
+
+		return e.complexity.Position.Name(childComplexity), true
+	case "Position.rank":
+		if e.complexity.Position.Rank == nil {
+			break
+		}
+
+		return e.complexity.Position.Rank(childComplexity), true
+	case "Position.restaurantID":
+		if e.complexity.Position.RestaurantID == nil {
+			break
+		}
+
+		return e.complexity.Position.RestaurantID(childComplexity), true
+	case "Position.salary":
+		if e.complexity.Position.Salary == nil {
+			break
+		}
+
+		return e.complexity.Position.Salary(childComplexity), true
+	case "Position.updatedAt":
+		if e.complexity.Position.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Position.UpdatedAt(childComplexity), true
+
 	case "Query._empty":
 		if e.complexity.Query.Empty == nil {
 			break
@@ -237,6 +403,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.MyRestaurants(childComplexity), true
+	case "Query.position":
+		if e.complexity.Query.Position == nil {
+			break
+		}
+
+		args, err := ec.field_Query_position_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Position(childComplexity, args["id"].(string)), true
+	case "Query.positionsByRestaurant":
+		if e.complexity.Query.PositionsByRestaurant == nil {
+			break
+		}
+
+		args, err := ec.field_Query_positionsByRestaurant_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.PositionsByRestaurant(childComplexity, args["restaurantId"].(string)), true
 	case "Query.restaurant":
 		if e.complexity.Query.Restaurant == nil {
 			break
@@ -247,7 +435,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Restaurant(childComplexity, args["id"].(string)), true
+		return e.complexity.Query.Restaurant(childComplexity, args["resID"].(string)), true
 	case "Query.restaurantMembers":
 		if e.complexity.Query.RestaurantMembers == nil {
 			break
@@ -290,6 +478,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Restaurant.ID(childComplexity), true
+	case "Restaurant.laws":
+		if e.complexity.Restaurant.Laws == nil {
+			break
+		}
+
+		return e.complexity.Restaurant.Laws(childComplexity), true
+	case "Restaurant.members":
+		if e.complexity.Restaurant.Members == nil {
+			break
+		}
+
+		return e.complexity.Restaurant.Members(childComplexity), true
 	case "Restaurant.name":
 		if e.complexity.Restaurant.Name == nil {
 			break
@@ -302,6 +502,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Restaurant.PhoneNumber(childComplexity), true
+	case "Restaurant.positions":
+		if e.complexity.Restaurant.Positions == nil {
+			break
+		}
+
+		return e.complexity.Restaurant.Positions(childComplexity), true
 	case "Restaurant.status":
 		if e.complexity.Restaurant.Status == nil {
 			break
@@ -453,7 +659,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputCreatePositionInput,
 		ec.unmarshalInputCreateRestaurantInput,
+		ec.unmarshalInputUpdatePositionInput,
 		ec.unmarshalInputUpdateRestaurantInput,
 		ec.unmarshalInputUpdateStaffByManagerInput,
 		ec.unmarshalInputUpdateUserInput,
@@ -554,7 +762,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
-//go:embed "restaurant.graphqls" "schema.graphqls" "user.graphqls"
+//go:embed "law.graphqls" "position.graphqls" "restaurant.graphqls" "schema.graphqls" "user.graphqls" "user_restaurant.graphqls"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -566,15 +774,29 @@ func sourceData(filename string) string {
 }
 
 var sources = []*ast.Source{
+	{Name: "law.graphqls", Input: sourceData("law.graphqls"), BuiltIn: false},
+	{Name: "position.graphqls", Input: sourceData("position.graphqls"), BuiltIn: false},
 	{Name: "restaurant.graphqls", Input: sourceData("restaurant.graphqls"), BuiltIn: false},
 	{Name: "schema.graphqls", Input: sourceData("schema.graphqls"), BuiltIn: false},
 	{Name: "user.graphqls", Input: sourceData("user.graphqls"), BuiltIn: false},
+	{Name: "user_restaurant.graphqls", Input: sourceData("user_restaurant.graphqls"), BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_createPosition_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreatePositionInput2shiftyᚑbackendᚋgraphᚋmodelᚐCreatePositionInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_createRestaurant_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
@@ -587,7 +809,7 @@ func (ec *executionContext) field_Mutation_createRestaurant_args(ctx context.Con
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_deleteRestaurant_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_deletePosition_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
@@ -595,6 +817,28 @@ func (ec *executionContext) field_Mutation_deleteRestaurant_args(ctx context.Con
 		return nil, err
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteRestaurant_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "resID", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["resID"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updatePosition_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdatePositionInput2shiftyᚑbackendᚋgraphᚋmodelᚐUpdatePositionInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -642,6 +886,28 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_position_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_positionsByRestaurant_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "restaurantId", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["restaurantId"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_restaurantMembers_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -671,11 +937,11 @@ func (ec *executionContext) field_Query_restaurantMembers_args(ctx context.Conte
 func (ec *executionContext) field_Query_restaurant_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "resID", ec.unmarshalNID2string)
 	if err != nil {
 		return nil, err
 	}
-	args["id"] = arg0
+	args["resID"] = arg0
 	return args, nil
 }
 
@@ -731,6 +997,180 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _Law_id(ctx context.Context, field graphql.CollectedField, obj *model.Law) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Law_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Law_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Law",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Law_name(ctx context.Context, field graphql.CollectedField, obj *model.Law) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Law_name,
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Law_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Law",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Law_severityLevel(ctx context.Context, field graphql.CollectedField, obj *model.Law) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Law_severityLevel,
+		func(ctx context.Context) (any, error) {
+			return obj.SeverityLevel, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Law_severityLevel(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Law",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Law_description(ctx context.Context, field graphql.CollectedField, obj *model.Law) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Law_description,
+		func(ctx context.Context) (any, error) {
+			return obj.Description, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Law_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Law",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Law_restaurantID(ctx context.Context, field graphql.CollectedField, obj *model.Law) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Law_restaurantID,
+		func(ctx context.Context) (any, error) {
+			return obj.RestaurantID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Law_restaurantID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Law",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Law_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Law) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Law_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Law_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Law",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutatio__empty(ctx context.Context, field graphql.CollectedField, obj *model.Mutatio) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -756,6 +1196,173 @@ func (ec *executionContext) fieldContext_Mutatio__empty(_ context.Context, field
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createPosition(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createPosition,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().CreatePosition(ctx, fc.Args["input"].(model.CreatePositionInput))
+		},
+		nil,
+		ec.marshalNPosition2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐPosition,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createPosition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Position_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Position_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Position_description(ctx, field)
+			case "rank":
+				return ec.fieldContext_Position_rank(ctx, field)
+			case "salary":
+				return ec.fieldContext_Position_salary(ctx, field)
+			case "canUpdateRestaurant":
+				return ec.fieldContext_Position_canUpdateRestaurant(ctx, field)
+			case "canDeleteRestaurant":
+				return ec.fieldContext_Position_canDeleteRestaurant(ctx, field)
+			case "restaurantID":
+				return ec.fieldContext_Position_restaurantID(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Position_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Position_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Position", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createPosition_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updatePosition(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updatePosition,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdatePosition(ctx, fc.Args["input"].(model.UpdatePositionInput))
+		},
+		nil,
+		ec.marshalNPosition2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐPosition,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updatePosition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Position_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Position_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Position_description(ctx, field)
+			case "rank":
+				return ec.fieldContext_Position_rank(ctx, field)
+			case "salary":
+				return ec.fieldContext_Position_salary(ctx, field)
+			case "canUpdateRestaurant":
+				return ec.fieldContext_Position_canUpdateRestaurant(ctx, field)
+			case "canDeleteRestaurant":
+				return ec.fieldContext_Position_canDeleteRestaurant(ctx, field)
+			case "restaurantID":
+				return ec.fieldContext_Position_restaurantID(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Position_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Position_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Position", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updatePosition_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deletePosition(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_deletePosition,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().DeletePosition(ctx, fc.Args["id"].(string))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deletePosition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deletePosition_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -795,6 +1402,12 @@ func (ec *executionContext) fieldContext_Mutation_createRestaurant(ctx context.C
 				return ec.fieldContext_Restaurant_avatar(ctx, field)
 			case "status":
 				return ec.fieldContext_Restaurant_status(ctx, field)
+			case "laws":
+				return ec.fieldContext_Restaurant_laws(ctx, field)
+			case "positions":
+				return ec.fieldContext_Restaurant_positions(ctx, field)
+			case "members":
+				return ec.fieldContext_Restaurant_members(ctx, field)
 			case "phoneNumber":
 				return ec.fieldContext_Restaurant_phoneNumber(ctx, field)
 			case "address":
@@ -854,6 +1467,12 @@ func (ec *executionContext) fieldContext_Mutation_updateRestaurant(ctx context.C
 				return ec.fieldContext_Restaurant_avatar(ctx, field)
 			case "status":
 				return ec.fieldContext_Restaurant_status(ctx, field)
+			case "laws":
+				return ec.fieldContext_Restaurant_laws(ctx, field)
+			case "positions":
+				return ec.fieldContext_Restaurant_positions(ctx, field)
+			case "members":
+				return ec.fieldContext_Restaurant_members(ctx, field)
 			case "phoneNumber":
 				return ec.fieldContext_Restaurant_phoneNumber(ctx, field)
 			case "address":
@@ -886,7 +1505,7 @@ func (ec *executionContext) _Mutation_deleteRestaurant(ctx context.Context, fiel
 		ec.fieldContext_Mutation_deleteRestaurant,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteRestaurant(ctx, fc.Args["id"].(string))
+			return ec.resolvers.Mutation().DeleteRestaurant(ctx, fc.Args["resID"].(string))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -1064,6 +1683,296 @@ func (ec *executionContext) fieldContext_Mutation_delete(_ context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _Position_id(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Position_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Position_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Position",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Position_name(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Position_name,
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Position_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Position",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Position_description(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Position_description,
+		func(ctx context.Context) (any, error) {
+			return obj.Description, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Position_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Position",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Position_rank(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Position_rank,
+		func(ctx context.Context) (any, error) {
+			return obj.Rank, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Position_rank(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Position",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Position_salary(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Position_salary,
+		func(ctx context.Context) (any, error) {
+			return obj.Salary, nil
+		},
+		nil,
+		ec.marshalOInt2ᚖint,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Position_salary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Position",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Position_canUpdateRestaurant(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Position_canUpdateRestaurant,
+		func(ctx context.Context) (any, error) {
+			return obj.CanUpdateRestaurant, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Position_canUpdateRestaurant(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Position",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Position_canDeleteRestaurant(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Position_canDeleteRestaurant,
+		func(ctx context.Context) (any, error) {
+			return obj.CanDeleteRestaurant, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Position_canDeleteRestaurant(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Position",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Position_restaurantID(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Position_restaurantID,
+		func(ctx context.Context) (any, error) {
+			return obj.RestaurantID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Position_restaurantID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Position",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Position_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Position_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Position_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Position",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Position_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Position) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Position_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Position_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Position",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query__empty(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1093,6 +2002,132 @@ func (ec *executionContext) fieldContext_Query__empty(_ context.Context, field g
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_position(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_position,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().Position(ctx, fc.Args["id"].(string))
+		},
+		nil,
+		ec.marshalNPosition2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐPosition,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_position(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Position_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Position_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Position_description(ctx, field)
+			case "rank":
+				return ec.fieldContext_Position_rank(ctx, field)
+			case "salary":
+				return ec.fieldContext_Position_salary(ctx, field)
+			case "canUpdateRestaurant":
+				return ec.fieldContext_Position_canUpdateRestaurant(ctx, field)
+			case "canDeleteRestaurant":
+				return ec.fieldContext_Position_canDeleteRestaurant(ctx, field)
+			case "restaurantID":
+				return ec.fieldContext_Position_restaurantID(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Position_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Position_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Position", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_position_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_positionsByRestaurant(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_positionsByRestaurant,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().PositionsByRestaurant(ctx, fc.Args["restaurantId"].(string))
+		},
+		nil,
+		ec.marshalNPosition2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐPositionᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_positionsByRestaurant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Position_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Position_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Position_description(ctx, field)
+			case "rank":
+				return ec.fieldContext_Position_rank(ctx, field)
+			case "salary":
+				return ec.fieldContext_Position_salary(ctx, field)
+			case "canUpdateRestaurant":
+				return ec.fieldContext_Position_canUpdateRestaurant(ctx, field)
+			case "canDeleteRestaurant":
+				return ec.fieldContext_Position_canDeleteRestaurant(ctx, field)
+			case "restaurantID":
+				return ec.fieldContext_Position_restaurantID(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Position_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Position_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Position", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_positionsByRestaurant_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_restaurant(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1101,7 +2136,7 @@ func (ec *executionContext) _Query_restaurant(ctx context.Context, field graphql
 		ec.fieldContext_Query_restaurant,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Restaurant(ctx, fc.Args["id"].(string))
+			return ec.resolvers.Query().Restaurant(ctx, fc.Args["resID"].(string))
 		},
 		nil,
 		ec.marshalNRestaurant2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐRestaurant,
@@ -1128,6 +2163,12 @@ func (ec *executionContext) fieldContext_Query_restaurant(ctx context.Context, f
 				return ec.fieldContext_Restaurant_avatar(ctx, field)
 			case "status":
 				return ec.fieldContext_Restaurant_status(ctx, field)
+			case "laws":
+				return ec.fieldContext_Restaurant_laws(ctx, field)
+			case "positions":
+				return ec.fieldContext_Restaurant_positions(ctx, field)
+			case "members":
+				return ec.fieldContext_Restaurant_members(ctx, field)
 			case "phoneNumber":
 				return ec.fieldContext_Restaurant_phoneNumber(ctx, field)
 			case "address":
@@ -1186,6 +2227,12 @@ func (ec *executionContext) fieldContext_Query_myRestaurants(_ context.Context, 
 				return ec.fieldContext_Restaurant_avatar(ctx, field)
 			case "status":
 				return ec.fieldContext_Restaurant_status(ctx, field)
+			case "laws":
+				return ec.fieldContext_Restaurant_laws(ctx, field)
+			case "positions":
+				return ec.fieldContext_Restaurant_positions(ctx, field)
+			case "members":
+				return ec.fieldContext_Restaurant_members(ctx, field)
 			case "phoneNumber":
 				return ec.fieldContext_Restaurant_phoneNumber(ctx, field)
 			case "address":
@@ -1506,9 +2553,9 @@ func (ec *executionContext) _Restaurant_avatar(ctx context.Context, field graphq
 			return obj.Avatar, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		ec.marshalNString2string,
 		true,
-		false,
+		true,
 	)
 }
 
@@ -1554,6 +2601,151 @@ func (ec *executionContext) fieldContext_Restaurant_status(_ context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Restaurant_laws(ctx context.Context, field graphql.CollectedField, obj *model.Restaurant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Restaurant_laws,
+		func(ctx context.Context) (any, error) {
+			return obj.Laws, nil
+		},
+		nil,
+		ec.marshalOLaw2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐLawᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Restaurant_laws(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Restaurant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Law_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Law_name(ctx, field)
+			case "severityLevel":
+				return ec.fieldContext_Law_severityLevel(ctx, field)
+			case "description":
+				return ec.fieldContext_Law_description(ctx, field)
+			case "restaurantID":
+				return ec.fieldContext_Law_restaurantID(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Law_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Law", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Restaurant_positions(ctx context.Context, field graphql.CollectedField, obj *model.Restaurant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Restaurant_positions,
+		func(ctx context.Context) (any, error) {
+			return obj.Positions, nil
+		},
+		nil,
+		ec.marshalOPosition2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐPositionᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Restaurant_positions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Restaurant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Position_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Position_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Position_description(ctx, field)
+			case "rank":
+				return ec.fieldContext_Position_rank(ctx, field)
+			case "salary":
+				return ec.fieldContext_Position_salary(ctx, field)
+			case "canUpdateRestaurant":
+				return ec.fieldContext_Position_canUpdateRestaurant(ctx, field)
+			case "canDeleteRestaurant":
+				return ec.fieldContext_Position_canDeleteRestaurant(ctx, field)
+			case "restaurantID":
+				return ec.fieldContext_Position_restaurantID(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Position_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Position_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Position", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Restaurant_members(ctx context.Context, field graphql.CollectedField, obj *model.Restaurant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Restaurant_members,
+		func(ctx context.Context) (any, error) {
+			return obj.Members, nil
+		},
+		nil,
+		ec.marshalOUser2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐUserᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Restaurant_members(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Restaurant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "fullName":
+				return ec.fieldContext_User_fullName(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "role":
+				return ec.fieldContext_User_role(ctx, field)
+			case "avatar":
+				return ec.fieldContext_User_avatar(ctx, field)
+			case "phoneNumber":
+				return ec.fieldContext_User_phoneNumber(ctx, field)
+			case "address":
+				return ec.fieldContext_User_address(ctx, field)
+			case "jobs":
+				return ec.fieldContext_User_jobs(ctx, field)
+			case "status":
+				return ec.fieldContext_User_status(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Restaurant_phoneNumber(ctx context.Context, field graphql.CollectedField, obj *model.Restaurant) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1564,9 +2756,9 @@ func (ec *executionContext) _Restaurant_phoneNumber(ctx context.Context, field g
 			return obj.PhoneNumber, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		ec.marshalNString2string,
 		true,
-		false,
+		true,
 	)
 }
 
@@ -1593,9 +2785,9 @@ func (ec *executionContext) _Restaurant_address(ctx context.Context, field graph
 			return obj.Address, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		ec.marshalNString2string,
 		true,
-		false,
+		true,
 	)
 }
 
@@ -3755,6 +4947,82 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputCreatePositionInput(ctx context.Context, obj any) (model.CreatePositionInput, error) {
+	var it model.CreatePositionInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["canUpdateRestaurant"]; !present {
+		asMap["canUpdateRestaurant"] = false
+	}
+	if _, present := asMap["canDeleteRestaurant"]; !present {
+		asMap["canDeleteRestaurant"] = false
+	}
+
+	fieldsInOrder := [...]string{"name", "description", "restaurantID", "rank", "salary", "canUpdateRestaurant", "canDeleteRestaurant"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = data
+		case "restaurantID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("restaurantID"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RestaurantID = data
+		case "rank":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rank"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Rank = data
+		case "salary":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("salary"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Salary = data
+		case "canUpdateRestaurant":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canUpdateRestaurant"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanUpdateRestaurant = data
+		case "canDeleteRestaurant":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canDeleteRestaurant"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanDeleteRestaurant = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreateRestaurantInput(ctx context.Context, obj any) (model.CreateRestaurantInput, error) {
 	var it model.CreateRestaurantInput
 	asMap := map[string]any{}
@@ -3762,7 +5030,7 @@ func (ec *executionContext) unmarshalInputCreateRestaurantInput(ctx context.Cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "email", "avatar", "phoneNumber", "address"}
+	fieldsInOrder := [...]string{"name", "email", "phoneNumber", "address"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3783,27 +5051,89 @@ func (ec *executionContext) unmarshalInputCreateRestaurantInput(ctx context.Cont
 				return it, err
 			}
 			it.Email = data
-		case "avatar":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("avatar"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Avatar = data
 		case "phoneNumber":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phoneNumber"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.PhoneNumber = data
 		case "address":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Address = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdatePositionInput(ctx context.Context, obj any) (model.UpdatePositionInput, error) {
+	var it model.UpdatePositionInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "name", "description", "rank", "salary", "canUpdateRestaurant", "canDeleteRestaurant"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = data
+		case "rank":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rank"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Rank = data
+		case "salary":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("salary"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Salary = data
+		case "canUpdateRestaurant":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canUpdateRestaurant"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanUpdateRestaurant = data
+		case "canDeleteRestaurant":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("canDeleteRestaurant"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CanDeleteRestaurant = data
 		}
 	}
 
@@ -3817,7 +5147,7 @@ func (ec *executionContext) unmarshalInputUpdateRestaurantInput(ctx context.Cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"restaurantID", "name", "email", "avatar", "status", "phoneNumber", "address"}
+	fieldsInOrder := [...]string{"restaurantID", "name", "email", "status", "phoneNumber", "address"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3845,13 +5175,6 @@ func (ec *executionContext) unmarshalInputUpdateRestaurantInput(ctx context.Cont
 				return it, err
 			}
 			it.Email = data
-		case "avatar":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("avatar"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Avatar = data
 		case "status":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -4024,6 +5347,70 @@ func (ec *executionContext) unmarshalInputUserFilterInput(ctx context.Context, o
 
 // region    **************************** object.gotpl ****************************
 
+var lawImplementors = []string{"Law"}
+
+func (ec *executionContext) _Law(ctx context.Context, sel ast.SelectionSet, obj *model.Law) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, lawImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Law")
+		case "id":
+			out.Values[i] = ec._Law_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Law_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "severityLevel":
+			out.Values[i] = ec._Law_severityLevel(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "description":
+			out.Values[i] = ec._Law_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "restaurantID":
+			out.Values[i] = ec._Law_restaurantID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._Law_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var mutatioImplementors = []string{"Mutatio"}
 
 func (ec *executionContext) _Mutatio(ctx context.Context, sel ast.SelectionSet, obj *model.Mutatio) graphql.Marshaler {
@@ -4079,6 +5466,27 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "createPosition":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createPosition(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatePosition":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updatePosition(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deletePosition":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deletePosition(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createRestaurant":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createRestaurant(ctx, field)
@@ -4144,6 +5552,87 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 	return out
 }
 
+var positionImplementors = []string{"Position"}
+
+func (ec *executionContext) _Position(ctx context.Context, sel ast.SelectionSet, obj *model.Position) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, positionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Position")
+		case "id":
+			out.Values[i] = ec._Position_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Position_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "description":
+			out.Values[i] = ec._Position_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rank":
+			out.Values[i] = ec._Position_rank(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "salary":
+			out.Values[i] = ec._Position_salary(ctx, field, obj)
+		case "canUpdateRestaurant":
+			out.Values[i] = ec._Position_canUpdateRestaurant(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "canDeleteRestaurant":
+			out.Values[i] = ec._Position_canDeleteRestaurant(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "restaurantID":
+			out.Values[i] = ec._Position_restaurantID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._Position_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._Position_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var queryImplementors = []string{"Query"}
 
 func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -4173,6 +5662,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query__empty(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "position":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_position(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "positionsByRestaurant":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_positionsByRestaurant(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -4329,15 +5862,30 @@ func (ec *executionContext) _Restaurant(ctx context.Context, sel ast.SelectionSe
 			}
 		case "avatar":
 			out.Values[i] = ec._Restaurant_avatar(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "status":
 			out.Values[i] = ec._Restaurant_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "laws":
+			out.Values[i] = ec._Restaurant_laws(ctx, field, obj)
+		case "positions":
+			out.Values[i] = ec._Restaurant_positions(ctx, field, obj)
+		case "members":
+			out.Values[i] = ec._Restaurant_members(ctx, field, obj)
 		case "phoneNumber":
 			out.Values[i] = ec._Restaurant_phoneNumber(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "address":
 			out.Values[i] = ec._Restaurant_address(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createdAt":
 			out.Values[i] = ec._Restaurant_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -4957,6 +6505,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) unmarshalNCreatePositionInput2shiftyᚑbackendᚋgraphᚋmodelᚐCreatePositionInput(ctx context.Context, v any) (model.CreatePositionInput, error) {
+	res, err := ec.unmarshalInputCreatePositionInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNCreateRestaurantInput2shiftyᚑbackendᚋgraphᚋmodelᚐCreateRestaurantInput(ctx context.Context, v any) (model.CreateRestaurantInput, error) {
 	res, err := ec.unmarshalInputCreateRestaurantInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4992,6 +6545,74 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNLaw2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐLaw(ctx context.Context, sel ast.SelectionSet, v *model.Law) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Law(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPosition2shiftyᚑbackendᚋgraphᚋmodelᚐPosition(ctx context.Context, sel ast.SelectionSet, v model.Position) graphql.Marshaler {
+	return ec._Position(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPosition2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐPositionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Position) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPosition2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐPosition(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNPosition2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐPosition(ctx context.Context, sel ast.SelectionSet, v *model.Position) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Position(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNRestaurant2shiftyᚑbackendᚋgraphᚋmodelᚐRestaurant(ctx context.Context, sel ast.SelectionSet, v model.Restaurant) graphql.Marshaler {
@@ -5082,6 +6703,11 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNUpdatePositionInput2shiftyᚑbackendᚋgraphᚋmodelᚐUpdatePositionInput(ctx context.Context, v any) (model.UpdatePositionInput, error) {
+	res, err := ec.unmarshalInputUpdatePositionInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNUpdateRestaurantInput2shiftyᚑbackendᚋgraphᚋmodelᚐUpdateRestaurantInput(ctx context.Context, v any) (model.UpdateRestaurantInput, error) {
@@ -5530,6 +7156,100 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
+func (ec *executionContext) marshalOLaw2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐLawᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Law) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNLaw2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐLaw(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalOPosition2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐPositionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Position) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPosition2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐPosition(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v any) (*string, error) {
 	if v == nil {
 		return nil, nil
@@ -5562,6 +7282,53 @@ func (ec *executionContext) unmarshalOUpdateUserInput2ᚖshiftyᚑbackendᚋgrap
 	}
 	res, err := ec.unmarshalInputUpdateUserInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOUser2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.User) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUser2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐUser(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOUserFilterInput2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐUserFilterInput(ctx context.Context, v any) (*model.UserFilterInput, error) {

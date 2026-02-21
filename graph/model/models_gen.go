@@ -6,12 +6,30 @@ import (
 	"time"
 )
 
+type CreatePositionInput struct {
+	Name                string `json:"name"`
+	Description         string `json:"description"`
+	RestaurantID        string `json:"restaurantID"`
+	Rank                *int   `json:"rank,omitempty"`
+	Salary              *int   `json:"salary,omitempty"`
+	CanUpdateRestaurant *bool  `json:"canUpdateRestaurant,omitempty"`
+	CanDeleteRestaurant *bool  `json:"canDeleteRestaurant,omitempty"`
+}
+
 type CreateRestaurantInput struct {
-	Name        string  `json:"name"`
-	Email       string  `json:"email"`
-	Avatar      *string `json:"avatar,omitempty"`
-	PhoneNumber *string `json:"phoneNumber,omitempty"`
-	Address     *string `json:"address,omitempty"`
+	Name        string `json:"name"`
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phoneNumber"`
+	Address     string `json:"address"`
+}
+
+type Law struct {
+	ID            string    `json:"id"`
+	Name          string    `json:"name"`
+	SeverityLevel string    `json:"severityLevel"`
+	Description   string    `json:"description"`
+	RestaurantID  string    `json:"restaurantID"`
+	CreatedAt     time.Time `json:"createdAt"`
 }
 
 type Mutatio struct {
@@ -21,25 +39,50 @@ type Mutatio struct {
 type Mutation struct {
 }
 
+type Position struct {
+	ID                  string    `json:"id"`
+	Name                string    `json:"name"`
+	Description         string    `json:"description"`
+	Rank                int       `json:"rank"`
+	Salary              *int      `json:"salary,omitempty"`
+	CanUpdateRestaurant bool      `json:"canUpdateRestaurant"`
+	CanDeleteRestaurant bool      `json:"canDeleteRestaurant"`
+	RestaurantID        string    `json:"restaurantID"`
+	CreatedAt           time.Time `json:"createdAt"`
+	UpdatedAt           time.Time `json:"updatedAt"`
+}
+
 type Query struct {
 }
 
 type Restaurant struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Email       string    `json:"email"`
-	Avatar      *string   `json:"avatar,omitempty"`
-	Status      bool      `json:"status"`
-	PhoneNumber *string   `json:"phoneNumber,omitempty"`
-	Address     *string   `json:"address,omitempty"`
-	CreatedAt   time.Time `json:"createdAt"`
+	ID          string      `json:"id"`
+	Name        string      `json:"name"`
+	Email       string      `json:"email"`
+	Avatar      string      `json:"avatar"`
+	Status      bool        `json:"status"`
+	Laws        []*Law      `json:"laws,omitempty"`
+	Positions   []*Position `json:"positions,omitempty"`
+	Members     []*User     `json:"members,omitempty"`
+	PhoneNumber string      `json:"phoneNumber"`
+	Address     string      `json:"address"`
+	CreatedAt   time.Time   `json:"createdAt"`
+}
+
+type UpdatePositionInput struct {
+	ID                  string  `json:"id"`
+	Name                *string `json:"name,omitempty"`
+	Description         *string `json:"description,omitempty"`
+	Rank                *int    `json:"rank,omitempty"`
+	Salary              *int    `json:"salary,omitempty"`
+	CanUpdateRestaurant *bool   `json:"canUpdateRestaurant,omitempty"`
+	CanDeleteRestaurant *bool   `json:"canDeleteRestaurant,omitempty"`
 }
 
 type UpdateRestaurantInput struct {
 	RestaurantID string  `json:"restaurantID"`
 	Name         *string `json:"name,omitempty"`
 	Email        *string `json:"email,omitempty"`
-	Avatar       *string `json:"avatar,omitempty"`
 	Status       *bool   `json:"status,omitempty"`
 	PhoneNumber  *string `json:"phoneNumber,omitempty"`
 	Address      *string `json:"address,omitempty"`

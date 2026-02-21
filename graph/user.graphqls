@@ -19,13 +19,7 @@ type User {
   createdAt: Time!
 }
 
-type UserRestaurant{
-  userID      : String!
-	restaurant: String!
-  position: String!
-	IsBanned: Boolean!
-	JoinedAt:     Time!
-}
+
 
 input UserFilterInput {
   search: String

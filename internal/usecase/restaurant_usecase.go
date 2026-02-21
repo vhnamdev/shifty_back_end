@@ -4,44 +4,86 @@ import (
 	"context"
 	"shifty-backend/internal/entity"
 	"shifty-backend/internal/repository"
+	"shifty-backend/pkg/constants"
 	"shifty-backend/pkg/utils"
 	"shifty-backend/pkg/xerror"
+
+	"github.com/google/uuid"
 )
 
 type RestaurantUseCase interface {
-	Create(ctx context.Context, restaurant *entity.Restaurant) (*entity.Restaurant, error)
-	Update(ctx context.Context, userID string, restaurant *entity.Restaurant) (*entity.Restaurant, error)
+	Create(ctx context.Context, userID string, restaurant *entity.Restaurant) (*entity.Restaurant, error)
+	Update(ctx context.Context, userID string, resID string, updateData map[string]interface{}) (*entity.Restaurant, error)
 	Delete(ctx context.Context, userID, resID string) error
 	GetByID(ctx context.Context, userID, resID string) (*entity.Restaurant, error)
 	GetMyRestaurants(ctx context.Context, userID string) ([]*entity.Restaurant, error)
 }
 
 type restaurantUseCase struct {
+	Transactor         repository.Transactor
 	RestaurantRepo     repository.RestaurantRepository
 	UserRestaurantRepo repository.UserRestaurantRepository
+	PositionRepo       repository.PositionRepository
 }
 
-func NewRestaurantUseCase(RestaurantRepo repository.RestaurantRepository, UserRestaurantRepo repository.UserRestaurantRepository) RestaurantUseCase {
+func NewRestaurantUseCase(Transactor repository.Transactor, RestaurantRepo repository.RestaurantRepository, UserRestaurantRepo repository.UserRestaurantRepository, PositionRepo repository.PositionRepository) RestaurantUseCase {
 	return &restaurantUseCase{
+		Transactor:         Transactor,
 		RestaurantRepo:     RestaurantRepo,
 		UserRestaurantRepo: UserRestaurantRepo,
+		PositionRepo:       PositionRepo,
 	}
 }
 
 // Create restaurant
-func (u *restaurantUseCase) Create(ctx context.Context, restaurant *entity.Restaurant) (*entity.Restaurant, error) {
-	newRestaurant, err := u.RestaurantRepo.Create(ctx, restaurant)
-
+func (u *restaurantUseCase) Create(ctx context.Context, userID string, restaurant *entity.Restaurant) (*entity.Restaurant, error) {
+	parsedUserID, err := uuid.Parse(userID)
 	if err != nil {
-		return nil, xerror.Internal("")
+		return nil, xerror.BadRequest("Invalid user ID")
 	}
 
-	return newRestaurant, nil
+	err = u.Transactor.WithTransaction(ctx, func(txCtx context.Context) error {
+		createdRes, err := u.RestaurantRepo.Create(txCtx, restaurant)
+		if err != nil {
+			return err
+		}
+
+		ownerPosition := &entity.Position{
+			Name:                constants.RoleOwner,
+			Description:         constants.DescOwner,
+			Rank:                constants.RankOwner,
+			CanUpdateRestaurant: true,
+			CanDeleteRestaurant: true,
+			RestaurantID:        createdRes.ID,
+		}
+		createdPos, err := u.PositionRepo.Create(txCtx, ownerPosition)
+		if err != nil {
+			return err
+		}
+
+		userRes := &entity.UserRestaurant{
+			UserID:       parsedUserID,
+			RestaurantID: createdRes.ID,
+			PositionID:   createdPos.ID,
+		}
+
+		_, err = u.UserRestaurantRepo.Create(txCtx, userRes)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, xerror.Internal("Failed to create restaurant and setup owner")
+	}
+	return restaurant, nil
 }
 
-func (u *restaurantUseCase) Update(ctx context.Context, userID string, restaurant *entity.Restaurant) (*entity.Restaurant, error) {
+func (u *restaurantUseCase) Update(ctx context.Context, userID string, resID string, updateData map[string]interface{}) (*entity.Restaurant, error) {
 
-	isAuthority, err := u.UserRestaurantRepo.CheckAuthorityToUpdate(ctx, userID, restaurant.ID.String())
+	isAuthority, err := u.UserRestaurantRepo.CheckAuthorityToUpdate(ctx, userID, resID)
 
 	if err != nil {
 		return nil, xerror.Internal("Authority cannot be verified")
@@ -50,12 +92,15 @@ func (u *restaurantUseCase) Update(ctx context.Context, userID string, restauran
 	if !isAuthority {
 		return nil, xerror.BadRequest("You are not allowed to update restaurant")
 	}
-
-	if err := u.RestaurantRepo.Update(ctx, restaurant); err != nil {
+	if len(updateData) == 0 {
+		return u.RestaurantRepo.GetByID(ctx, resID)
+	}
+	updatedRestaurant, err := u.RestaurantRepo.Update(ctx, resID, updateData)
+	if err != nil {
 		return nil, xerror.Internal("Can not update restaurant")
 	}
 
-	return restaurant, nil
+	return updatedRestaurant, nil
 }
 
 func (u *restaurantUseCase) Delete(ctx context.Context, userID, resID string) error {
