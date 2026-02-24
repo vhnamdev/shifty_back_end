@@ -11,6 +11,7 @@ import (
 type RestaurantRepository interface {
 	Create(ctx context.Context, restaurant *entity.Restaurant) (*entity.Restaurant, error)
 	Update(ctx context.Context, resID string, updateData map[string]interface{}) (*entity.Restaurant, error)
+	UpdateImage(ctx context.Context, resID, imageURL string) (*entity.Restaurant, error)
 	Delete(ctx context.Context, id string) error
 	GetByID(ctx context.Context, id string) (*entity.Restaurant, error)
 	GetMyRestaurants(ctx context.Context, userID string) ([]*entity.Restaurant, error)
@@ -43,17 +44,31 @@ func (r *RestaurantRepo) Update(ctx context.Context, resID string, updateData ma
 	var updatedRestaurant entity.Restaurant
 
 	// Update data and return new data
-	err := r.db.WithContext(ctx).
+	if err := r.db.WithContext(ctx).
 		Model(&updatedRestaurant).
 		Clauses(clause.Returning{}).
 		Where("id = ?", resID).
-		Updates(updateData).Error
-
-	if err != nil {
+		Updates(updateData).Error; err != nil {
 		return nil, err
 	}
 
 	return &updatedRestaurant, nil
+}
+
+func (r *RestaurantRepo) UpdateImage(ctx context.Context, resID, imageURL string) (*entity.Restaurant, error) {
+	var updatedRestaurant entity.Restaurant
+
+	if err := r.db.WithContext(ctx).
+		Model(&updatedRestaurant).
+		Clauses(clause.Returning{}).
+		Where("id = ?", resID).
+		Update("avatar", imageURL).
+		Error; err != nil {
+		return nil, err
+	}
+
+	return &updatedRestaurant, nil
+
 }
 
 // Delete Restaurant, set IsDeleted equal true

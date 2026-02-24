@@ -34,7 +34,6 @@ func TestRestaurantUseCase_Create(t *testing.T) {
 			userID:     userID,
 			restaurant: mockRestaurant,
 			mockSetup: func(r *MockRestaurantRepo, p *MockPositionRepo, ur *MockUserRestaurantRepo) {
-				// Mock 3 bước chạy tuần tự trong Transaction
 				r.On("Create", mock.Anything, mockRestaurant).Return(createdRes, nil)
 				p.On("Create", mock.Anything, mock.AnythingOfType("*entity.Position")).Return(createdPos, nil)
 				ur.On("Create", mock.Anything, mock.AnythingOfType("*entity.UserRestaurant")).Return(&entity.UserRestaurant{}, nil)
@@ -42,10 +41,10 @@ func TestRestaurantUseCase_Create(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:       "Fail - Invalid User ID",
-			userID:     "invalid-uuid", // ID vớ vẩn, sẽ lỗi ngay vòng gửi xe
-			restaurant: mockRestaurant,
-			mockSetup:  func(r *MockRestaurantRepo, p *MockPositionRepo, ur *MockUserRestaurantRepo) {},
+			name:          "Fail - Invalid User ID",
+			userID:        "invalid-uuid",
+			restaurant:    mockRestaurant,
+			mockSetup:     func(r *MockRestaurantRepo, p *MockPositionRepo, ur *MockUserRestaurantRepo) {},
 			expectedError: true,
 		},
 		{
@@ -53,7 +52,6 @@ func TestRestaurantUseCase_Create(t *testing.T) {
 			userID:     userID,
 			restaurant: mockRestaurant,
 			mockSetup: func(r *MockRestaurantRepo, p *MockPositionRepo, ur *MockUserRestaurantRepo) {
-				// Giả vờ bị sập DB ngay lúc tạo quán
 				r.On("Create", mock.Anything, mockRestaurant).Return(nil, xerror.Internal("DB Error"))
 			},
 			expectedError: true,
@@ -64,15 +62,27 @@ func TestRestaurantUseCase_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockTx := new(MockTransactor)
 			mockResRepo := new(MockRestaurantRepo)
-			mockPosRepo := new(MockPositionRepo)
 			mockUserResRepo := new(MockUserRestaurantRepo)
+			mockPosRepo := new(MockPositionRepo)
+			mockRedisRepo := new(MockRedisRepo)
+			mockUserRepo := new(MockUserRepo)
+			mockMailer := new(MockMailer)
+			mockUploader := new(MockUploader)
 
 			if tt.mockSetup != nil {
 				tt.mockSetup(mockResRepo, mockPosRepo, mockUserResRepo)
 			}
 
-			resUC := usecase.NewRestaurantUseCase(mockTx, mockResRepo, mockUserResRepo, mockPosRepo)
-
+			resUC := usecase.NewRestaurantUseCase(
+				mockTx,
+				mockResRepo,
+				mockUserResRepo,
+				mockPosRepo,
+				mockRedisRepo,
+				mockUserRepo,
+				mockMailer,
+				mockUploader,
+			)
 
 			result, err := resUC.Create(context.Background(), tt.userID, tt.restaurant)
 

@@ -62,11 +62,13 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
+		CreateInviteCode     func(childComplexity int, input model.CreateInviteCodeInput) int
 		CreatePosition       func(childComplexity int, input model.CreatePositionInput) int
 		CreateRestaurant     func(childComplexity int, input model.CreateRestaurantInput) int
 		Delete               func(childComplexity int) int
 		DeletePosition       func(childComplexity int, id string) int
 		DeleteRestaurant     func(childComplexity int, resID string) int
+		JoinRestaurant       func(childComplexity int, input model.JoinRestaurantInput) int
 		UpdatePosition       func(childComplexity int, input model.UpdatePositionInput) int
 		UpdateRestaurant     func(childComplexity int, input model.UpdateRestaurantInput) int
 		UpdateStaffByManager func(childComplexity int, input *model.UpdateStaffByManagerInput) int
@@ -151,6 +153,8 @@ type MutationResolver interface {
 	DeletePosition(ctx context.Context, id string) (bool, error)
 	CreateRestaurant(ctx context.Context, input model.CreateRestaurantInput) (*model.Restaurant, error)
 	UpdateRestaurant(ctx context.Context, input model.UpdateRestaurantInput) (*model.Restaurant, error)
+	CreateInviteCode(ctx context.Context, input model.CreateInviteCodeInput) (bool, error)
+	JoinRestaurant(ctx context.Context, input model.JoinRestaurantInput) (bool, error)
 	DeleteRestaurant(ctx context.Context, resID string) (bool, error)
 	UpdateUser(ctx context.Context, input *model.UpdateUserInput) (*model.User, error)
 	UpdateStaffByManager(ctx context.Context, input *model.UpdateStaffByManagerInput) (*model.UserRestaurant, error)
@@ -229,6 +233,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Mutatio.Empty(childComplexity), true
 
+	case "Mutation.createInviteCode":
+		if e.complexity.Mutation.CreateInviteCode == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createInviteCode_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateInviteCode(childComplexity, args["input"].(model.CreateInviteCodeInput)), true
 	case "Mutation.createPosition":
 		if e.complexity.Mutation.CreatePosition == nil {
 			break
@@ -279,6 +294,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.DeleteRestaurant(childComplexity, args["resID"].(string)), true
+	case "Mutation.joinRestaurant":
+		if e.complexity.Mutation.JoinRestaurant == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_joinRestaurant_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.JoinRestaurant(childComplexity, args["input"].(model.JoinRestaurantInput)), true
 	case "Mutation.updatePosition":
 		if e.complexity.Mutation.UpdatePosition == nil {
 			break
@@ -659,8 +685,10 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputCreateInviteCodeInput,
 		ec.unmarshalInputCreatePositionInput,
 		ec.unmarshalInputCreateRestaurantInput,
+		ec.unmarshalInputJoinRestaurantInput,
 		ec.unmarshalInputUpdatePositionInput,
 		ec.unmarshalInputUpdateRestaurantInput,
 		ec.unmarshalInputUpdateStaffByManagerInput,
@@ -787,6 +815,17 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
+func (ec *executionContext) field_Mutation_createInviteCode_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateInviteCodeInput2shiftyᚑbackendᚋgraphᚋmodelᚐCreateInviteCodeInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createPosition_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -828,6 +867,17 @@ func (ec *executionContext) field_Mutation_deleteRestaurant_args(ctx context.Con
 		return nil, err
 	}
 	args["resID"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_joinRestaurant_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNJoinRestaurantInput2shiftyᚑbackendᚋgraphᚋmodelᚐJoinRestaurantInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -1491,6 +1541,88 @@ func (ec *executionContext) fieldContext_Mutation_updateRestaurant(ctx context.C
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_updateRestaurant_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createInviteCode(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createInviteCode,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().CreateInviteCode(ctx, fc.Args["input"].(model.CreateInviteCodeInput))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createInviteCode(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createInviteCode_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_joinRestaurant(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_joinRestaurant,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().JoinRestaurant(ctx, fc.Args["input"].(model.JoinRestaurantInput))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_joinRestaurant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_joinRestaurant_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -4947,6 +5079,47 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputCreateInviteCodeInput(ctx context.Context, obj any) (model.CreateInviteCodeInput, error) {
+	var it model.CreateInviteCodeInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"email", "resID", "positionID"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "email":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
+		case "resID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resID"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ResID = data
+		case "positionID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("positionID"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PositionID = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreatePositionInput(ctx context.Context, obj any) (model.CreatePositionInput, error) {
 	var it model.CreatePositionInput
 	asMap := map[string]any{}
@@ -5065,6 +5238,33 @@ func (ec *executionContext) unmarshalInputCreateRestaurantInput(ctx context.Cont
 				return it, err
 			}
 			it.Address = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputJoinRestaurantInput(ctx context.Context, obj any) (model.JoinRestaurantInput, error) {
+	var it model.JoinRestaurantInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"inviteCode"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "inviteCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCode"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCode = data
 		}
 	}
 
@@ -5497,6 +5697,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "updateRestaurant":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateRestaurant(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createInviteCode":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createInviteCode(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "joinRestaurant":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_joinRestaurant(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -6505,6 +6719,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) unmarshalNCreateInviteCodeInput2shiftyᚑbackendᚋgraphᚋmodelᚐCreateInviteCodeInput(ctx context.Context, v any) (model.CreateInviteCodeInput, error) {
+	res, err := ec.unmarshalInputCreateInviteCodeInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNCreatePositionInput2shiftyᚑbackendᚋgraphᚋmodelᚐCreatePositionInput(ctx context.Context, v any) (model.CreatePositionInput, error) {
 	res, err := ec.unmarshalInputCreatePositionInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -6545,6 +6764,11 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNJoinRestaurantInput2shiftyᚑbackendᚋgraphᚋmodelᚐJoinRestaurantInput(ctx context.Context, v any) (model.JoinRestaurantInput, error) {
+	res, err := ec.unmarshalInputJoinRestaurantInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNLaw2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐLaw(ctx context.Context, sel ast.SelectionSet, v *model.Law) graphql.Marshaler {
