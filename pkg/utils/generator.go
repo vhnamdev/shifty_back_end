@@ -2,18 +2,36 @@ package utils
 
 import (
 	"crypto/rand"
-	"io"
+	"math/big"
 )
 
-func GenerateOTP(max int) string {
-	var table = [...]byte{'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'}
-	b := make([]byte, max)
-	n, err := io.ReadAtLeast(rand.Reader, b, max)
-	if n != max || err != nil {
-		return "123456"
+func GenerateOTP(length int) (string, error) {
+	const charset = CharsetNumeric
+	result := make([]byte, length)
+	charsetLen := big.NewInt(int64(len(charset)))
+
+	for i := range result {
+		num, err := rand.Int(rand.Reader, charsetLen)
+
+		if err != nil {
+			return "", err
+		}
+		result[i] = charset[num.Int64()]
 	}
-	for i := 0; i < len(b); i++ {
-		b[i] = table[int(b[i])%len(table)]
+	return string(result),nil
+}
+
+func GenerateInviteCode(length int) (string, error) {
+	const safeCharset = CharsetSafe
+	result := make([]byte, length)
+
+	for i := range result {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(safeCharset))))
+		if err != nil {
+			return "", err
+		}
+		result[i] = safeCharset[num.Int64()]
 	}
-	return string(b)
+
+	return string(result), nil
 }

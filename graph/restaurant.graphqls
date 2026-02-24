@@ -27,6 +27,16 @@ input UpdateRestaurantInput{
     address: String
 }
 
+input CreateInviteCodeInput{
+  email: String!
+  resID: String!
+  positionID: String!
+}
+
+input JoinRestaurantInput{
+  inviteCode: String!
+}
+
 extend type Query {
   restaurant(resID:ID!): Restaurant!
   myRestaurants:[Restaurant!]!
@@ -35,5 +45,7 @@ extend type Query {
 extend type Mutation{
     createRestaurant(input: CreateRestaurantInput!): Restaurant!
     updateRestaurant(input: UpdateRestaurantInput!): Restaurant!
+    createInviteCode(input: CreateInviteCodeInput!):Boolean!
+    joinRestaurant(input: JoinRestaurantInput!):Boolean!
     deleteRestaurant(resID:ID!):Boolean!
 }
