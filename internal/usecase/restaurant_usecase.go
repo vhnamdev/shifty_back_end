@@ -147,6 +147,8 @@ func (u *restaurantUseCase) Update(ctx context.Context, userID string, resID str
 
 // Update restaurant' avatar
 func (u *restaurantUseCase) UpdateImage(ctx context.Context, userID, resID, imageURL string) (*entity.Restaurant, error) {
+
+	// Check restaurant is exist or not
 	oldRestaurant, err := u.restaurantRepo.GetByID(ctx, resID)
 
 	if err != nil {
@@ -156,6 +158,8 @@ func (u *restaurantUseCase) UpdateImage(ctx context.Context, userID, resID, imag
 
 		return nil, xerror.Internal("Database failed")
 	}
+
+	// Check if the user has the necessary authorization
 	isAuthority, err := u.userRestaurantRepo.CheckAuthorityToUpdate(ctx, userID, resID)
 
 	if err != nil {
@@ -165,18 +169,25 @@ func (u *restaurantUseCase) UpdateImage(ctx context.Context, userID, resID, imag
 	if !isAuthority {
 		return nil, xerror.Forbidden("You are not allowed to update restaurant")
 	}
+
+	// Update image
 	updatedRestaurant, err := u.restaurantRepo.UpdateImage(ctx, resID, imageURL)
 
 	if err != nil {
 		return nil, xerror.Internal("Can not update image")
 	}
 
+	// Check old avatar is exist and not equal new image
 	if oldRestaurant.Avatar != "" && oldRestaurant.Avatar != imageURL {
+
+		// Get public ID from old url
 		publicID := u.uploader.GetPublicIDFromURL(oldRestaurant.Avatar)
 		if publicID != "" {
 			return nil, xerror.BadRequest("Can not get publicID")
 		}
 		go func(pID string) {
+
+			// Delete old url in cloudinary
 			errDelete := u.uploader.DeleteImage(context.Background(), pID)
 
 			if errDelete != nil {

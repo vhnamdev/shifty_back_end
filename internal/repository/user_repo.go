@@ -84,10 +84,12 @@ func (r *userRepo) Update(ctx context.Context, user *entity.User) error {
 	return nil
 }
 
+// Update user's password
 func (r *userRepo) UpdatePassword(ctx context.Context, id, newPassword string) error {
 	return r.db.WithContext(ctx).Model(&entity.User{}).Where("id = ?", id).Update("password", newPassword).Error
 }
 
+// Update user's avatar
 func (r *userRepo) UpdateImage(ctx context.Context, id, imageURl string) (*entity.User, error) {
 	var updatedUser entity.User
 
