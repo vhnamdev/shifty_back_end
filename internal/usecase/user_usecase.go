@@ -2,12 +2,15 @@ package usecase
 
 import (
 	"context"
+	"log"
 	"shifty-backend/internal/dto"
 	"shifty-backend/internal/entity"
 	"shifty-backend/internal/repository"
 	"shifty-backend/pkg/constants"
+	"shifty-backend/pkg/uploader"
 	"shifty-backend/pkg/utils"
 	"shifty-backend/pkg/xerror"
+	"strings"
 )
 
 type UserUseCase interface {
@@ -15,18 +18,21 @@ type UserUseCase interface {
 	FindUserByID(ctx context.Context, id string) (*entity.User, error)
 	DeleteUser(ctx context.Context, id string) error
 	UpdateUser(ctx context.Context, user *entity.User) (*entity.User, error)
+	UpdateImage(ctx context.Context, id, imageURl string) (*entity.User, error)
 	GetRestaurantMembers(ctx context.Context, page, limit int, restaurantID string, filter *dto.UserFilter) ([]*entity.User, int64, error)
 	ValidateRestaurantAccess(ctx context.Context, currentUserID, TargetRestaurantID string) (bool, error)
 }
 type userUseCase struct {
 	userRepo           repository.UserRepository
 	userRestaurantRepo repository.UserRestaurantRepository
+	uploader           uploader.ImageUploader
 }
 
-func NewUserUseCase(userRepo repository.UserRepository, userRestaurantRepo repository.UserRestaurantRepository) UserUseCase {
+func NewUserUseCase(userRepo repository.UserRepository, userRestaurantRepo repository.UserRestaurantRepository, uploader uploader.ImageUploader) UserUseCase {
 	return &userUseCase{
 		userRepo:           userRepo,
 		userRestaurantRepo: userRestaurantRepo,
+		uploader:           uploader,
 	}
 }
 
@@ -75,6 +81,39 @@ func (u *userUseCase) UpdateUser(ctx context.Context, user *entity.User) (*entit
 		return nil, xerror.Internal("Can not update user")
 	}
 	return user, nil
+}
+
+func (u *userUseCase) UpdateImage(ctx context.Context, id, imageURl string) (*entity.User, error) {
+	oldUser, err := u.userRepo.GetByID(ctx, id)
+
+	if err != nil {
+		if utils.IsRecordNotFoundError(err) {
+			return nil, xerror.NotFound("User not found")
+		}
+		return nil, xerror.Internal("Database failed")
+	}
+	updatedUser, err := u.userRepo.UpdateImage(ctx, id, imageURl)
+	if err != nil {
+		return nil, err
+	}
+
+	if oldUser.Avatar != "" && oldUser.Avatar != imageURl && strings.Contains(oldUser.Avatar, "cloudinary.com") {
+		publicID := u.uploader.GetPublicIDFromURL(oldUser.Avatar)
+
+		if publicID != "" {
+			return nil, xerror.BadRequest("Can not get publicID")
+		}
+		go func(pID string) {
+			errDelete := u.uploader.DeleteImage(ctx, pID)
+
+			if errDelete != nil {
+				log.Printf("[CLEANUP ERROR]: Failed to delete old image from Cloudinary. PublicID: %s, Error: %v", pID, errDelete)
+			} else {
+				log.Printf("[CLEANUP SUCCESS]: Old image deleted. PublicID: %s", pID)
+			}
+		}(publicID)
+	}
+	return updatedUser, nil
 }
 
 // Get restaurant's members

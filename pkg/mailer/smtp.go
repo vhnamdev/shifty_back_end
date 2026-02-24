@@ -10,6 +10,7 @@ import (
 
 type EmailSender interface {
 	SendOTP(toEmail string, userName string, otp string) error
+	SendInviteCode(toEmail, inviterName, resName, positionName, inviteCode string) error
 }
 type EmailService struct {
 	Dialer *gomail.Dialer
@@ -19,6 +20,7 @@ type EmailService struct {
 func NewGoMail(host string, port int, user, pass string) *EmailService {
 	return &EmailService{
 		Dialer: gomail.NewDialer(host, port, user, pass),
+		User:   user,
 	}
 }
 
@@ -40,7 +42,7 @@ func parseTemplate(templateFileName string, data interface{}) (string, error) {
 	return buf.String(), nil
 }
 
-func (s *EmailService) SendOTP(toEmail string, userName string, otp string) error {
+func (s *EmailService) SendOTP(toEmail, userName, otp string) error {
 	data := OTPData{
 		Name: userName,
 		OTP:  otp,
@@ -55,6 +57,36 @@ func (s *EmailService) SendOTP(toEmail string, userName string, otp string) erro
 	m.SetHeader("From", s.User)
 	m.SetHeader("To", toEmail)
 	m.SetHeader("Subject", "Verify your account - Shifty")
+	m.SetBody("text/html", bodyContent)
+
+	return s.Dialer.DialAndSend(m)
+}
+
+type inviteTemplateData struct {
+	InviterName    string
+	RestaurantName string
+	PositionName   string
+	InviteCode     string
+}
+
+func (s *EmailService) SendInviteCode(toEmail, inviterName, resName, positionName, inviteCode string) error {
+	data := inviteTemplateData{
+		InviterName:    inviterName,
+		RestaurantName: resName,
+		PositionName:   positionName,
+		InviteCode:     inviteCode,
+	}
+
+	bodyContent, err := parseTemplate("invite_template.html", data)
+
+	if err != nil {
+		return err
+	}
+
+	m := gomail.NewMessage()
+	m.SetHeader("From", s.User)
+	m.SetHeader("To", toEmail)
+	m.SetHeader("Subject", "Restaurant invitation - Shifty")
 	m.SetBody("text/html", bodyContent)
 
 	return s.Dialer.DialAndSend(m)

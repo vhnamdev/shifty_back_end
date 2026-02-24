@@ -17,6 +17,7 @@ type UserRepository interface {
 	Delete(ctx context.Context, id string) error
 	Update(ctx context.Context, user *entity.User) error
 	UpdatePassword(ctx context.Context, id, newPassword string) error
+	UpdateImage(ctx context.Context, id, imageURl string) (*entity.User, error)
 	GetRestaurantMembers(ctx context.Context, page int, limit int, restaurantID string, filter *dto.UserFilter) ([]*entity.User, int64, error)
 }
 
@@ -85,6 +86,22 @@ func (r *userRepo) Update(ctx context.Context, user *entity.User) error {
 
 func (r *userRepo) UpdatePassword(ctx context.Context, id, newPassword string) error {
 	return r.db.WithContext(ctx).Model(&entity.User{}).Where("id = ?", id).Update("password", newPassword).Error
+}
+
+func (r *userRepo) UpdateImage(ctx context.Context, id, imageURl string) (*entity.User, error) {
+	var updatedUser entity.User
+
+	if err := r.db.
+		WithContext(ctx).
+		Model(&updatedUser).
+		Clauses(clause.Returning{}).
+		Where("id = ?", id).
+		Update("avatar", imageURl).
+		Error; err != nil {
+		return nil, err
+	}
+
+	return &updatedUser, nil
 }
 
 // Update user function

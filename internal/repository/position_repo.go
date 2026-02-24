@@ -10,6 +10,7 @@ import (
 
 type PositionRepository interface {
 	Create(ctx context.Context, position *entity.Position) (*entity.Position, error)
+	FindByID(ctx context.Context, ID string) (*entity.Position, error)
 }
 
 type positionRepo struct {
@@ -32,4 +33,19 @@ func (r *positionRepo) Create(ctx context.Context, position *entity.Position) (*
 	}
 
 	return position, nil
+}
+
+func (r *positionRepo) FindByID(ctx context.Context, ID string) (*entity.Position, error) {
+	var position entity.Position
+
+	if err := r.db.
+		WithContext(ctx).
+		Model(&entity.Position{}).
+		Where("id = ?", ID).
+		First(&position).
+		Error; err != nil {
+		return nil, err
+	}
+
+	return &position, nil
 }

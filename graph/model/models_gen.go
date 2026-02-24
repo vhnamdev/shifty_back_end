@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+type CreateInviteCodeInput struct {
+	Email      string `json:"email"`
+	ResID      string `json:"resID"`
+	PositionID string `json:"positionID"`
+}
+
 type CreatePositionInput struct {
 	Name                string `json:"name"`
 	Description         string `json:"description"`
@@ -21,6 +27,10 @@ type CreateRestaurantInput struct {
 	Email       string `json:"email"`
 	PhoneNumber string `json:"phoneNumber"`
 	Address     string `json:"address"`
+}
+
+type JoinRestaurantInput struct {
+	InviteCode string `json:"inviteCode"`
 }
 
 type Law struct {

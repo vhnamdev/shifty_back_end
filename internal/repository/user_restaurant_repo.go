@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"shifty-backend/internal/dto"
 	"shifty-backend/internal/entity"
 
 	"gorm.io/gorm"
@@ -14,6 +15,7 @@ type UserRestaurantRepository interface {
 	CheckAuthority(ctx context.Context, targetID, requestID, resID string) (bool, error)
 	CheckAuthorityToUpdate(ctx context.Context, userID, resID string) (bool, error)
 	CheckAuthorityToDelete(ctx context.Context, userID, resID string) (bool, error)
+	CheckAuthorityToInvite(ctx context.Context, userID, resID string) (bool, error)
 	Update(ctx context.Context, userID, resID string, updateData map[string]interface{}) (*entity.UserRestaurant, error)
 }
 
@@ -27,6 +29,7 @@ func NewUserRestaurantRepository(db *gorm.DB) UserRestaurantRepository {
 	}
 }
 
+// Create user restaurant
 func (r *userRestaurantRepo) Create(ctx context.Context, userRes *entity.UserRestaurant) (*entity.UserRestaurant, error) {
 	db := Extract(ctx, r.db)
 
@@ -58,14 +61,8 @@ func (r *userRestaurantRepo) CheckUserInRestaurant(ctx context.Context, userID, 
 // Check authorioty when the owner or managers want to update their members in their restaurant
 func (r *userRestaurantRepo) CheckAuthority(ctx context.Context, targetID, requestID, resID string) (bool, error) {
 
-	// Create a struct to save 2 variables are UserID and rank
-	type UserRank struct {
-		UserID string
-		Rank   int
-	}
-
 	// Create an array to save requestor and the member who is updated
-	var ranks []UserRank
+	var ranks []dto.UserRank
 
 	// Select 2 collumn are user_id and rank in position, join positions table into user restaurants table to get the rank
 	if err := r.db.
@@ -133,10 +130,27 @@ func (r *userRestaurantRepo) CheckAuthorityToDelete(ctx context.Context, userID,
 
 }
 
+func (r *userRestaurantRepo) CheckAuthorityToInvite(ctx context.Context, userID, resID string) (bool, error) {
+	var rank int
+
+	if err := r.db.WithContext(ctx).
+		Model(&entity.UserRestaurant{}).
+		Select("positions.rank").
+		Joins("JOIN positions ON user_restaurants.position_id = positions.id").
+		Where("user_restaurants.user_id = ? AND user_restaurants.restaurant_id = ?", userID, resID).
+		Scan(&rank).Error; err != nil {
+		return false, err
+	}
+	if rank == 0 {
+		return false, nil
+	}
+
+	return rank <= 3, nil
+
+}
+
 // Update position or ban member
 func (r *userRestaurantRepo) Update(ctx context.Context, userID, resID string, updateData map[string]interface{}) (*entity.UserRestaurant, error) {
-
-	var updatedRecord entity.UserRestaurant
 
 	//I have to use map to can update boolean field in database
 	if err := r.db.WithContext(ctx).
@@ -146,11 +160,15 @@ func (r *userRestaurantRepo) Update(ctx context.Context, userID, resID string, u
 		return nil, err
 	}
 
+	var updatedRecord entity.UserRestaurant
+
 	// Get the information again and return to usecase
-	r.db.WithContext(ctx).
+	if err := r.db.WithContext(ctx).
 		Preload("Position").
 		Preload("Restaurant").
 		Where("user_id = ? AND restaurant_id = ?", userID, resID).
-		First(&updatedRecord)
+		First(&updatedRecord).Error; err != nil {
+		return nil, err
+	}
 	return &updatedRecord, nil
 }
