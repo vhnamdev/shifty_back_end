@@ -55,6 +55,8 @@ func (r *RestaurantRepo) Update(ctx context.Context, resID string, updateData ma
 	return &updatedRestaurant, nil
 }
 
+
+// Update image of restaurant
 func (r *RestaurantRepo) UpdateImage(ctx context.Context, resID, imageURL string) (*entity.Restaurant, error) {
 	var updatedRestaurant entity.Restaurant
 

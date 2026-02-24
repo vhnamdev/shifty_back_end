@@ -83,7 +83,10 @@ func (u *userUseCase) UpdateUser(ctx context.Context, user *entity.User) (*entit
 	return user, nil
 }
 
+// Update user's avatar
 func (u *userUseCase) UpdateImage(ctx context.Context, id, imageURl string) (*entity.User, error) {
+
+	// Get user
 	oldUser, err := u.userRepo.GetByID(ctx, id)
 
 	if err != nil {
@@ -92,18 +95,25 @@ func (u *userUseCase) UpdateImage(ctx context.Context, id, imageURl string) (*en
 		}
 		return nil, xerror.Internal("Database failed")
 	}
+
+	// Update new image
 	updatedUser, err := u.userRepo.UpdateImage(ctx, id, imageURl)
 	if err != nil {
 		return nil, err
 	}
 
+	// Check old avatar is exist or not, check new image is equal old avatar and check is this image already uploaded to Cloudinary?
 	if oldUser.Avatar != "" && oldUser.Avatar != imageURl && strings.Contains(oldUser.Avatar, "cloudinary.com") {
+
+		// Get public ID
 		publicID := u.uploader.GetPublicIDFromURL(oldUser.Avatar)
 
 		if publicID != "" {
 			return nil, xerror.BadRequest("Can not get publicID")
 		}
 		go func(pID string) {
+
+			// Delete old image
 			errDelete := u.uploader.DeleteImage(ctx, pID)
 
 			if errDelete != nil {
