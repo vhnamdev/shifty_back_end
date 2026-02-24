@@ -15,11 +15,11 @@ import (
 
 type AuthHandler struct {
 	authUC   usecase.AuthUseCase
-	uploader *uploader.CloudinaryService
-	mailer   *mailer.EmailService
+	uploader uploader.ImageUploader
+	mailer   mailer.EmailSender
 }
 
-func NewAuthHandler(authUC usecase.AuthUseCase, uploader *uploader.CloudinaryService, mailer *mailer.EmailService) *AuthHandler {
+func NewAuthHandler(authUC usecase.AuthUseCase, uploader uploader.ImageUploader, mailer mailer.EmailSender) *AuthHandler {
 	return &AuthHandler{
 		authUC:   authUC,
 		uploader: uploader,
@@ -35,24 +35,21 @@ func (h *AuthHandler) RegisterLocal(c *fiber.Ctx) error {
 	if err := c.BodyParser(req); err != nil {
 		return xerror.BadRequest("Invalid request body")
 	}
-	ctx := c.Context()
-
-	avatarURL := ""
+	ctx := c.UserContext()
 
 	file, err := c.FormFile("avatar")
-
-	if err == nil {
-		url, errUpload := h.uploader.UploadImage(ctx, file)
-		if errUpload != nil {
-			return xerror.BadRequest("Fail to save avatar into Cloudinary")
-		}
-		avatarURL = url
+	if err != nil {
+		return xerror.BadRequest("Please choose image to upload")
+	}
+	imageURL, errUpload := h.uploader.UploadImage(ctx, file, "avatars")
+	if errUpload != nil {
+		return xerror.Internal("Fail to save avatar into Cloudinary")
 	}
 	newUser := &entity.User{
 		FullName: req.FullName,
 		Email:    req.Email,
 		Password: req.Password,
-		Avatar:   avatarURL,
+		Avatar:   imageURL,
 		Role:     constants.User,
 	}
 	err = h.authUC.RegisterLocal(ctx, newUser)
@@ -60,7 +57,7 @@ func (h *AuthHandler) RegisterLocal(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	return c.Status(200).JSON("OK")
+	return c.Status(200).JSON(fiber.Map{"message": "OK"})
 }
 
 // LoginLocal handles authentication with Email & Password
@@ -157,10 +154,10 @@ func (h *AuthHandler) SendOTP(c *fiber.Ctx) error {
 	err := h.authUC.SendOTP(ctx, req.Email, req.Purpose)
 
 	if err != nil {
-		return xerror.BadRequest("Can not send OTP")
+		return err
 	}
 
-	return c.Status(200).JSON("OK")
+	return c.Status(200).JSON(fiber.Map{"message": "OK"})
 }
 
 // Reset password
@@ -178,8 +175,8 @@ func (h *AuthHandler) ResetPassword(c *fiber.Ctx) error {
 	err := h.authUC.ResetPassword(ctx, req.Email, req.Password)
 
 	if err != nil {
-		return xerror.BadRequest("Reset password fail")
+		return err
 	}
 
-	return c.Status(200).JSON("Ok")
+	return c.Status(200).JSON(fiber.Map{"message": "OK"})
 }

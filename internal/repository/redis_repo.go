@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"shifty-backend/internal/dto"
 	"shifty-backend/internal/entity"
 	"shifty-backend/pkg/constants"
 	"shifty-backend/pkg/xerror"
@@ -32,6 +33,10 @@ type RedisRepository interface {
 	// Online
 	SetUserStatus(ctx context.Context, userID string, isOnline bool) error
 	GetUserStatus(ctx context.Context, userID string) (bool, error)
+
+	// Invite Code
+	SaveInviteCode(ctx context.Context, inviteCode, email, positonID, resID string) error
+	VerifyInviteCode(ctx context.Context, email, inviteCode string) (*dto.InviteData, error)
 }
 
 type redisRepo struct {
@@ -285,4 +290,55 @@ func (r *redisRepo) GetUserStatus(ctx context.Context, userID string) (bool, err
 		return false, err
 	}
 	return isOnline, nil
+}
+
+// Save Invite Code
+func (r *redisRepo) SaveInviteCode(ctx context.Context, inviteCode, email, positonID, resID string) error {
+
+	// Create key
+	inviteCodeKey := fmt.Sprintf("invite:%s", email)
+
+	// Put invite code and position id into struct
+	inviteData := dto.InviteData{
+		InviteCode:   inviteCode,
+		PositionID:   positonID,
+		RestaurantID: resID,
+	}
+
+	// Convert invited data to json to save with key
+	dataBytes, err := json.Marshal(inviteData)
+
+	if err != nil {
+		return xerror.Internal("Failed to encode invite data")
+	}
+
+	return r.client.Set(ctx, inviteCodeKey, dataBytes, 24*time.Hour).Err()
+}
+
+func (r *redisRepo) VerifyInviteCode(ctx context.Context, email, inviteCode string) (*dto.InviteData, error) {
+	inviteCodeKey := fmt.Sprintf("invite:%s", email)
+
+	val, err := r.client.Get(ctx, inviteCodeKey).Result()
+
+	if err == redis.Nil {
+		return nil, xerror.BadRequest("Invite code expired or invalid")
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	var inviteData dto.InviteData
+	if err := json.Unmarshal([]byte(val), &inviteData); err != nil {
+		return nil, xerror.Internal("Can not read invite data")
+	}
+
+	if inviteData.InviteCode != inviteCode {
+		return nil, xerror.BadRequest("Incorrect invitation code")
+	}
+
+	_ = r.client.Del(ctx, inviteCodeKey).Err()
+
+	return &inviteData, nil
+
 }

@@ -119,14 +119,14 @@ func (u *authUseCase) LoginLocal(ctx context.Context, email string, password str
 
 	// Save user cache
 	err = u.redisRepo.SaveUserCache(ctx, &entity.UserCache{
-		UserID:       user.ID.String(),
-		UserName:     user.FullName,
-		Avatar:       user.Avatar,
-		Role:         user.Role,
-		Email:        user.Email,
-		PhoneNumber:  utils.GetString(user.PhoneNumber),
-		Address:      utils.GetString(user.Address),
-		CreatedAt:    time.Now(),
+		UserID:      user.ID.String(),
+		UserName:    user.FullName,
+		Avatar:      user.Avatar,
+		Role:        user.Role,
+		Email:       user.Email,
+		PhoneNumber: utils.GetString(user.PhoneNumber),
+		Address:     utils.GetString(user.Address),
+		CreatedAt:   time.Now(),
 	})
 
 	if err != nil {
@@ -265,8 +265,10 @@ func (u *authUseCase) SendOTP(ctx context.Context, email string, purpose string)
 	}
 
 	// Generate OTP with 5 digits
-	otp := utils.GenerateOTP(5)
-
+	otp, err := utils.GenerateOTP(6)
+	if err != nil {
+		return xerror.Internal("System error, please try again later")
+	}
 	// Save OTP into Redis database
 	err = u.redisRepo.SaveOTP(ctx, email, otp, otpPurpose)
 
