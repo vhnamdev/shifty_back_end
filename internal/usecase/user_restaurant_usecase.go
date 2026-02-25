@@ -36,3 +36,4 @@ func (u *userRestaurantUseCase) UpdateStaffByManager(ctx context.Context, reques
 	}
 	return updatedStaff, nil
 }
+

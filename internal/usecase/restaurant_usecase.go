@@ -95,7 +95,7 @@ func (u *restaurantUseCase) Create(ctx context.Context, userID string, restauran
 		userRes := &entity.UserRestaurant{
 			UserID:       parsedUserID,
 			RestaurantID: createdRes.ID,
-			PositionID:   createdPos.ID,
+			PositionID:   &createdPos.ID,
 		}
 
 		_, err = u.userRestaurantRepo.Create(txCtx, userRes)
@@ -203,9 +203,16 @@ func (u *restaurantUseCase) UpdateImage(ctx context.Context, userID, resID, imag
 // Delete restaurant
 func (u *restaurantUseCase) Delete(ctx context.Context, userID, resID string) error {
 
+	_, err := u.restaurantRepo.GetByID(ctx, resID)
+
+	if err != nil {
+		if utils.IsRecordNotFoundError(err) {
+			return xerror.NotFound("Restaurant not found")
+		}
+		return xerror.Internal("Database failed")
+	}
 	// Similar to the update function, this function has to check authority of user
 	isAuthority, err := u.userRestaurantRepo.CheckAuthorityToDelete(ctx, userID, resID)
-
 	if err != nil {
 		return xerror.Internal("Authority cannot be verified")
 	}
@@ -214,11 +221,28 @@ func (u *restaurantUseCase) Delete(ctx context.Context, userID, resID string) er
 		return xerror.Forbidden("You are not allowed to update restaurant")
 	}
 
-	// Delete
-	if err = u.restaurantRepo.Delete(ctx, resID); err != nil {
-		return xerror.Internal("Can not delete this restaurant")
-	}
+	// Open transaction and delete restaurant with related informations
+	err = u.transactor.WithTransaction(ctx, func(txCtx context.Context) error {
+		err = u.userRestaurantRepo.DeleteAllByRestaurantID(txCtx, resID)
 
+		if err != nil {
+			return xerror.Internal("Can not delete user restaurant")
+		}
+		err = u.positionRepo.DeleteAllByRestaurantID(txCtx, resID)
+		if err != nil {
+			return xerror.Internal("Can not delete position")
+		}
+		err = u.restaurantRepo.Delete(txCtx, resID)
+		if err != nil {
+			return xerror.Internal("Can not delete restaurant")
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return xerror.Internal("Failed to delete restaurant")
+	}
 	return nil
 
 }
@@ -290,7 +314,7 @@ func (u *restaurantUseCase) CreateInviteCode(ctx context.Context, userID, email,
 		return xerror.Internal("Save invite code failed")
 	}
 
-	position, err := u.positionRepo.FindByID(ctx, positionID)
+	position, err := u.positionRepo.FindByID(ctx, positionID, resID)
 
 	if err != nil {
 		if utils.IsRecordNotFoundError(err) {
@@ -366,7 +390,7 @@ func (u *restaurantUseCase) JoinRestaurant(ctx context.Context, userID, inviteCo
 	}
 	userRes := &entity.UserRestaurant{
 		RestaurantID: resUUID,
-		PositionID:   posUUID,
+		PositionID:   &posUUID,
 		UserID:       userUUID,
 		IsBanned:     false,
 	}

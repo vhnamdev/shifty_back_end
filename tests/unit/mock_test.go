@@ -194,6 +194,18 @@ func (m *MockUserRestaurantRepo) CheckAuthorityToInvite(ctx context.Context, use
 	args := m.Called(ctx, userID, resID)
 	return args.Bool(0), args.Error(1)
 }
+func (m *MockUserRestaurantRepo) DeleteAllByRestaurantID(ctx context.Context, resID string) error {
+	args := m.Called(ctx, resID)
+	return args.Error(0)
+}
+func (m *MockUserRestaurantRepo) DeleteAllByUserID(ctx context.Context, userID string) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
+func (m *MockUserRestaurantRepo) SetPositionNull(ctx context.Context, posID, resID string) error {
+	args := m.Called(ctx, posID, resID)
+	return args.Error(0)
+}
 
 // ===== MOCK RESTAURANT REPO =====
 type MockRestaurantRepo struct{ mock.Mock }
@@ -246,8 +258,40 @@ func (m *MockPositionRepo) Create(ctx context.Context, position *entity.Position
 	}
 	return args.Get(0).(*entity.Position), args.Error(1)
 }
-func (m *MockPositionRepo) FindByID(ctx context.Context, id string) (*entity.Position, error) {
-	args := m.Called(ctx, id)
+
+
+func (m *MockPositionRepo) FindByID(ctx context.Context, posID, resID string) (*entity.Position, error) {
+	args := m.Called(ctx, posID, resID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*entity.Position), args.Error(1)
+}
+
+
+func (m *MockPositionRepo) GetAllByRestaurantID(ctx context.Context, resID string) ([]*entity.Position, error) {
+	args := m.Called(ctx, resID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*entity.Position), args.Error(1)
+}
+
+
+func (m *MockPositionRepo) Delete(ctx context.Context, posID, resID string) error {
+	args := m.Called(ctx, posID, resID)
+	return args.Error(0)
+}
+
+
+func (m *MockPositionRepo) DeleteAllByRestaurantID(ctx context.Context, resID string) error {
+	args := m.Called(ctx, resID)
+	return args.Error(0)
+}
+
+
+func (m *MockPositionRepo) Update(ctx context.Context, id string, updateData map[string]interface{}) (*entity.Position, error) {
+	args := m.Called(ctx, id, updateData)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

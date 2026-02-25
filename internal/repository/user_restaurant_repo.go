@@ -4,6 +4,7 @@ import (
 	"context"
 	"shifty-backend/internal/dto"
 	"shifty-backend/internal/entity"
+	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -17,6 +18,9 @@ type UserRestaurantRepository interface {
 	CheckAuthorityToDelete(ctx context.Context, userID, resID string) (bool, error)
 	CheckAuthorityToInvite(ctx context.Context, userID, resID string) (bool, error)
 	Update(ctx context.Context, userID, resID string, updateData map[string]interface{}) (*entity.UserRestaurant, error)
+	DeleteAllByUserID(ctx context.Context, userID string) error
+	DeleteAllByRestaurantID(ctx context.Context, resID string) error
+	SetPositionNull(ctx context.Context, posID, resID string) error
 }
 
 type userRestaurantRepo struct {
@@ -171,4 +175,30 @@ func (r *userRestaurantRepo) Update(ctx context.Context, userID, resID string, u
 		return nil, err
 	}
 	return &updatedRecord, nil
+}
+
+func (r *userRestaurantRepo) DeleteAllByUserID(ctx context.Context, userID string) error {
+	db := Extract(ctx, r.db)
+
+	result := db.WithContext(ctx).Model(&entity.UserRestaurant{}).Where("user_id = ?", userID).Updates(map[string]interface{}{
+		"is_deleted": true,
+		"deleted_at": time.Now(),
+	})
+
+	return result.Error
+}
+
+func (r *userRestaurantRepo) DeleteAllByRestaurantID(ctx context.Context, resID string) error {
+	db := Extract(ctx, r.db)
+
+	return db.WithContext(ctx).Model(&entity.UserRestaurant{}).Where("restaurant_id = ?", resID).Updates(map[string]interface{}{
+		"is_deleted": true,
+		"deleted_at": time.Now(),
+	}).Error
+}
+
+func (r *userRestaurantRepo) SetPositionNull(ctx context.Context, posID, resID string) error {
+	db := Extract(ctx, r.db)
+
+	return db.WithContext(ctx).Model(&entity.UserRestaurant{}).Where("position_id = ? AND restaurant_id", posID, resID).Update("position_id", nil).Error
 }
