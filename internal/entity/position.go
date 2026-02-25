@@ -15,6 +15,7 @@ type Position struct {
 	CanUpdateRestaurant bool               `gorm:"default:false" json:"can_update_restaurant"`
 	CanDeleteRestaurant bool               `gorm:"default:false" json:"can_delete_restaurant"`
 	Salary              *int64             `gorm:"type:bigint" json:"salary"`
+	IsDeleted           bool               `gorm:"default:false" json:"is_deleted"`
 	RestaurantID        uuid.UUID          `gorm:"type:uuid;not null" json:"restaurant_id"`
 	Restaurant          Restaurant         `gorm:"foreignKey:RestaurantID" json:"restaurant,omitempty"`
 	UserRestaurants     []UserRestaurant   `gorm:"foreignKey:PositionID" json:"users,omitempty"`
@@ -23,6 +24,7 @@ type Position struct {
 	ShiftAssignments    []ShiftAssignment  `gorm:"foreignKey:PositionID" json:"shift_assignment,omitempty"`
 	CreatedAt           time.Time          `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt           time.Time          `json:"updated_at"`
+	DeletedAt           time.Time          `json:"deleted_at"`
 }
 
 func (p *Position) BeforeCreate(tx *gorm.DB) (err error) {

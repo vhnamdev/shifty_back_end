@@ -26,13 +26,17 @@ type userUseCase struct {
 	userRepo           repository.UserRepository
 	userRestaurantRepo repository.UserRestaurantRepository
 	uploader           uploader.ImageUploader
+	transactor         repository.Transactor
+	restaurantRepo     repository.RestaurantRepository
 }
 
-func NewUserUseCase(userRepo repository.UserRepository, userRestaurantRepo repository.UserRestaurantRepository, uploader uploader.ImageUploader) UserUseCase {
+func NewUserUseCase(userRepo repository.UserRepository, userRestaurantRepo repository.UserRestaurantRepository, uploader uploader.ImageUploader, transactor repository.Transactor, restaurantRepo repository.RestaurantRepository) UserUseCase {
 	return &userUseCase{
 		userRepo:           userRepo,
 		userRestaurantRepo: userRestaurantRepo,
 		uploader:           uploader,
+		transactor:         transactor,
+		restaurantRepo:     restaurantRepo,
 	}
 }
 
@@ -67,9 +71,34 @@ func (u *userUseCase) FindUserByID(ctx context.Context, id string) (*entity.User
 }
 
 // Delete User by ID, change IsDeleted field to true
-func (u *userUseCase) DeleteUser(ctx context.Context, id string) error {
-	if err := u.userRepo.Delete(ctx, id); err != nil {
-		return xerror.Internal("Can not delete this user")
+func (u *userUseCase) DeleteUser(ctx context.Context, userID string) error {
+	_, err := u.userRepo.GetByID(ctx, userID)
+
+	if err != nil {
+		if utils.IsRecordNotFoundError(err) {
+			return xerror.NotFound("User not found")
+		}
+		return xerror.Internal("Database failed")
+	}
+
+	err = u.transactor.WithTransaction(ctx, func(txCtx context.Context) error {
+		err := u.userRestaurantRepo.DeleteAllByUserID(txCtx, userID)
+
+		if err != nil {
+			return xerror.Internal("Can not delete user restaurant")
+		}
+
+		err = u.userRepo.Delete(txCtx, userID)
+
+		if err != nil {
+			return xerror.Internal("Can not delete user")
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return xerror.Internal("Failed to delete user")
 	}
 	return nil
 }

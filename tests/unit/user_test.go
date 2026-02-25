@@ -14,8 +14,6 @@ import (
 	"gorm.io/gorm"
 )
 
-
-
 func TestUserUseCase_FindUserByEmail(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -57,12 +55,13 @@ func TestUserUseCase_FindUserByEmail(t *testing.T) {
 			mockRepo := new(MockUserRepo)
 			mockUserResRepo := new(MockUserRestaurantRepo)
 			mockUploader := new(MockUploader)
-
+			mockTransactor := new(MockTransactor)
+			mockRestaurantRepo := new(MockRestaurantRepo)
 			if tt.mockSetup != nil {
 				tt.mockSetup(mockRepo)
 			}
 
-			userUC := usecase.NewUserUseCase(mockRepo, mockUserResRepo, mockUploader)
+			userUC := usecase.NewUserUseCase(mockRepo, mockUserResRepo, mockUploader, mockTransactor, mockRestaurantRepo)
 			user, err := userUC.FindUserByEmail(context.Background(), tt.email)
 
 			if tt.expectedError {
@@ -111,12 +110,13 @@ func TestUserUseCase_FindUserByID(t *testing.T) {
 			mockRepo := new(MockUserRepo)
 			mockUserResRepo := new(MockUserRestaurantRepo)
 			mockUploader := new(MockUploader)
-
+			mockTransactor := new(MockTransactor)
+			mockRestaurantRepo := new(MockRestaurantRepo)
 			if tt.mockSetup != nil {
 				tt.mockSetup(mockRepo)
 			}
 
-			userUC := usecase.NewUserUseCase(mockRepo, mockUserResRepo, mockUploader)
+			userUC := usecase.NewUserUseCase(mockRepo, mockUserResRepo, mockUploader, mockTransactor, mockRestaurantRepo)
 			_, err := userUC.FindUserByID(context.Background(), tt.id)
 
 			if tt.expectedError {

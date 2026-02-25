@@ -106,7 +106,7 @@ func main() {
 	// ------------------------------USECASE----------------------------------
 
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenMaster, timeoutContext, redisRepo, emailService, googleService)
-	userUseCase := usecase.NewUserUseCase(userRepo, userRestaurantRepo, cloudinaryService)
+	userUseCase := usecase.NewUserUseCase(userRepo, userRestaurantRepo, cloudinaryService,transactor,restaurantRepo)
 	userRestaurantUseCase := usecase.NewUserRestaurantUseCase(userRestaurantRepo)
 	restaurantUseCase := usecase.NewRestaurantUseCase(transactor, restaurantRepo, userRestaurantRepo, positionRepo, redisRepo, userRepo, emailService, cloudinaryService)
 	// ------------------------------HANDLER----------------------------------
