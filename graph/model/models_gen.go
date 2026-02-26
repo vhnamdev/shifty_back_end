@@ -81,6 +81,7 @@ type Restaurant struct {
 
 type UpdatePositionInput struct {
 	ID                  string  `json:"id"`
+	RestaurantID        string  `json:"restaurantID"`
 	Name                *string `json:"name,omitempty"`
 	Description         *string `json:"description,omitempty"`
 	Rank                *int    `json:"rank,omitempty"`

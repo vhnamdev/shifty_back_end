@@ -10,6 +10,10 @@ import (
 
 type PositionUseCase interface {
 	Create(ctx context.Context, position *entity.Position) (*entity.Position, error)
+	Update(ctx context.Context, posID, userID, resID string, updateData map[string]interface{}) (*entity.Position, error)
+	Delete(ctx context.Context, userID, resID, posID string) error
+	FindByID(ctx context.Context, posID, userID, resID string) (*entity.Position, error)
+	GetAllByRestaurantID(ctx context.Context, resID, userID string) ([]*entity.Position, error)
 }
 
 type positionUseCase struct {
@@ -47,7 +51,7 @@ func (u *positionUseCase) Update(ctx context.Context, posID, userID, resID strin
 		return nil, xerror.Forbidden("You can not allowed to update position")
 	}
 
-	updatePosition, err := u.positionRepo.Update(ctx, posID, updateData)
+	updatePosition, err := u.positionRepo.Update(ctx, posID, resID, updateData)
 
 	if err != nil {
 		return nil, xerror.Internal("Can not update position")

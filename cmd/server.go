@@ -106,9 +106,10 @@ func main() {
 	// ------------------------------USECASE----------------------------------
 
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenMaster, timeoutContext, redisRepo, emailService, googleService)
-	userUseCase := usecase.NewUserUseCase(userRepo, userRestaurantRepo, cloudinaryService,transactor,restaurantRepo)
+	userUseCase := usecase.NewUserUseCase(userRepo, userRestaurantRepo, cloudinaryService, transactor, restaurantRepo)
 	userRestaurantUseCase := usecase.NewUserRestaurantUseCase(userRestaurantRepo)
 	restaurantUseCase := usecase.NewRestaurantUseCase(transactor, restaurantRepo, userRestaurantRepo, positionRepo, redisRepo, userRepo, emailService, cloudinaryService)
+	positionUseCase := usecase.NewPositionUseCase(positionRepo, userRestaurantRepo, transactor)
 	// ------------------------------HANDLER----------------------------------
 
 	authHandler := handler.NewAuthHandler(authUseCase, cloudinaryService, emailService)
@@ -121,6 +122,7 @@ func main() {
 		UserUseCase:           userUseCase,
 		UserRestaurantUseCase: userRestaurantUseCase,
 		RestaurantUseCase:     restaurantUseCase,
+		PositionUseCase:       positionUseCase,
 	}
 
 	playgroundHandler, queryHandler := graphql.NewGraphQLHandler(gqlResolver)
