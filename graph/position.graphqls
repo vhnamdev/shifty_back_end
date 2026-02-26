@@ -36,12 +36,12 @@ input UpdatePositionInput {
 }
 
 extend type Query {
-  position(id: ID!, restaurantID: String!): Position!
-  positionsByRestaurant(restaurantID: String!): [Position!]!
+  position(posID: ID!, resID: String!): Position!
+  positionsByRestaurant(resID: String!): [Position!]!
 }
 
 extend type Mutation {
   createPosition(input: CreatePositionInput!): Position!
   updatePosition(input: UpdatePositionInput!): Position!
-  deletePosition(id: ID!, restaurantID: String!): Boolean! 
+  deletePosition(posID: ID!, resID: String!): Boolean! 
 }

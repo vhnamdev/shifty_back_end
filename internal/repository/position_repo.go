@@ -15,7 +15,7 @@ type PositionRepository interface {
 	GetAllByRestaurantID(ctx context.Context, resID string) ([]*entity.Position, error)
 	Delete(ctx context.Context, posID, resID string) error
 	DeleteAllByRestaurantID(ctx context.Context, resID string) error
-	Update(ctx context.Context, id string, updateData map[string]interface{}) (*entity.Position, error)
+	Update(ctx context.Context, posID, resID string, updateData map[string]interface{}) (*entity.Position, error)
 }
 
 type positionRepo struct {
@@ -40,10 +40,10 @@ func (r *positionRepo) Create(ctx context.Context, position *entity.Position) (*
 	return position, nil
 }
 
-func (r *positionRepo) Update(ctx context.Context, id string, updateData map[string]interface{}) (*entity.Position, error) {
+func (r *positionRepo) Update(ctx context.Context, posID, resID string, updateData map[string]interface{}) (*entity.Position, error) {
 	var updatedPosition entity.Position
 
-	result := r.db.WithContext(ctx).Model(&updatedPosition).Where("id = ?", id).Updates(updateData)
+	result := r.db.WithContext(ctx).Model(&updatedPosition).Clauses(clause.Returning{}).Where("id = ? AND restaurant_id = ?", posID, resID).Updates(updateData)
 
 	if result.Error != nil {
 		return nil, result.Error
