@@ -14,6 +14,7 @@ import (
 	"shifty-backend/internal/usecase"
 	"shifty-backend/pkg/database"
 	"shifty-backend/pkg/mailer"
+	"shifty-backend/pkg/monitoring"
 	"shifty-backend/pkg/token"
 	"shifty-backend/pkg/uploader"
 	"syscall"
@@ -44,6 +45,14 @@ func main() {
 			log.Fatal("Can not disconnect PostgresSQL Database!")
 		}
 	}()
+
+	if cfg.SentryDSN != "" {
+		err := monitoring.Init(cfg.SentryDSN, cfg.AppEnv, cfg.SentryTraceRate)
+		if err != nil {
+			log.Printf("[SENTRY] Sentry initialization failed: %v", err)
+		}
+	}
+	defer monitoring.Flush()
 
 	// Connect to Redis Database
 	redisClient := database.ConnectRedis(cfg)
