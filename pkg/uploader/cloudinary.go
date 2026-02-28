@@ -2,19 +2,25 @@ package uploader
 
 import (
 	"context"
+	"fmt"
 	"mime/multipart"
-	"regexp"
+	"shifty-backend/pkg/utils"
 
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 )
 
+type ImageUploader interface {
+	UploadImage(ctx context.Context, file *multipart.FileHeader, subFolder string) (string, error)
+	DeleteImage(ctx context.Context, publicID string) error
+	GetPublicIDFromURL(url string) string
+}
 type CloudinaryService struct {
 	client     *cloudinary.Cloudinary
-	folderName string
+	baseFolder string
 }
 
-func NewCloudinary(cloudName, apiKey, apiSecret, folderName string) (*CloudinaryService, error) {
+func NewCloudinary(cloudName, apiKey, apiSecret, baseFolder string) (*CloudinaryService, error) {
 	cld, err := cloudinary.NewFromParams(cloudName, apiKey, apiSecret)
 	if err != nil {
 		return nil, err
@@ -22,12 +28,12 @@ func NewCloudinary(cloudName, apiKey, apiSecret, folderName string) (*Cloudinary
 
 	return &CloudinaryService{
 		client:     cld,
-		folderName: folderName,
+		baseFolder: baseFolder,
 	}, nil
 }
 
 // Func Upload Image
-func (c *CloudinaryService) UploadImage(ctx context.Context, file *multipart.FileHeader) (string, error) {
+func (c *CloudinaryService) UploadImage(ctx context.Context, file *multipart.FileHeader, subFolder string) (string, error) {
 
 	// Open the file
 	src, err := file.Open()
@@ -39,10 +45,13 @@ func (c *CloudinaryService) UploadImage(ctx context.Context, file *multipart.Fil
 
 	// close file when exist this func
 	defer src.Close()
-
+	fullFolder := c.baseFolder
+	if subFolder != "" {
+		fullFolder = fmt.Sprintf("%s/%s", c.baseFolder, subFolder)
+	}
 	// Upload file into folder
 	resp, err := c.client.Upload.Upload(ctx, src, uploader.UploadParams{
-		Folder: c.folderName,
+		Folder: fullFolder,
 	})
 
 	if err != nil {
@@ -64,12 +73,11 @@ func (c *CloudinaryService) DeleteImage(ctx context.Context, publicID string) er
 }
 
 // GetPublicIDFromURL extracts the Public ID from a Cloudinary URL.
-func GetPublicIDFromURL(url string) string {
+func (c *CloudinaryService) GetPublicIDFromURL(url string) string {
 	// Regex matches the string after "/upload/" (and optional version like v123/)
 	// up to the first dot (file extension).
-	re := regexp.MustCompile(`/upload/(?:v\d+/)?([^.]+)\.`)
 
-	match := re.FindStringSubmatch(url)
+	match := utils.CloudinaryPublicIDRegex.FindStringSubmatch(url)
 
 	if len(match) > 1 {
 		return match[1]

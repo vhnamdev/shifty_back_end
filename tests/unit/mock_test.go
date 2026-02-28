@@ -2,6 +2,7 @@ package unit_test
 
 import (
 	"context"
+	"mime/multipart"
 	"time"
 
 	"shifty-backend/internal/dto"
@@ -20,6 +21,22 @@ func newTestTokenMaster() *token.TokenMaster {
 		time.Minute*15,
 		time.Hour*24,
 	)
+}
+
+// ===== MOCK UPLOADER =====
+type MockUploader struct{ mock.Mock }
+
+func (m *MockUploader) UploadImage(ctx context.Context, file *multipart.FileHeader, subFolder string) (string, error) {
+	args := m.Called(ctx, file, subFolder)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockUploader) DeleteImage(ctx context.Context, publicID string) error {
+	return m.Called(ctx, publicID).Error(0)
+}
+
+func (m *MockUploader) GetPublicIDFromURL(url string) string {
+	return m.Called(url).String(0)
 }
 
 // ===== MOCK USER REPO =====
@@ -51,6 +68,10 @@ func (m *MockUserRepo) Update(ctx context.Context, user *entity.User) error {
 }
 func (m *MockUserRepo) UpdatePassword(ctx context.Context, id, newPassword string) error {
 	return m.Called(ctx, id, newPassword).Error(0)
+}
+func (m *MockUserRepo) UpdateImage(ctx context.Context, id, imageURL string) (*entity.User, error) {
+	args := m.Called(ctx, id, imageURL)
+	return args.Get(0).(*entity.User), args.Error(1)
 }
 func (m *MockUserRepo) Delete(ctx context.Context, id string) error {
 	return m.Called(ctx, id).Error(0)
@@ -116,11 +137,24 @@ func (m *MockRedisRepo) GetUserStatus(ctx context.Context, userID string) (bool,
 	return args.Bool(0), args.Error(1)
 }
 
+func (m *MockRedisRepo) SaveInviteCode(ctx context.Context, inviteCode, email, positonID, resID string) error {
+	args := m.Called(ctx, inviteCode, email, positonID, resID)
+	return args.Error(0)
+}
+
+func (m *MockRedisRepo) VerifyInviteCode(ctx context.Context, email, inviteCode string) (*dto.InviteData, error) {
+	args := m.Called(ctx, email, inviteCode)
+	return args.Get(0).(*dto.InviteData), args.Error(1)
+}
+
 // ===== MOCK MAILER =====
 type MockMailer struct{ mock.Mock }
 
 func (m *MockMailer) SendOTP(email, name, otp string) error {
 	return m.Called(email, name, otp).Error(0)
+}
+func (m *MockMailer) SendInviteCode(toEmail, inviterName, resName, positionName, inviteCode string) error {
+	return m.Called(toEmail, inviterName, resName, positionName, inviteCode).Error(0)
 }
 
 // ===== MOCK USER RESTAURANT REPO =====
@@ -155,6 +189,22 @@ func (m *MockUserRestaurantRepo) Update(ctx context.Context, userID, resID strin
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*entity.UserRestaurant), args.Error(1)
+}
+func (m *MockUserRestaurantRepo) CheckAuthorityToInvite(ctx context.Context, userID, resID string) (bool, error) {
+	args := m.Called(ctx, userID, resID)
+	return args.Bool(0), args.Error(1)
+}
+func (m *MockUserRestaurantRepo) DeleteAllByRestaurantID(ctx context.Context, resID string) error {
+	args := m.Called(ctx, resID)
+	return args.Error(0)
+}
+func (m *MockUserRestaurantRepo) DeleteAllByUserID(ctx context.Context, userID string) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
+func (m *MockUserRestaurantRepo) SetPositionNull(ctx context.Context, posID, resID string) error {
+	args := m.Called(ctx, posID, resID)
+	return args.Error(0)
 }
 
 // ===== MOCK RESTAURANT REPO =====
@@ -192,11 +242,51 @@ func (m *MockRestaurantRepo) GetMyRestaurants(ctx context.Context, userID string
 	return args.Get(0).([]*entity.Restaurant), args.Error(1)
 }
 
+func (m *MockRestaurantRepo) UpdateImage(ctx context.Context, resID, imageURl string) (*entity.Restaurant, error) {
+	args := m.Called(ctx, resID, imageURl)
+
+	return args.Get(0).(*entity.Restaurant), args.Error(1)
+}
+
 // ===== MOCK POSITION REPO =====
 type MockPositionRepo struct{ mock.Mock }
 
 func (m *MockPositionRepo) Create(ctx context.Context, position *entity.Position) (*entity.Position, error) {
 	args := m.Called(ctx, position)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*entity.Position), args.Error(1)
+}
+
+func (m *MockPositionRepo) FindByID(ctx context.Context, posID, resID string) (*entity.Position, error) {
+	args := m.Called(ctx, posID, resID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*entity.Position), args.Error(1)
+}
+
+func (m *MockPositionRepo) GetAllByRestaurantID(ctx context.Context, resID string) ([]*entity.Position, error) {
+	args := m.Called(ctx, resID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*entity.Position), args.Error(1)
+}
+
+func (m *MockPositionRepo) Delete(ctx context.Context, posID, resID string) error {
+	args := m.Called(ctx, posID, resID)
+	return args.Error(0)
+}
+
+func (m *MockPositionRepo) DeleteAllByRestaurantID(ctx context.Context, resID string) error {
+	args := m.Called(ctx, resID)
+	return args.Error(0)
+}
+
+func (m *MockPositionRepo) Update(ctx context.Context, posID, resID string, updateData map[string]interface{}) (*entity.Position, error) {
+	args := m.Called(ctx, posID, resID, updateData)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

@@ -53,12 +53,15 @@ func TestUserUseCase_FindUserByEmail(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := new(MockUserRepo)
-			mockUserResRepo := new(MockUserRestaurantRepo) 
+			mockUserResRepo := new(MockUserRestaurantRepo)
+			mockUploader := new(MockUploader)
+			mockTransactor := new(MockTransactor)
+			mockRestaurantRepo := new(MockRestaurantRepo)
 			if tt.mockSetup != nil {
 				tt.mockSetup(mockRepo)
 			}
 
-			userUC := usecase.NewUserUseCase(mockRepo, mockUserResRepo)
+			userUC := usecase.NewUserUseCase(mockRepo, mockUserResRepo, mockUploader, mockTransactor, mockRestaurantRepo)
 			user, err := userUC.FindUserByEmail(context.Background(), tt.email)
 
 			if tt.expectedError {
@@ -105,12 +108,15 @@ func TestUserUseCase_FindUserByID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := new(MockUserRepo)
-			mockUserResRepo := new(MockUserRestaurantRepo) 
+			mockUserResRepo := new(MockUserRestaurantRepo)
+			mockUploader := new(MockUploader)
+			mockTransactor := new(MockTransactor)
+			mockRestaurantRepo := new(MockRestaurantRepo)
 			if tt.mockSetup != nil {
 				tt.mockSetup(mockRepo)
 			}
 
-			userUC := usecase.NewUserUseCase(mockRepo, mockUserResRepo)
+			userUC := usecase.NewUserUseCase(mockRepo, mockUserResRepo, mockUploader, mockTransactor, mockRestaurantRepo)
 			_, err := userUC.FindUserByID(context.Background(), tt.id)
 
 			if tt.expectedError {

@@ -8,39 +8,41 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type UserHandler struct {
-	userUC   usecase.UserUseCase
-	uploader uploader.ImageUploader
+type RestaurantHandler struct {
+	restaurantUC usecase.RestaurantUseCase
+	uploader     uploader.CloudinaryService
 }
 
-func NewUserHandler(userUC usecase.UserUseCase, uploader uploader.ImageUploader) *UserHandler {
-	return &UserHandler{
-		userUC:   userUC,
-		uploader: uploader,
+func NewRestaurantHandler(restaurantUC usecase.RestaurantUseCase, uploader uploader.CloudinaryService) *RestaurantHandler {
+	return &RestaurantHandler{
+		restaurantUC: restaurantUC,
+		uploader:     uploader,
 	}
 }
 
-func (h *UserHandler) UpdateAvatar(c *fiber.Ctx) error {
+func (h *RestaurantHandler) UpdateImage(c *fiber.Ctx) error {
+	resID := c.Params("id")
+	if resID == "" {
+		return xerror.BadRequest("Restaurant ID is required")
+	}
+
 	ctx := c.UserContext()
+
 	userID, ok := ctx.Value("user_id").(string)
 
 	if !ok || userID == "" {
 		return xerror.BadRequest("You are not logged in")
 	}
-
 	file, err := c.FormFile("avatar")
-
 	if err != nil {
 		return xerror.BadRequest("Please choose image to upload")
 	}
-
 	imageURL, errUpload := h.uploader.UploadImage(ctx, file, "restaurants")
-
 	if errUpload != nil {
 		return xerror.Internal("Fail to save avatar into Cloudinary")
 	}
 
-	updatedUser, err := h.userUC.UpdateImage(ctx, userID, imageURL)
+	updatedRestaurant, err := h.restaurantUC.UpdateImage(ctx, userID, resID, imageURL)
 
 	if err != nil {
 		return err
@@ -48,6 +50,6 @@ func (h *UserHandler) UpdateAvatar(c *fiber.Ctx) error {
 
 	return c.Status(200).JSON(fiber.Map{
 		"message": "Update avatar successful",
-		"data":    updatedUser,
+		"data":    updatedRestaurant,
 	})
 }

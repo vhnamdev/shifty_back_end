@@ -56,6 +56,10 @@ type Config struct {
 
 	// --------Context Configuration-----------
 	ContextTimeout int `mapstructure:"CONTEXT_TIMEOUT"`
+
+	// --------Sentry Configuration-----------
+	SentryDSN       string  `mapstructure:"SENTRY_DSN"`
+	SentryTraceRate float64 `mapstructure:"SENTRY_TRACES_SAMPLE_RATE"`
 }
 
 func LoadConfig() (config *Config, err error) {

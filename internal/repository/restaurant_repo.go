@@ -11,6 +11,7 @@ import (
 type RestaurantRepository interface {
 	Create(ctx context.Context, restaurant *entity.Restaurant) (*entity.Restaurant, error)
 	Update(ctx context.Context, resID string, updateData map[string]interface{}) (*entity.Restaurant, error)
+	UpdateImage(ctx context.Context, resID, imageURL string) (*entity.Restaurant, error)
 	Delete(ctx context.Context, id string) error
 	GetByID(ctx context.Context, id string) (*entity.Restaurant, error)
 	GetMyRestaurants(ctx context.Context, userID string) ([]*entity.Restaurant, error)
@@ -43,24 +44,39 @@ func (r *RestaurantRepo) Update(ctx context.Context, resID string, updateData ma
 	var updatedRestaurant entity.Restaurant
 
 	// Update data and return new data
-	err := r.db.WithContext(ctx).
+	if err := r.db.WithContext(ctx).
 		Model(&updatedRestaurant).
 		Clauses(clause.Returning{}).
 		Where("id = ?", resID).
-		Updates(updateData).Error
-
-	if err != nil {
+		Updates(updateData).Error; err != nil {
 		return nil, err
 	}
 
 	return &updatedRestaurant, nil
 }
 
+// Update image of restaurant
+func (r *RestaurantRepo) UpdateImage(ctx context.Context, resID, imageURL string) (*entity.Restaurant, error) {
+	var updatedRestaurant entity.Restaurant
+
+	if err := r.db.WithContext(ctx).
+		Model(&updatedRestaurant).
+		Clauses(clause.Returning{}).
+		Where("id = ?", resID).
+		Update("avatar", imageURL).
+		Error; err != nil {
+		return nil, err
+	}
+
+	return &updatedRestaurant, nil
+
+}
+
 // Delete Restaurant, set IsDeleted equal true
 func (r *RestaurantRepo) Delete(ctx context.Context, id string) error {
-
+	db := Extract(ctx, r.db)
 	// Set is_deleted equal true and status equal false
-	return r.db.WithContext(ctx).Model(&entity.Restaurant{}).Where("id = ?", id).Updates(map[string]interface{}{
+	return db.WithContext(ctx).Model(&entity.Restaurant{}).Where("id = ?", id).Updates(map[string]interface{}{
 		"is_deleted": true,
 		"status":     false,
 	}).Error
@@ -71,8 +87,8 @@ func (r *RestaurantRepo) GetByID(ctx context.Context, id string) (*entity.Restau
 	var restaurant entity.Restaurant
 	if err := r.db.
 		WithContext(ctx).
-		Preload("Positions").
-		Preload("Users").
+		Preload("Positions", "is_deleted = ?", false).
+		Preload("Users", "is_deleted = ? AND status = ?", false, true).
 		Preload("Laws").
 		Where("id = ?", id).
 		First(&restaurant).Error; err != nil {
@@ -90,7 +106,7 @@ func (r *RestaurantRepo) GetMyRestaurants(ctx context.Context, userID string) ([
 		Model(&entity.Restaurant{}).
 		Joins("JOIN user_restaurants ON user_restaurants.restaurant_id = restaurants.id").
 		Where("user_restaurants.user_id = ?", userID).
-		Preload("Positions").
+		Preload("Positions", "is_deleted = ?", false).
 		Find(&restaurants).
 		Error; err != nil {
 		return nil, err

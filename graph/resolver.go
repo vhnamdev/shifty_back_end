@@ -11,4 +11,5 @@ type Resolver struct {
 	UserUseCase           usecase.UserUseCase
 	UserRestaurantUseCase usecase.UserRestaurantUseCase
 	RestaurantUseCase     usecase.RestaurantUseCase
+	PositionUseCase       usecase.PositionUseCase
 }
