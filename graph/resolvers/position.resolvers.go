@@ -1,4 +1,4 @@
-package graph
+package resolvers
 
 // This file will be automatically regenerated based on the schema, any resolver
 // implementations
@@ -7,6 +7,8 @@ package graph
 
 import (
 	"context"
+	"shifty-backend/graph"
+	"shifty-backend/graph/mapper"
 	"shifty-backend/graph/model"
 	"shifty-backend/pkg/xerror"
 )
@@ -19,9 +21,9 @@ func (r *mutationResolver) CreatePosition(ctx context.Context, input model.Creat
 		return nil, xerror.BadRequest("You are not logged in")
 	}
 
-	positionEntity, err := MapPositionModelToEntity(&input)
+	positionEntity, err := mapper.MapPositionModelToEntity(&input)
 	if err != nil {
-		return nil, xerror.Internal("Can not map position model to entity")
+		return nil, err
 	}
 
 	newPosition, err := r.PositionUseCase.Create(ctx, positionEntity)
@@ -30,7 +32,11 @@ func (r *mutationResolver) CreatePosition(ctx context.Context, input model.Creat
 		return nil, err
 	}
 
-	positionModel := MapPositionEntityToModel(newPosition)
+	positionModel, err := mapper.MapPositionEntityToModel(newPosition)
+
+	if err != nil {
+		return nil, xerror.Internal("Can not map position from entity to model")
+	}
 	return positionModel, nil
 }
 
@@ -41,10 +47,10 @@ func (r *mutationResolver) UpdatePosition(ctx context.Context, input model.Updat
 	if !ok || userID == "" {
 		return nil, xerror.BadRequest("You are not logged in")
 	}
-	updateData, err := MapUpdatePositionToEntity(&input)
+	updateData, err := mapper.MapUpdatePositionToEntity(&input)
 
 	if err != nil {
-		return nil, xerror.Internal("Can not map update data")
+		return nil, err
 	}
 
 	updatedPosition, err := r.PositionUseCase.Update(ctx, input.ID, userID, input.RestaurantID, updateData)
@@ -53,7 +59,11 @@ func (r *mutationResolver) UpdatePosition(ctx context.Context, input model.Updat
 		return nil, err
 	}
 
-	positionModel := MapPositionEntityToModel(updatedPosition)
+	positionModel, err := mapper.MapPositionEntityToModel(updatedPosition)
+
+	if err != nil {
+		return nil, xerror.Internal("Can not map position from entity to model")
+	}
 
 	return positionModel, nil
 }
@@ -87,7 +97,10 @@ func (r *queryResolver) Position(ctx context.Context, posID string, resID string
 		return nil, err
 	}
 
-	positionModel := MapPositionEntityToModel(position)
+	positionModel, err := mapper.MapPositionEntityToModel(position)
+	if err != nil {
+		return nil, err
+	}
 	return positionModel, nil
 }
 
@@ -107,9 +120,17 @@ func (r *queryResolver) PositionsByRestaurant(ctx context.Context, resID string)
 	positionModel := make([]*model.Position, 0, len(positions))
 
 	for _, position := range positions {
-		mappedPosition := MapPositionEntityToModel(position)
+		mappedPosition, err := mapper.MapPositionEntityToModel(position)
+		if err != nil {
+			return nil, err
+		}
 		positionModel = append(positionModel, mappedPosition)
 	}
 
 	return positionModel, nil
 }
+
+// Mutation returns graph.MutationResolver implementation.
+func (r *Resolver) Mutation() graph.MutationResolver { return &mutationResolver{r} }
+
+type mutationResolver struct{ *Resolver }
