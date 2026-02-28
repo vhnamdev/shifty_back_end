@@ -1,0 +1,8 @@
+type Law{
+ id: String!
+ name: String!
+ severityLevel: String!
+ description: String!
+ restaurantID: String!
+ createdAt: Time!
+}

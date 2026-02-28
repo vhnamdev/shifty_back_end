@@ -1,0 +1,47 @@
+
+type Position {
+  id: ID!
+  name: String!
+  description: String!
+  rank: Int!
+  salary: Int
+  canUpdateRestaurant: Boolean!
+  canDeleteRestaurant: Boolean!
+  restaurantID: String!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+
+input CreatePositionInput {
+  name: String!
+  description: String!
+  restaurantID: String!
+  rank: Int
+  salary: Int
+  canUpdateRestaurant: Boolean = false
+  canDeleteRestaurant: Boolean = false
+}
+
+input UpdatePositionInput {
+  id: ID!
+  name: String
+  description: String
+  rank: Int
+  salary: Int
+  canUpdateRestaurant: Boolean
+  canDeleteRestaurant: Boolean
+}
+
+
+extend type Query {
+
+  position(id: ID!): Position!
+  positionsByRestaurant(restaurantId: String!): [Position!]!
+}
+
+extend type Mutation {
+  createPosition(input: CreatePositionInput!): Position!
+  updatePosition(input: UpdatePositionInput!): Position!
+  deletePosition(id: ID!): Boolean! 
+}

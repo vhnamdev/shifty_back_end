@@ -10,7 +10,7 @@ import (
 
 type RestaurantRepository interface {
 	Create(ctx context.Context, restaurant *entity.Restaurant) (*entity.Restaurant, error)
-	Update(ctx context.Context, restaurant *entity.Restaurant) error
+	Update(ctx context.Context, resID string, updateData map[string]interface{}) (*entity.Restaurant, error)
 	Delete(ctx context.Context, id string) error
 	GetByID(ctx context.Context, id string) (*entity.Restaurant, error)
 	GetMyRestaurants(ctx context.Context, userID string) ([]*entity.Restaurant, error)
@@ -39,16 +39,21 @@ func (r *RestaurantRepo) Create(ctx context.Context, restaurant *entity.Restaura
 }
 
 // Update Restaurant
-func (r *RestaurantRepo) Update(ctx context.Context, restaurant *entity.Restaurant) error {
+func (r *RestaurantRepo) Update(ctx context.Context, resID string, updateData map[string]interface{}) (*entity.Restaurant, error) {
+	var updatedRestaurant entity.Restaurant
 
 	// Update data and return new data
-	result := r.db.WithContext(ctx).Clauses(clause.Returning{}).Updates(restaurant)
+	err := r.db.WithContext(ctx).
+		Model(&updatedRestaurant).
+		Clauses(clause.Returning{}).
+		Where("id = ?", resID).
+		Updates(updateData).Error
 
-	if result.Error != nil {
-		return result.Error
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	return &updatedRestaurant, nil
 }
 
 // Delete Restaurant, set IsDeleted equal true
@@ -80,16 +85,16 @@ func (r *RestaurantRepo) GetByID(ctx context.Context, id string) (*entity.Restau
 // Get User's Restaurants
 func (r *RestaurantRepo) GetMyRestaurants(ctx context.Context, userID string) ([]*entity.Restaurant, error) {
 	var restaurants []*entity.Restaurant
-if err := r.db.
-        WithContext(ctx).
-        Model(&entity.Restaurant{}).
-        Joins("JOIN user_restaurants ON user_restaurants.restaurant_id = restaurants.id").
-        Where("user_restaurants.user_id = ?", userID).
-        Preload("Positions").
-        Find(&restaurants).
-        Error; err != nil {
-        return nil, err
-    }
+	if err := r.db.
+		WithContext(ctx).
+		Model(&entity.Restaurant{}).
+		Joins("JOIN user_restaurants ON user_restaurants.restaurant_id = restaurants.id").
+		Where("user_restaurants.user_id = ?", userID).
+		Preload("Positions").
+		Find(&restaurants).
+		Error; err != nil {
+		return nil, err
+	}
 
 	return restaurants, nil
 }
