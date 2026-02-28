@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"shifty-backend/configs"
 	"shifty-backend/graph"
+	"shifty-backend/internal/delivery/graphql"
 	"shifty-backend/internal/delivery/http/handler"
 	"shifty-backend/internal/delivery/http/route"
 	"shifty-backend/internal/repository"
@@ -93,15 +94,18 @@ func main() {
 	googleService := configs.NewGoogleConfig(cfg.GoogleClientID, cfg.GoogleSecret, "postmessage")
 
 	// -----------------------REPOSITORY-------------------------------------
+	transactor := repository.NewTransactor(db)
 	redisRepo := repository.NewRedisRepo(redisClient)
 	userRepo := repository.NewUserRepository(db)
 	userRestaurantRepo := repository.NewUserRestaurantRepository(db)
-
+	restaurantRepo := repository.NewRestaurantRepository(db)
+	positionRepo := repository.NewPositionRepository(db)
 	// ------------------------------USECASE----------------------------------
 
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenMaster, timeoutContext, redisRepo, emailService, googleService)
 	userUseCase := usecase.NewUserUseCase(userRepo, userRestaurantRepo)
 	userRestaurantUseCase := usecase.NewUserRestaurantUseCase(userRestaurantRepo)
+	restaurantUseCase := usecase.NewRestaurantUseCase(transactor, restaurantRepo, userRestaurantRepo, positionRepo)
 	// ------------------------------HANDLER----------------------------------
 
 	authHandler := handler.NewAuthHandler(authUseCase, cloudinaryService, emailService)
@@ -113,9 +117,12 @@ func main() {
 	gqlResolver := &graph.Resolver{
 		UserUseCase:           userUseCase,
 		UserRestaurantUseCase: userRestaurantUseCase,
+		RestaurantUseCase:     restaurantUseCase,
 	}
+
+	playgroundHandler, queryHandler := graphql.NewGraphQLHandler(gqlResolver)
 	// Setup routes
-	route.SetupRoutes(app, handlers, tokenMaster, gqlResolver)
+	route.SetupRoutes(app, handlers, tokenMaster, playgroundHandler, queryHandler)
 
 	// Start server
 	go func() {
