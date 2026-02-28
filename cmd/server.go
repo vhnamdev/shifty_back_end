@@ -5,11 +5,17 @@ import (
 	"os"
 	"os/signal"
 	"shifty-backend/configs"
-	handler "shifty-backend/internal/delivery/http"
+	"shifty-backend/graph"
+	"shifty-backend/internal/delivery/http/handler"
 	"shifty-backend/internal/delivery/http/route"
-	"shifty-backend/internal/domain"
+	"shifty-backend/internal/repository"
+	"shifty-backend/internal/usecase"
 	"shifty-backend/pkg/database"
+	"shifty-backend/pkg/mailer"
+	"shifty-backend/pkg/token"
+	"shifty-backend/pkg/uploader"
 	"syscall"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -36,31 +42,22 @@ func main() {
 			log.Fatal("Can not disconnect PostgresSQL Database!")
 		}
 	}()
+
+	// Connect to Redis Database
+	redisClient := database.ConnectRedis(cfg)
+
 	// Run Auto Migrate
-	log.Println("Loading Auto Migrations")
-	err = db.AutoMigrate(
-		&domain.Restaurant{},
-		&domain.Position{},
-		&domain.User{},
-		&domain.ShiftRule{},
-		&domain.Schedule{},
-		&domain.Shift{},
-		&domain.ShiftRequirement{},
-		&domain.ShiftRequest{},
-		&domain.ShiftAssignment{},
-		&domain.Post{},
-		&domain.Comment{},
-		&domain.Reaction{},
-		&domain.Conversation{},
-		&domain.Participant{},
-		&domain.Feedback{},
-	)
+	database.RunAutoMigrate(db)
 
+	accessDuration, err := time.ParseDuration(cfg.AcessTokenExpiry)
 	if err != nil {
-		log.Fatal("Database Migration Failed: ", err)
+		log.Fatal("Invalid access token duration")
 	}
-	log.Println("Database Migration Successfully!")
 
+	refreshDuration, err := time.ParseDuration(cfg.RefreshTokenExpiry)
+	if err != nil {
+		log.Fatal("Invalid refresh token duration")
+	}
 	app := fiber.New(fiber.Config{
 		AppName:      "Shifty Backend API",
 		ErrorHandler: handler.GlobalErrorHandler,
@@ -74,8 +71,53 @@ func main() {
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 		AllowMethods: "GET, POST, HEAD, PUT, DELETE, PATCH",
 	}))
-	handlers := &route.AppHandlers{}
-	route.SetupRoutes(app, handlers)
+
+	// Token
+	tokenMaster := token.NewToken(
+		cfg.JWTAccessSecret,
+		cfg.JWTRefreshSecret,
+		accessDuration,
+		refreshDuration,
+	)
+
+	// Set default timeout if missing
+	timeoutInt := cfg.ContextTimeout
+	if timeoutInt <= 0 {
+		timeoutInt = 5 // Default 5 seconds
+	}
+	timeoutContext := time.Duration(timeoutInt) * time.Second
+	// ----------------------- INFRASTRUCTURE--------------------------------
+
+	emailService := mailer.NewGoMail(cfg.SMTPHost, cfg.SMTPPort, cfg.GmailUser, cfg.GmailPassword)
+	cloudinaryService, err := uploader.NewCloudinary(cfg.CloudName, cfg.CloudinaryAPIKey, cfg.CloudinaryAPISecret, cfg.CloudinaryFolderName)
+	googleService := configs.NewGoogleConfig(cfg.GoogleClientID, cfg.GoogleSecret, "postmessage")
+
+	// -----------------------REPOSITORY-------------------------------------
+	redisRepo := repository.NewRedisRepo(redisClient)
+	userRepo := repository.NewUserRepository(db)
+	userRestaurantRepo := repository.NewUserRestaurantRepository(db)
+
+	// ------------------------------USECASE----------------------------------
+
+	authUseCase := usecase.NewAuthUseCase(userRepo, tokenMaster, timeoutContext, redisRepo, emailService, googleService)
+	userUseCase := usecase.NewUserUseCase(userRepo, userRestaurantRepo)
+	userRestaurantUseCase := usecase.NewUserRestaurantUseCase(userRestaurantRepo)
+	// ------------------------------HANDLER----------------------------------
+
+	authHandler := handler.NewAuthHandler(authUseCase, cloudinaryService, emailService)
+	userHandler := handler.NewUserHandler(userUseCase)
+	handlers := &route.AppHandlers{
+		AuthHandler: authHandler,
+		UserHandler: userHandler,
+	}
+	gqlResolver := &graph.Resolver{
+		UserUseCase:           userUseCase,
+		UserRestaurantUseCase: userRestaurantUseCase,
+	}
+	// Setup routes
+	route.SetupRoutes(app, handlers, tokenMaster, gqlResolver)
+
+	// Start server
 	go func() {
 		port := cfg.AppPort
 		if port == "" {

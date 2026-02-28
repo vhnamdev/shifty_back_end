@@ -1,0 +1,66 @@
+scalar Time
+
+type UserJob {
+  restaurant_id: String!
+  restaurant_name: String!
+  position: String!
+}
+
+type User {
+  id:ID!
+  fullName: String!
+  email: String!
+  role: String!
+  avatar: String!
+  phoneNumber: String
+  address: String
+  jobs:[UserJob!]!
+  status: Boolean!
+  createdAt: Time!
+}
+
+type UserRestaurant{
+  userID      : String!
+	restaurant: String!
+  position: String!
+	IsBanned: Boolean!
+	JoinedAt:     Time!
+}
+
+input UserFilterInput {
+  search: String
+  position: String
+}
+
+type UserPagination {
+  data: [User!]!
+  total: Int!
+  currentPage: Int!
+  totalPages: Int!
+}
+
+input UpdateUserInput {
+  fullName: String
+  phoneNumber: String
+  address: String
+  position: String
+  restaurant: String
+}
+
+input UpdateStaffByManagerInput {
+  staffID: String
+  position: String
+  restaurant: String
+  isBanned: Boolean
+}
+
+extend type Query {
+  me: User!
+  restaurantMembers(restaurantID: String!,limit: Int = 10, page:Int = 0,filter: UserFilterInput): UserPagination!
+}
+
+extend type Mutation {
+  updateUser(input: UpdateUserInput): User!
+  updateStaffByManager(input: UpdateStaffByManagerInput) : UserRestaurant!
+  delete: Boolean!
+}

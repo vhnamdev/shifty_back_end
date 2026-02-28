@@ -105,7 +105,11 @@ shifty-backend/
 │   └── migrate/         # Database migration utility
 ├── configs/             # Environment variables (.env) & Config structs
 ├── internal/
+<<<<<<< HEAD
 │   ├── domain/          # Entities & GORM Models (User, Post, Shift...)
+=======
+│   ├── entity/          # Entities & GORM Models (User, Post, Shift...)
+>>>>>>> dev
 │   ├── repository/      # Database Access Layer (Postgres/Mongo/Redis impl)
 │   ├── usecase/         # Business Logic & Service Layer
 │   └── delivery/
