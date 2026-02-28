@@ -24,7 +24,7 @@ type Position struct {
 	ShiftAssignments    []ShiftAssignment  `gorm:"foreignKey:PositionID" json:"shift_assignment,omitempty"`
 	CreatedAt           time.Time          `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt           time.Time          `json:"updated_at"`
-	DeletedAt           time.Time          `json:"deleted_at"`
+	DeletedAt           *time.Time         `json:"deleted_at"`
 }
 
 func (p *Position) BeforeCreate(tx *gorm.DB) (err error) {

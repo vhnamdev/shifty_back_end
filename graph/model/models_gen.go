@@ -29,6 +29,12 @@ type CreateRestaurantInput struct {
 	Address     string `json:"address"`
 }
 
+type CreateScheduleInput struct {
+	StartTime    time.Time `json:"startTime"`
+	EndTime      time.Time `json:"endTime"`
+	RestaurantID string    `json:"restaurantID"`
+}
+
 type JoinRestaurantInput struct {
 	InviteCode string `json:"inviteCode"`
 }
@@ -79,6 +85,16 @@ type Restaurant struct {
 	CreatedAt   time.Time   `json:"createdAt"`
 }
 
+type Schedule struct {
+	ID              string    `json:"id"`
+	StartTime       time.Time `json:"startTime"`
+	EndTime         time.Time `json:"endTime"`
+	NumberOfMembers int       `json:"numberOfMembers"`
+	NumberOfShifts  int       `json:"numberOfShifts"`
+	RestaurantID    string    `json:"restaurantID"`
+	CreatedAt       time.Time `json:"createdAt"`
+}
+
 type UpdatePositionInput struct {
 	ID                  string  `json:"id"`
 	RestaurantID        string  `json:"restaurantID"`
@@ -97,6 +113,13 @@ type UpdateRestaurantInput struct {
 	Status       *bool   `json:"status,omitempty"`
 	PhoneNumber  *string `json:"phoneNumber,omitempty"`
 	Address      *string `json:"address,omitempty"`
+}
+
+type UpdateScheduleInput struct {
+	RestaurantID string     `json:"restaurantID"`
+	ScheduleID   string     `json:"scheduleID"`
+	StartTime    *time.Time `json:"startTime,omitempty"`
+	EndTime      *time.Time `json:"endTime,omitempty"`
 }
 
 type UpdateStaffByManagerInput struct {
