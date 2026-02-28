@@ -4,6 +4,7 @@ import (
 	"context"
 	"shifty-backend/internal/dto"
 	"shifty-backend/internal/entity"
+	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -17,6 +18,7 @@ type UserRepository interface {
 	Delete(ctx context.Context, id string) error
 	Update(ctx context.Context, user *entity.User) error
 	UpdatePassword(ctx context.Context, id, newPassword string) error
+	UpdateImage(ctx context.Context, id, imageURl string) (*entity.User, error)
 	GetRestaurantMembers(ctx context.Context, page int, limit int, restaurantID string, filter *dto.UserFilter) ([]*entity.User, int64, error)
 }
 
@@ -48,10 +50,10 @@ func (r *userRepo) GetByEmail(ctx context.Context, email string) (*entity.User, 
 	var user entity.User
 	if err := r.db.
 		WithContext(ctx).
-		Preload("UserRestaurants").
-		Preload("UserRestaurants.Restaurant").
-		Preload("UserRestaurants.Position").
-		Where("email = ?", email).
+		Preload("UserRestaurants", "is_deleted = ? AND is_banned = ?", false, false).
+		Preload("UserRestaurants.Restaurant", "is_deleted = ?", false).
+		Preload("UserRestaurants.Position", "is_deleted = ?", false).
+		Where("email = ? AND is_deleted = ?", email, false).
 		First(&user).Error; err != nil {
 		return nil, err
 	}
@@ -63,10 +65,10 @@ func (r *userRepo) GetByEmail(ctx context.Context, email string) (*entity.User, 
 func (r *userRepo) GetByID(ctx context.Context, id string) (*entity.User, error) {
 	var user entity.User
 	if err := r.db.WithContext(ctx).
-		Preload("UserRestaurants").
-		Preload("UserRestaurants.Restaurant").
-		Preload("UserRestaurants.Position").
-		Where("id = ?", id).
+		Preload("UserRestaurants", "is_deleted = ? AND is_banned = ?", false, false).
+		Preload("UserRestaurants.Restaurant", "is_deleted = ?", false).
+		Preload("UserRestaurants.Position", "is_deleted = ?", false).
+		Where("id = ? AND is_deleted = ?", id, false).
 		First(&user).Error; err != nil {
 		return nil, err
 	}
@@ -83,15 +85,35 @@ func (r *userRepo) Update(ctx context.Context, user *entity.User) error {
 	return nil
 }
 
+// Update user's password
 func (r *userRepo) UpdatePassword(ctx context.Context, id, newPassword string) error {
 	return r.db.WithContext(ctx).Model(&entity.User{}).Where("id = ?", id).Update("password", newPassword).Error
 }
 
+// Update user's avatar
+func (r *userRepo) UpdateImage(ctx context.Context, id, imageURl string) (*entity.User, error) {
+	var updatedUser entity.User
+
+	if err := r.db.
+		WithContext(ctx).
+		Model(&updatedUser).
+		Clauses(clause.Returning{}).
+		Where("id = ?", id).
+		Update("avatar", imageURl).
+		Error; err != nil {
+		return nil, err
+	}
+
+	return &updatedUser, nil
+}
+
 // Update user function
 func (r *userRepo) Delete(ctx context.Context, id string) error {
-	return r.db.WithContext(ctx).Model(&entity.User{}).Where("id = ?", id).Updates(map[string]interface{}{
+	db := Extract(ctx, r.db)
+	return db.WithContext(ctx).Model(&entity.User{}).Where("id = ?", id).Updates(map[string]interface{}{
 		"is_deleted": true,
 		"status":     false,
+		"deleted_at": time.Now(),
 	}).Error
 }
 
@@ -105,11 +127,11 @@ func (r *userRepo) GetRestaurantMembers(ctx context.Context, page, limit int, re
 	offset := (page - 1) * limit
 
 	// Create a query to search and limit it to only the user's restaurant.
-	query := r.db.WithContext(ctx).Model(&entity.User{})
+	query := r.db.WithContext(ctx).Model(&entity.User{}).Where("is_deleted = ? ", false)
 
 	query = query.
 		Joins("JOIN user_restaurants ON user_restaurants.user_id = users.id").
-		Where("user_restaurants.restaurant_id = ?", restaurantID)
+		Where("user_restaurants.restaurant_id = ? AND user_restaurants.is_deleted = ?", restaurantID, false)
 
 	// Check if filter search is not nul
 	if filter.Search != nil && *filter.Search != "" {
@@ -138,8 +160,8 @@ func (r *userRepo) GetRestaurantMembers(ctx context.Context, page, limit int, re
 		Limit(limit).
 		Offset(offset).
 		Order("created_at desc").
-		Preload("UserRestaurants", "restaurant_id = ?", restaurantID).
-		Preload("UserRestaurants.Position").
+		Preload("UserRestaurants", "restaurant_id = ? AND is_deleted = ?", restaurantID, false).
+		Preload("UserRestaurants.Position", "is_deleted = ?", false).
 		Find(&users).Error
 
 	if err != nil {

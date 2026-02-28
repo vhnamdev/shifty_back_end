@@ -8,6 +8,7 @@ import (
 	"shifty-backend/graph"
 	"shifty-backend/internal/delivery/graphql"
 	"shifty-backend/internal/delivery/http/handler"
+	"shifty-backend/internal/delivery/http/middleware"
 	"shifty-backend/internal/delivery/http/route"
 	"shifty-backend/internal/repository"
 	"shifty-backend/internal/usecase"
@@ -64,8 +65,10 @@ func main() {
 		ErrorHandler: handler.GlobalErrorHandler,
 	})
 
-	app.Use(recover.New()) // Auto restart server
-	app.Use(logger.New())  // Log request to console
+	app.Use(recover.New())                                 // Auto restart server
+	app.Use(logger.New())                                  // Log request to console
+	app.Use(middleware.NewRateLimiter(100, 1*time.Minute)) // Rate limit
+
 	// Config Cors
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
@@ -103,13 +106,14 @@ func main() {
 	// ------------------------------USECASE----------------------------------
 
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenMaster, timeoutContext, redisRepo, emailService, googleService)
-	userUseCase := usecase.NewUserUseCase(userRepo, userRestaurantRepo)
+	userUseCase := usecase.NewUserUseCase(userRepo, userRestaurantRepo, cloudinaryService, transactor, restaurantRepo)
 	userRestaurantUseCase := usecase.NewUserRestaurantUseCase(userRestaurantRepo)
-	restaurantUseCase := usecase.NewRestaurantUseCase(transactor, restaurantRepo, userRestaurantRepo, positionRepo)
+	restaurantUseCase := usecase.NewRestaurantUseCase(transactor, restaurantRepo, userRestaurantRepo, positionRepo, redisRepo, userRepo, emailService, cloudinaryService)
+	positionUseCase := usecase.NewPositionUseCase(positionRepo, userRestaurantRepo, transactor)
 	// ------------------------------HANDLER----------------------------------
 
 	authHandler := handler.NewAuthHandler(authUseCase, cloudinaryService, emailService)
-	userHandler := handler.NewUserHandler(userUseCase)
+	userHandler := handler.NewUserHandler(userUseCase, cloudinaryService)
 	handlers := &route.AppHandlers{
 		AuthHandler: authHandler,
 		UserHandler: userHandler,
@@ -118,6 +122,7 @@ func main() {
 		UserUseCase:           userUseCase,
 		UserRestaurantUseCase: userRestaurantUseCase,
 		RestaurantUseCase:     restaurantUseCase,
+		PositionUseCase:       positionUseCase,
 	}
 
 	playgroundHandler, queryHandler := graphql.NewGraphQLHandler(gqlResolver)

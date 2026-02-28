@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"shifty-backend/graph/model"
 	"strconv"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -24,20 +23,10 @@ import (
 
 // NewExecutableSchema creates an ExecutableSchema from the ResolverRoot interface.
 func NewExecutableSchema(cfg Config) graphql.ExecutableSchema {
-	return &executableSchema{
-		schema:     cfg.Schema,
-		resolvers:  cfg.Resolvers,
-		directives: cfg.Directives,
-		complexity: cfg.Complexity,
-	}
+	return &executableSchema{SchemaData: cfg.Schema, Resolvers: cfg.Resolvers, Directives: cfg.Directives, ComplexityRoot: cfg.Complexity}
 }
 
-type Config struct {
-	Schema     *ast.Schema
-	Resolvers  ResolverRoot
-	Directives DirectiveRoot
-	Complexity ComplexityRoot
-}
+type Config = graphql.Config[ResolverRoot, DirectiveRoot, ComplexityRoot]
 
 type ResolverRoot interface {
 	Mutation() MutationResolver
@@ -62,11 +51,13 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
+		CreateInviteCode     func(childComplexity int, input model.CreateInviteCodeInput) int
 		CreatePosition       func(childComplexity int, input model.CreatePositionInput) int
 		CreateRestaurant     func(childComplexity int, input model.CreateRestaurantInput) int
 		Delete               func(childComplexity int) int
-		DeletePosition       func(childComplexity int, id string) int
+		DeletePosition       func(childComplexity int, posID string, resID string) int
 		DeleteRestaurant     func(childComplexity int, resID string) int
+		JoinRestaurant       func(childComplexity int, input model.JoinRestaurantInput) int
 		UpdatePosition       func(childComplexity int, input model.UpdatePositionInput) int
 		UpdateRestaurant     func(childComplexity int, input model.UpdateRestaurantInput) int
 		UpdateStaffByManager func(childComplexity int, input *model.UpdateStaffByManagerInput) int
@@ -90,8 +81,8 @@ type ComplexityRoot struct {
 		Empty                 func(childComplexity int) int
 		Me                    func(childComplexity int) int
 		MyRestaurants         func(childComplexity int) int
-		Position              func(childComplexity int, id string) int
-		PositionsByRestaurant func(childComplexity int, restaurantID string) int
+		Position              func(childComplexity int, posID string, resID string) int
+		PositionsByRestaurant func(childComplexity int, resID string) int
 		Restaurant            func(childComplexity int, resID string) int
 		RestaurantMembers     func(childComplexity int, restaurantID string, limit *int, page *int, filter *model.UserFilterInput) int
 	}
@@ -148,9 +139,11 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	CreatePosition(ctx context.Context, input model.CreatePositionInput) (*model.Position, error)
 	UpdatePosition(ctx context.Context, input model.UpdatePositionInput) (*model.Position, error)
-	DeletePosition(ctx context.Context, id string) (bool, error)
+	DeletePosition(ctx context.Context, posID string, resID string) (bool, error)
 	CreateRestaurant(ctx context.Context, input model.CreateRestaurantInput) (*model.Restaurant, error)
 	UpdateRestaurant(ctx context.Context, input model.UpdateRestaurantInput) (*model.Restaurant, error)
+	CreateInviteCode(ctx context.Context, input model.CreateInviteCodeInput) (bool, error)
+	JoinRestaurant(ctx context.Context, input model.JoinRestaurantInput) (bool, error)
 	DeleteRestaurant(ctx context.Context, resID string) (bool, error)
 	UpdateUser(ctx context.Context, input *model.UpdateUserInput) (*model.User, error)
 	UpdateStaffByManager(ctx context.Context, input *model.UpdateStaffByManagerInput) (*model.UserRestaurant, error)
@@ -158,79 +151,85 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	Empty(ctx context.Context) (*string, error)
-	Position(ctx context.Context, id string) (*model.Position, error)
-	PositionsByRestaurant(ctx context.Context, restaurantID string) ([]*model.Position, error)
+	Position(ctx context.Context, posID string, resID string) (*model.Position, error)
+	PositionsByRestaurant(ctx context.Context, resID string) ([]*model.Position, error)
 	Restaurant(ctx context.Context, resID string) (*model.Restaurant, error)
 	MyRestaurants(ctx context.Context) ([]*model.Restaurant, error)
 	Me(ctx context.Context) (*model.User, error)
 	RestaurantMembers(ctx context.Context, restaurantID string, limit *int, page *int, filter *model.UserFilterInput) (*model.UserPagination, error)
 }
 
-type executableSchema struct {
-	schema     *ast.Schema
-	resolvers  ResolverRoot
-	directives DirectiveRoot
-	complexity ComplexityRoot
-}
+type executableSchema graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot]
 
 func (e *executableSchema) Schema() *ast.Schema {
-	if e.schema != nil {
-		return e.schema
+	if e.SchemaData != nil {
+		return e.SchemaData
 	}
 	return parsedSchema
 }
 
 func (e *executableSchema) Complexity(ctx context.Context, typeName, field string, childComplexity int, rawArgs map[string]any) (int, bool) {
-	ec := executionContext{nil, e, 0, 0, nil}
+	ec := newExecutionContext(nil, e, nil)
 	_ = ec
 	switch typeName + "." + field {
 
 	case "Law.createdAt":
-		if e.complexity.Law.CreatedAt == nil {
+		if e.ComplexityRoot.Law.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.Law.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.Law.CreatedAt(childComplexity), true
 	case "Law.description":
-		if e.complexity.Law.Description == nil {
+		if e.ComplexityRoot.Law.Description == nil {
 			break
 		}
 
-		return e.complexity.Law.Description(childComplexity), true
+		return e.ComplexityRoot.Law.Description(childComplexity), true
 	case "Law.id":
-		if e.complexity.Law.ID == nil {
+		if e.ComplexityRoot.Law.ID == nil {
 			break
 		}
 
-		return e.complexity.Law.ID(childComplexity), true
+		return e.ComplexityRoot.Law.ID(childComplexity), true
 	case "Law.name":
-		if e.complexity.Law.Name == nil {
+		if e.ComplexityRoot.Law.Name == nil {
 			break
 		}
 
-		return e.complexity.Law.Name(childComplexity), true
+		return e.ComplexityRoot.Law.Name(childComplexity), true
 	case "Law.restaurantID":
-		if e.complexity.Law.RestaurantID == nil {
+		if e.ComplexityRoot.Law.RestaurantID == nil {
 			break
 		}
 
-		return e.complexity.Law.RestaurantID(childComplexity), true
+		return e.ComplexityRoot.Law.RestaurantID(childComplexity), true
 	case "Law.severityLevel":
-		if e.complexity.Law.SeverityLevel == nil {
+		if e.ComplexityRoot.Law.SeverityLevel == nil {
 			break
 		}
 
-		return e.complexity.Law.SeverityLevel(childComplexity), true
+		return e.ComplexityRoot.Law.SeverityLevel(childComplexity), true
 
 	case "Mutatio._empty":
-		if e.complexity.Mutatio.Empty == nil {
+		if e.ComplexityRoot.Mutatio.Empty == nil {
 			break
 		}
 
-		return e.complexity.Mutatio.Empty(childComplexity), true
+		return e.ComplexityRoot.Mutatio.Empty(childComplexity), true
 
+	case "Mutation.createInviteCode":
+		if e.ComplexityRoot.Mutation.CreateInviteCode == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createInviteCode_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CreateInviteCode(childComplexity, args["input"].(model.CreateInviteCodeInput)), true
 	case "Mutation.createPosition":
-		if e.complexity.Mutation.CreatePosition == nil {
+		if e.ComplexityRoot.Mutation.CreatePosition == nil {
 			break
 		}
 
@@ -239,9 +238,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreatePosition(childComplexity, args["input"].(model.CreatePositionInput)), true
+		return e.ComplexityRoot.Mutation.CreatePosition(childComplexity, args["input"].(model.CreatePositionInput)), true
 	case "Mutation.createRestaurant":
-		if e.complexity.Mutation.CreateRestaurant == nil {
+		if e.ComplexityRoot.Mutation.CreateRestaurant == nil {
 			break
 		}
 
@@ -250,15 +249,15 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateRestaurant(childComplexity, args["input"].(model.CreateRestaurantInput)), true
+		return e.ComplexityRoot.Mutation.CreateRestaurant(childComplexity, args["input"].(model.CreateRestaurantInput)), true
 	case "Mutation.delete":
-		if e.complexity.Mutation.Delete == nil {
+		if e.ComplexityRoot.Mutation.Delete == nil {
 			break
 		}
 
-		return e.complexity.Mutation.Delete(childComplexity), true
+		return e.ComplexityRoot.Mutation.Delete(childComplexity), true
 	case "Mutation.deletePosition":
-		if e.complexity.Mutation.DeletePosition == nil {
+		if e.ComplexityRoot.Mutation.DeletePosition == nil {
 			break
 		}
 
@@ -267,9 +266,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeletePosition(childComplexity, args["id"].(string)), true
+		return e.ComplexityRoot.Mutation.DeletePosition(childComplexity, args["posID"].(string), args["resID"].(string)), true
 	case "Mutation.deleteRestaurant":
-		if e.complexity.Mutation.DeleteRestaurant == nil {
+		if e.ComplexityRoot.Mutation.DeleteRestaurant == nil {
 			break
 		}
 
@@ -278,9 +277,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteRestaurant(childComplexity, args["resID"].(string)), true
+		return e.ComplexityRoot.Mutation.DeleteRestaurant(childComplexity, args["resID"].(string)), true
+	case "Mutation.joinRestaurant":
+		if e.ComplexityRoot.Mutation.JoinRestaurant == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_joinRestaurant_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.JoinRestaurant(childComplexity, args["input"].(model.JoinRestaurantInput)), true
 	case "Mutation.updatePosition":
-		if e.complexity.Mutation.UpdatePosition == nil {
+		if e.ComplexityRoot.Mutation.UpdatePosition == nil {
 			break
 		}
 
@@ -289,9 +299,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdatePosition(childComplexity, args["input"].(model.UpdatePositionInput)), true
+		return e.ComplexityRoot.Mutation.UpdatePosition(childComplexity, args["input"].(model.UpdatePositionInput)), true
 	case "Mutation.updateRestaurant":
-		if e.complexity.Mutation.UpdateRestaurant == nil {
+		if e.ComplexityRoot.Mutation.UpdateRestaurant == nil {
 			break
 		}
 
@@ -300,9 +310,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateRestaurant(childComplexity, args["input"].(model.UpdateRestaurantInput)), true
+		return e.ComplexityRoot.Mutation.UpdateRestaurant(childComplexity, args["input"].(model.UpdateRestaurantInput)), true
 	case "Mutation.updateStaffByManager":
-		if e.complexity.Mutation.UpdateStaffByManager == nil {
+		if e.ComplexityRoot.Mutation.UpdateStaffByManager == nil {
 			break
 		}
 
@@ -311,9 +321,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateStaffByManager(childComplexity, args["input"].(*model.UpdateStaffByManagerInput)), true
+		return e.ComplexityRoot.Mutation.UpdateStaffByManager(childComplexity, args["input"].(*model.UpdateStaffByManagerInput)), true
 	case "Mutation.updateUser":
-		if e.complexity.Mutation.UpdateUser == nil {
+		if e.ComplexityRoot.Mutation.UpdateUser == nil {
 			break
 		}
 
@@ -322,89 +332,90 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateUser(childComplexity, args["input"].(*model.UpdateUserInput)), true
+		return e.ComplexityRoot.Mutation.UpdateUser(childComplexity, args["input"].(*model.UpdateUserInput)), true
 
 	case "Position.canDeleteRestaurant":
-		if e.complexity.Position.CanDeleteRestaurant == nil {
+		if e.ComplexityRoot.Position.CanDeleteRestaurant == nil {
 			break
 		}
 
-		return e.complexity.Position.CanDeleteRestaurant(childComplexity), true
+		return e.ComplexityRoot.Position.CanDeleteRestaurant(childComplexity), true
 	case "Position.canUpdateRestaurant":
-		if e.complexity.Position.CanUpdateRestaurant == nil {
+		if e.ComplexityRoot.Position.CanUpdateRestaurant == nil {
 			break
 		}
 
-		return e.complexity.Position.CanUpdateRestaurant(childComplexity), true
+		return e.ComplexityRoot.Position.CanUpdateRestaurant(childComplexity), true
 	case "Position.createdAt":
-		if e.complexity.Position.CreatedAt == nil {
+		if e.ComplexityRoot.Position.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.Position.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.Position.CreatedAt(childComplexity), true
 	case "Position.description":
-		if e.complexity.Position.Description == nil {
+		if e.ComplexityRoot.Position.Description == nil {
 			break
 		}
 
-		return e.complexity.Position.Description(childComplexity), true
+		return e.ComplexityRoot.Position.Description(childComplexity), true
 	case "Position.id":
-		if e.complexity.Position.ID == nil {
+		if e.ComplexityRoot.Position.ID == nil {
 			break
 		}
 
-		return e.complexity.Position.ID(childComplexity), true
+		return e.ComplexityRoot.Position.ID(childComplexity), true
 	case "Position.name":
-		if e.complexity.Position.Name == nil {
+		if e.ComplexityRoot.Position.Name == nil {
 			break
 		}
 
-		return e.complexity.Position.Name(childComplexity), true
+		return e.ComplexityRoot.Position.Name(childComplexity), true
 	case "Position.rank":
-		if e.complexity.Position.Rank == nil {
+		if e.ComplexityRoot.Position.Rank == nil {
 			break
 		}
 
-		return e.complexity.Position.Rank(childComplexity), true
+		return e.ComplexityRoot.Position.Rank(childComplexity), true
 	case "Position.restaurantID":
-		if e.complexity.Position.RestaurantID == nil {
+		if e.ComplexityRoot.Position.RestaurantID == nil {
 			break
 		}
 
-		return e.complexity.Position.RestaurantID(childComplexity), true
+		return e.ComplexityRoot.Position.RestaurantID(childComplexity), true
 	case "Position.salary":
-		if e.complexity.Position.Salary == nil {
+		if e.ComplexityRoot.Position.Salary == nil {
 			break
 		}
 
-		return e.complexity.Position.Salary(childComplexity), true
+		return e.ComplexityRoot.Position.Salary(childComplexity), true
 	case "Position.updatedAt":
-		if e.complexity.Position.UpdatedAt == nil {
+		if e.ComplexityRoot.Position.UpdatedAt == nil {
 			break
 		}
 
-		return e.complexity.Position.UpdatedAt(childComplexity), true
+		return e.ComplexityRoot.Position.UpdatedAt(childComplexity), true
 
 	case "Query._empty":
-		if e.complexity.Query.Empty == nil {
+		if e.ComplexityRoot.Query.Empty == nil {
 			break
 		}
 
-		return e.complexity.Query.Empty(childComplexity), true
+		return e.ComplexityRoot.Query.Empty(childComplexity), true
+
 	case "Query.me":
-		if e.complexity.Query.Me == nil {
+		if e.ComplexityRoot.Query.Me == nil {
 			break
 		}
 
-		return e.complexity.Query.Me(childComplexity), true
+		return e.ComplexityRoot.Query.Me(childComplexity), true
 	case "Query.myRestaurants":
-		if e.complexity.Query.MyRestaurants == nil {
+		if e.ComplexityRoot.Query.MyRestaurants == nil {
 			break
 		}
 
-		return e.complexity.Query.MyRestaurants(childComplexity), true
+		return e.ComplexityRoot.Query.MyRestaurants(childComplexity), true
 	case "Query.position":
-		if e.complexity.Query.Position == nil {
+		if e.ComplexityRoot.Query.Position == nil {
 			break
 		}
 
@@ -413,9 +424,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Position(childComplexity, args["id"].(string)), true
+		return e.ComplexityRoot.Query.Position(childComplexity, args["posID"].(string), args["resID"].(string)), true
 	case "Query.positionsByRestaurant":
-		if e.complexity.Query.PositionsByRestaurant == nil {
+		if e.ComplexityRoot.Query.PositionsByRestaurant == nil {
 			break
 		}
 
@@ -424,9 +435,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.PositionsByRestaurant(childComplexity, args["restaurantId"].(string)), true
+		return e.ComplexityRoot.Query.PositionsByRestaurant(childComplexity, args["resID"].(string)), true
 	case "Query.restaurant":
-		if e.complexity.Query.Restaurant == nil {
+		if e.ComplexityRoot.Query.Restaurant == nil {
 			break
 		}
 
@@ -435,9 +446,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Restaurant(childComplexity, args["resID"].(string)), true
+		return e.ComplexityRoot.Query.Restaurant(childComplexity, args["resID"].(string)), true
 	case "Query.restaurantMembers":
-		if e.complexity.Query.RestaurantMembers == nil {
+		if e.ComplexityRoot.Query.RestaurantMembers == nil {
 			break
 		}
 
@@ -446,210 +457,210 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.RestaurantMembers(childComplexity, args["restaurantID"].(string), args["limit"].(*int), args["page"].(*int), args["filter"].(*model.UserFilterInput)), true
+		return e.ComplexityRoot.Query.RestaurantMembers(childComplexity, args["restaurantID"].(string), args["limit"].(*int), args["page"].(*int), args["filter"].(*model.UserFilterInput)), true
 
 	case "Restaurant.address":
-		if e.complexity.Restaurant.Address == nil {
+		if e.ComplexityRoot.Restaurant.Address == nil {
 			break
 		}
 
-		return e.complexity.Restaurant.Address(childComplexity), true
+		return e.ComplexityRoot.Restaurant.Address(childComplexity), true
 	case "Restaurant.avatar":
-		if e.complexity.Restaurant.Avatar == nil {
+		if e.ComplexityRoot.Restaurant.Avatar == nil {
 			break
 		}
 
-		return e.complexity.Restaurant.Avatar(childComplexity), true
+		return e.ComplexityRoot.Restaurant.Avatar(childComplexity), true
 	case "Restaurant.createdAt":
-		if e.complexity.Restaurant.CreatedAt == nil {
+		if e.ComplexityRoot.Restaurant.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.Restaurant.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.Restaurant.CreatedAt(childComplexity), true
 	case "Restaurant.email":
-		if e.complexity.Restaurant.Email == nil {
+		if e.ComplexityRoot.Restaurant.Email == nil {
 			break
 		}
 
-		return e.complexity.Restaurant.Email(childComplexity), true
+		return e.ComplexityRoot.Restaurant.Email(childComplexity), true
 	case "Restaurant.id":
-		if e.complexity.Restaurant.ID == nil {
+		if e.ComplexityRoot.Restaurant.ID == nil {
 			break
 		}
 
-		return e.complexity.Restaurant.ID(childComplexity), true
+		return e.ComplexityRoot.Restaurant.ID(childComplexity), true
 	case "Restaurant.laws":
-		if e.complexity.Restaurant.Laws == nil {
+		if e.ComplexityRoot.Restaurant.Laws == nil {
 			break
 		}
 
-		return e.complexity.Restaurant.Laws(childComplexity), true
+		return e.ComplexityRoot.Restaurant.Laws(childComplexity), true
 	case "Restaurant.members":
-		if e.complexity.Restaurant.Members == nil {
+		if e.ComplexityRoot.Restaurant.Members == nil {
 			break
 		}
 
-		return e.complexity.Restaurant.Members(childComplexity), true
+		return e.ComplexityRoot.Restaurant.Members(childComplexity), true
 	case "Restaurant.name":
-		if e.complexity.Restaurant.Name == nil {
+		if e.ComplexityRoot.Restaurant.Name == nil {
 			break
 		}
 
-		return e.complexity.Restaurant.Name(childComplexity), true
+		return e.ComplexityRoot.Restaurant.Name(childComplexity), true
 	case "Restaurant.phoneNumber":
-		if e.complexity.Restaurant.PhoneNumber == nil {
+		if e.ComplexityRoot.Restaurant.PhoneNumber == nil {
 			break
 		}
 
-		return e.complexity.Restaurant.PhoneNumber(childComplexity), true
+		return e.ComplexityRoot.Restaurant.PhoneNumber(childComplexity), true
 	case "Restaurant.positions":
-		if e.complexity.Restaurant.Positions == nil {
+		if e.ComplexityRoot.Restaurant.Positions == nil {
 			break
 		}
 
-		return e.complexity.Restaurant.Positions(childComplexity), true
+		return e.ComplexityRoot.Restaurant.Positions(childComplexity), true
 	case "Restaurant.status":
-		if e.complexity.Restaurant.Status == nil {
+		if e.ComplexityRoot.Restaurant.Status == nil {
 			break
 		}
 
-		return e.complexity.Restaurant.Status(childComplexity), true
+		return e.ComplexityRoot.Restaurant.Status(childComplexity), true
 
 	case "User.address":
-		if e.complexity.User.Address == nil {
+		if e.ComplexityRoot.User.Address == nil {
 			break
 		}
 
-		return e.complexity.User.Address(childComplexity), true
+		return e.ComplexityRoot.User.Address(childComplexity), true
 	case "User.avatar":
-		if e.complexity.User.Avatar == nil {
+		if e.ComplexityRoot.User.Avatar == nil {
 			break
 		}
 
-		return e.complexity.User.Avatar(childComplexity), true
+		return e.ComplexityRoot.User.Avatar(childComplexity), true
 	case "User.createdAt":
-		if e.complexity.User.CreatedAt == nil {
+		if e.ComplexityRoot.User.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.User.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.User.CreatedAt(childComplexity), true
 	case "User.email":
-		if e.complexity.User.Email == nil {
+		if e.ComplexityRoot.User.Email == nil {
 			break
 		}
 
-		return e.complexity.User.Email(childComplexity), true
+		return e.ComplexityRoot.User.Email(childComplexity), true
 	case "User.fullName":
-		if e.complexity.User.FullName == nil {
+		if e.ComplexityRoot.User.FullName == nil {
 			break
 		}
 
-		return e.complexity.User.FullName(childComplexity), true
+		return e.ComplexityRoot.User.FullName(childComplexity), true
 	case "User.id":
-		if e.complexity.User.ID == nil {
+		if e.ComplexityRoot.User.ID == nil {
 			break
 		}
 
-		return e.complexity.User.ID(childComplexity), true
+		return e.ComplexityRoot.User.ID(childComplexity), true
 	case "User.jobs":
-		if e.complexity.User.Jobs == nil {
+		if e.ComplexityRoot.User.Jobs == nil {
 			break
 		}
 
-		return e.complexity.User.Jobs(childComplexity), true
+		return e.ComplexityRoot.User.Jobs(childComplexity), true
 	case "User.phoneNumber":
-		if e.complexity.User.PhoneNumber == nil {
+		if e.ComplexityRoot.User.PhoneNumber == nil {
 			break
 		}
 
-		return e.complexity.User.PhoneNumber(childComplexity), true
+		return e.ComplexityRoot.User.PhoneNumber(childComplexity), true
 	case "User.role":
-		if e.complexity.User.Role == nil {
+		if e.ComplexityRoot.User.Role == nil {
 			break
 		}
 
-		return e.complexity.User.Role(childComplexity), true
+		return e.ComplexityRoot.User.Role(childComplexity), true
 	case "User.status":
-		if e.complexity.User.Status == nil {
+		if e.ComplexityRoot.User.Status == nil {
 			break
 		}
 
-		return e.complexity.User.Status(childComplexity), true
+		return e.ComplexityRoot.User.Status(childComplexity), true
 
 	case "UserJob.position":
-		if e.complexity.UserJob.Position == nil {
+		if e.ComplexityRoot.UserJob.Position == nil {
 			break
 		}
 
-		return e.complexity.UserJob.Position(childComplexity), true
+		return e.ComplexityRoot.UserJob.Position(childComplexity), true
 	case "UserJob.restaurant_id":
-		if e.complexity.UserJob.RestaurantID == nil {
+		if e.ComplexityRoot.UserJob.RestaurantID == nil {
 			break
 		}
 
-		return e.complexity.UserJob.RestaurantID(childComplexity), true
+		return e.ComplexityRoot.UserJob.RestaurantID(childComplexity), true
 	case "UserJob.restaurant_name":
-		if e.complexity.UserJob.RestaurantName == nil {
+		if e.ComplexityRoot.UserJob.RestaurantName == nil {
 			break
 		}
 
-		return e.complexity.UserJob.RestaurantName(childComplexity), true
+		return e.ComplexityRoot.UserJob.RestaurantName(childComplexity), true
 
 	case "UserPagination.currentPage":
-		if e.complexity.UserPagination.CurrentPage == nil {
+		if e.ComplexityRoot.UserPagination.CurrentPage == nil {
 			break
 		}
 
-		return e.complexity.UserPagination.CurrentPage(childComplexity), true
+		return e.ComplexityRoot.UserPagination.CurrentPage(childComplexity), true
 	case "UserPagination.data":
-		if e.complexity.UserPagination.Data == nil {
+		if e.ComplexityRoot.UserPagination.Data == nil {
 			break
 		}
 
-		return e.complexity.UserPagination.Data(childComplexity), true
+		return e.ComplexityRoot.UserPagination.Data(childComplexity), true
 	case "UserPagination.total":
-		if e.complexity.UserPagination.Total == nil {
+		if e.ComplexityRoot.UserPagination.Total == nil {
 			break
 		}
 
-		return e.complexity.UserPagination.Total(childComplexity), true
+		return e.ComplexityRoot.UserPagination.Total(childComplexity), true
 	case "UserPagination.totalPages":
-		if e.complexity.UserPagination.TotalPages == nil {
+		if e.ComplexityRoot.UserPagination.TotalPages == nil {
 			break
 		}
 
-		return e.complexity.UserPagination.TotalPages(childComplexity), true
+		return e.ComplexityRoot.UserPagination.TotalPages(childComplexity), true
 
 	case "UserRestaurant.IsBanned":
-		if e.complexity.UserRestaurant.IsBanned == nil {
+		if e.ComplexityRoot.UserRestaurant.IsBanned == nil {
 			break
 		}
 
-		return e.complexity.UserRestaurant.IsBanned(childComplexity), true
+		return e.ComplexityRoot.UserRestaurant.IsBanned(childComplexity), true
 	case "UserRestaurant.JoinedAt":
-		if e.complexity.UserRestaurant.JoinedAt == nil {
+		if e.ComplexityRoot.UserRestaurant.JoinedAt == nil {
 			break
 		}
 
-		return e.complexity.UserRestaurant.JoinedAt(childComplexity), true
+		return e.ComplexityRoot.UserRestaurant.JoinedAt(childComplexity), true
 	case "UserRestaurant.position":
-		if e.complexity.UserRestaurant.Position == nil {
+		if e.ComplexityRoot.UserRestaurant.Position == nil {
 			break
 		}
 
-		return e.complexity.UserRestaurant.Position(childComplexity), true
+		return e.ComplexityRoot.UserRestaurant.Position(childComplexity), true
 	case "UserRestaurant.restaurant":
-		if e.complexity.UserRestaurant.Restaurant == nil {
+		if e.ComplexityRoot.UserRestaurant.Restaurant == nil {
 			break
 		}
 
-		return e.complexity.UserRestaurant.Restaurant(childComplexity), true
+		return e.ComplexityRoot.UserRestaurant.Restaurant(childComplexity), true
 	case "UserRestaurant.userID":
-		if e.complexity.UserRestaurant.UserID == nil {
+		if e.ComplexityRoot.UserRestaurant.UserID == nil {
 			break
 		}
 
-		return e.complexity.UserRestaurant.UserID(childComplexity), true
+		return e.ComplexityRoot.UserRestaurant.UserID(childComplexity), true
 
 	}
 	return 0, false
@@ -657,10 +668,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
-	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
+	ec := newExecutionContext(opCtx, e, make(chan graphql.DeferredResult))
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputCreateInviteCodeInput,
 		ec.unmarshalInputCreatePositionInput,
 		ec.unmarshalInputCreateRestaurantInput,
+		ec.unmarshalInputJoinRestaurantInput,
 		ec.unmarshalInputUpdatePositionInput,
 		ec.unmarshalInputUpdateRestaurantInput,
 		ec.unmarshalInputUpdateStaffByManagerInput,
@@ -679,9 +692,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 				ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
 				data = ec._Query(ctx, opCtx.Operation.SelectionSet)
 			} else {
-				if atomic.LoadInt32(&ec.pendingDeferred) > 0 {
-					result := <-ec.deferredResults
-					atomic.AddInt32(&ec.pendingDeferred, -1)
+				if atomic.LoadInt32(&ec.PendingDeferred) > 0 {
+					result := <-ec.DeferredResults
+					atomic.AddInt32(&ec.PendingDeferred, -1)
 					data = result.Result
 					response.Path = result.Path
 					response.Label = result.Label
@@ -693,8 +706,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			var buf bytes.Buffer
 			data.MarshalGQL(&buf)
 			response.Data = buf.Bytes()
-			if atomic.LoadInt32(&ec.deferred) > 0 {
-				hasNext := atomic.LoadInt32(&ec.pendingDeferred) > 0
+			if atomic.LoadInt32(&ec.Deferred) > 0 {
+				hasNext := atomic.LoadInt32(&ec.PendingDeferred) > 0
 				response.HasNext = &hasNext
 			}
 
@@ -722,44 +735,22 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 }
 
 type executionContext struct {
-	*graphql.OperationContext
-	*executableSchema
-	deferred        int32
-	pendingDeferred int32
-	deferredResults chan graphql.DeferredResult
+	*graphql.ExecutionContextState[ResolverRoot, DirectiveRoot, ComplexityRoot]
 }
 
-func (ec *executionContext) processDeferredGroup(dg graphql.DeferredGroup) {
-	atomic.AddInt32(&ec.pendingDeferred, 1)
-	go func() {
-		ctx := graphql.WithFreshResponseContext(dg.Context)
-		dg.FieldSet.Dispatch(ctx)
-		ds := graphql.DeferredResult{
-			Path:   dg.Path,
-			Label:  dg.Label,
-			Result: dg.FieldSet,
-			Errors: graphql.GetErrors(ctx),
-		}
-		// null fields should bubble up
-		if dg.FieldSet.Invalids > 0 {
-			ds.Result = graphql.Null
-		}
-		ec.deferredResults <- ds
-	}()
-}
-
-func (ec *executionContext) introspectSchema() (*introspection.Schema, error) {
-	if ec.DisableIntrospection {
-		return nil, errors.New("introspection disabled")
+func newExecutionContext(
+	opCtx *graphql.OperationContext,
+	execSchema *executableSchema,
+	deferredResults chan graphql.DeferredResult,
+) executionContext {
+	return executionContext{
+		ExecutionContextState: graphql.NewExecutionContextState[ResolverRoot, DirectiveRoot, ComplexityRoot](
+			opCtx,
+			(*graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot])(execSchema),
+			parsedSchema,
+			deferredResults,
+		),
 	}
-	return introspection.WrapSchema(ec.Schema()), nil
-}
-
-func (ec *executionContext) introspectType(name string) (*introspection.Type, error) {
-	if ec.DisableIntrospection {
-		return nil, errors.New("introspection disabled")
-	}
-	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
 //go:embed "law.graphqls" "position.graphqls" "restaurant.graphqls" "schema.graphqls" "user.graphqls" "user_restaurant.graphqls"
@@ -787,6 +778,17 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
+func (ec *executionContext) field_Mutation_createInviteCode_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateInviteCodeInput2shiftyᚑbackendᚋgraphᚋmodelᚐCreateInviteCodeInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createPosition_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -812,11 +814,16 @@ func (ec *executionContext) field_Mutation_createRestaurant_args(ctx context.Con
 func (ec *executionContext) field_Mutation_deletePosition_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "posID", ec.unmarshalNID2string)
 	if err != nil {
 		return nil, err
 	}
-	args["id"] = arg0
+	args["posID"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "resID", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["resID"] = arg1
 	return args, nil
 }
 
@@ -828,6 +835,17 @@ func (ec *executionContext) field_Mutation_deleteRestaurant_args(ctx context.Con
 		return nil, err
 	}
 	args["resID"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_joinRestaurant_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNJoinRestaurantInput2shiftyᚑbackendᚋgraphᚋmodelᚐJoinRestaurantInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -889,22 +907,27 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_position_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "posID", ec.unmarshalNID2string)
 	if err != nil {
 		return nil, err
 	}
-	args["id"] = arg0
+	args["posID"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "resID", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["resID"] = arg1
 	return args, nil
 }
 
 func (ec *executionContext) field_Query_positionsByRestaurant_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "restaurantId", ec.unmarshalNString2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "resID", ec.unmarshalNString2string)
 	if err != nil {
 		return nil, err
 	}
-	args["restaurantId"] = arg0
+	args["resID"] = arg0
 	return args, nil
 }
 
@@ -1208,7 +1231,7 @@ func (ec *executionContext) _Mutation_createPosition(ctx context.Context, field 
 		ec.fieldContext_Mutation_createPosition,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreatePosition(ctx, fc.Args["input"].(model.CreatePositionInput))
+			return ec.Resolvers.Mutation().CreatePosition(ctx, fc.Args["input"].(model.CreatePositionInput))
 		},
 		nil,
 		ec.marshalNPosition2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐPosition,
@@ -1271,7 +1294,7 @@ func (ec *executionContext) _Mutation_updatePosition(ctx context.Context, field 
 		ec.fieldContext_Mutation_updatePosition,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdatePosition(ctx, fc.Args["input"].(model.UpdatePositionInput))
+			return ec.Resolvers.Mutation().UpdatePosition(ctx, fc.Args["input"].(model.UpdatePositionInput))
 		},
 		nil,
 		ec.marshalNPosition2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐPosition,
@@ -1334,7 +1357,7 @@ func (ec *executionContext) _Mutation_deletePosition(ctx context.Context, field 
 		ec.fieldContext_Mutation_deletePosition,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeletePosition(ctx, fc.Args["id"].(string))
+			return ec.Resolvers.Mutation().DeletePosition(ctx, fc.Args["posID"].(string), fc.Args["resID"].(string))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -1375,7 +1398,7 @@ func (ec *executionContext) _Mutation_createRestaurant(ctx context.Context, fiel
 		ec.fieldContext_Mutation_createRestaurant,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateRestaurant(ctx, fc.Args["input"].(model.CreateRestaurantInput))
+			return ec.Resolvers.Mutation().CreateRestaurant(ctx, fc.Args["input"].(model.CreateRestaurantInput))
 		},
 		nil,
 		ec.marshalNRestaurant2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐRestaurant,
@@ -1440,7 +1463,7 @@ func (ec *executionContext) _Mutation_updateRestaurant(ctx context.Context, fiel
 		ec.fieldContext_Mutation_updateRestaurant,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateRestaurant(ctx, fc.Args["input"].(model.UpdateRestaurantInput))
+			return ec.Resolvers.Mutation().UpdateRestaurant(ctx, fc.Args["input"].(model.UpdateRestaurantInput))
 		},
 		nil,
 		ec.marshalNRestaurant2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐRestaurant,
@@ -1497,6 +1520,88 @@ func (ec *executionContext) fieldContext_Mutation_updateRestaurant(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createInviteCode(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createInviteCode,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CreateInviteCode(ctx, fc.Args["input"].(model.CreateInviteCodeInput))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createInviteCode(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createInviteCode_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_joinRestaurant(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_joinRestaurant,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().JoinRestaurant(ctx, fc.Args["input"].(model.JoinRestaurantInput))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_joinRestaurant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_joinRestaurant_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_deleteRestaurant(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1505,7 +1610,7 @@ func (ec *executionContext) _Mutation_deleteRestaurant(ctx context.Context, fiel
 		ec.fieldContext_Mutation_deleteRestaurant,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteRestaurant(ctx, fc.Args["resID"].(string))
+			return ec.Resolvers.Mutation().DeleteRestaurant(ctx, fc.Args["resID"].(string))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -1546,7 +1651,7 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 		ec.fieldContext_Mutation_updateUser,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateUser(ctx, fc.Args["input"].(*model.UpdateUserInput))
+			return ec.Resolvers.Mutation().UpdateUser(ctx, fc.Args["input"].(*model.UpdateUserInput))
 		},
 		nil,
 		ec.marshalNUser2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐUser,
@@ -1609,7 +1714,7 @@ func (ec *executionContext) _Mutation_updateStaffByManager(ctx context.Context, 
 		ec.fieldContext_Mutation_updateStaffByManager,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateStaffByManager(ctx, fc.Args["input"].(*model.UpdateStaffByManagerInput))
+			return ec.Resolvers.Mutation().UpdateStaffByManager(ctx, fc.Args["input"].(*model.UpdateStaffByManagerInput))
 		},
 		nil,
 		ec.marshalNUserRestaurant2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐUserRestaurant,
@@ -1661,7 +1766,7 @@ func (ec *executionContext) _Mutation_delete(ctx context.Context, field graphql.
 		field,
 		ec.fieldContext_Mutation_delete,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Mutation().Delete(ctx)
+			return ec.Resolvers.Mutation().Delete(ctx)
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -1980,7 +2085,7 @@ func (ec *executionContext) _Query__empty(ctx context.Context, field graphql.Col
 		field,
 		ec.fieldContext_Query__empty,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().Empty(ctx)
+			return ec.Resolvers.Query().Empty(ctx)
 		},
 		nil,
 		ec.marshalOString2ᚖstring,
@@ -2010,7 +2115,7 @@ func (ec *executionContext) _Query_position(ctx context.Context, field graphql.C
 		ec.fieldContext_Query_position,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Position(ctx, fc.Args["id"].(string))
+			return ec.Resolvers.Query().Position(ctx, fc.Args["posID"].(string), fc.Args["resID"].(string))
 		},
 		nil,
 		ec.marshalNPosition2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐPosition,
@@ -2073,7 +2178,7 @@ func (ec *executionContext) _Query_positionsByRestaurant(ctx context.Context, fi
 		ec.fieldContext_Query_positionsByRestaurant,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().PositionsByRestaurant(ctx, fc.Args["restaurantId"].(string))
+			return ec.Resolvers.Query().PositionsByRestaurant(ctx, fc.Args["resID"].(string))
 		},
 		nil,
 		ec.marshalNPosition2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐPositionᚄ,
@@ -2136,7 +2241,7 @@ func (ec *executionContext) _Query_restaurant(ctx context.Context, field graphql
 		ec.fieldContext_Query_restaurant,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Restaurant(ctx, fc.Args["resID"].(string))
+			return ec.Resolvers.Query().Restaurant(ctx, fc.Args["resID"].(string))
 		},
 		nil,
 		ec.marshalNRestaurant2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐRestaurant,
@@ -2200,7 +2305,7 @@ func (ec *executionContext) _Query_myRestaurants(ctx context.Context, field grap
 		field,
 		ec.fieldContext_Query_myRestaurants,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().MyRestaurants(ctx)
+			return ec.Resolvers.Query().MyRestaurants(ctx)
 		},
 		nil,
 		ec.marshalNRestaurant2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐRestaurantᚄ,
@@ -2253,7 +2358,7 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 		field,
 		ec.fieldContext_Query_me,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().Me(ctx)
+			return ec.Resolvers.Query().Me(ctx)
 		},
 		nil,
 		ec.marshalNUser2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐUser,
@@ -2305,7 +2410,7 @@ func (ec *executionContext) _Query_restaurantMembers(ctx context.Context, field 
 		ec.fieldContext_Query_restaurantMembers,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().RestaurantMembers(ctx, fc.Args["restaurantID"].(string), fc.Args["limit"].(*int), fc.Args["page"].(*int), fc.Args["filter"].(*model.UserFilterInput))
+			return ec.Resolvers.Query().RestaurantMembers(ctx, fc.Args["restaurantID"].(string), fc.Args["limit"].(*int), fc.Args["page"].(*int), fc.Args["filter"].(*model.UserFilterInput))
 		},
 		nil,
 		ec.marshalNUserPagination2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐUserPagination,
@@ -2356,7 +2461,7 @@ func (ec *executionContext) _Query___type(ctx context.Context, field graphql.Col
 		ec.fieldContext_Query___type,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.introspectType(fc.Args["name"].(string))
+			return ec.IntrospectType(fc.Args["name"].(string))
 		},
 		nil,
 		ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType,
@@ -2420,7 +2525,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 		field,
 		ec.fieldContext_Query___schema,
 		func(ctx context.Context) (any, error) {
-			return ec.introspectSchema()
+			return ec.IntrospectSchema()
 		},
 		nil,
 		ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema,
@@ -4947,6 +5052,46 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputCreateInviteCodeInput(ctx context.Context, obj any) (model.CreateInviteCodeInput, error) {
+	var it model.CreateInviteCodeInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"email", "resID", "positionID"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "email":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
+		case "resID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resID"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ResID = data
+		case "positionID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("positionID"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PositionID = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreatePositionInput(ctx context.Context, obj any) (model.CreatePositionInput, error) {
 	var it model.CreatePositionInput
 	asMap := map[string]any{}
@@ -5019,7 +5164,6 @@ func (ec *executionContext) unmarshalInputCreatePositionInput(ctx context.Contex
 			it.CanDeleteRestaurant = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -5067,7 +5211,32 @@ func (ec *executionContext) unmarshalInputCreateRestaurantInput(ctx context.Cont
 			it.Address = data
 		}
 	}
+	return it, nil
+}
 
+func (ec *executionContext) unmarshalInputJoinRestaurantInput(ctx context.Context, obj any) (model.JoinRestaurantInput, error) {
+	var it model.JoinRestaurantInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"inviteCode"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "inviteCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inviteCode"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InviteCode = data
+		}
+	}
 	return it, nil
 }
 
@@ -5078,7 +5247,7 @@ func (ec *executionContext) unmarshalInputUpdatePositionInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "description", "rank", "salary", "canUpdateRestaurant", "canDeleteRestaurant"}
+	fieldsInOrder := [...]string{"id", "restaurantID", "name", "description", "rank", "salary", "canUpdateRestaurant", "canDeleteRestaurant"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -5092,6 +5261,13 @@ func (ec *executionContext) unmarshalInputUpdatePositionInput(ctx context.Contex
 				return it, err
 			}
 			it.ID = data
+		case "restaurantID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("restaurantID"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RestaurantID = data
 		case "name":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -5136,7 +5312,6 @@ func (ec *executionContext) unmarshalInputUpdatePositionInput(ctx context.Contex
 			it.CanDeleteRestaurant = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -5198,7 +5373,6 @@ func (ec *executionContext) unmarshalInputUpdateRestaurantInput(ctx context.Cont
 			it.Address = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -5246,7 +5420,6 @@ func (ec *executionContext) unmarshalInputUpdateStaffByManagerInput(ctx context.
 			it.IsBanned = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -5301,7 +5474,6 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 			it.Restaurant = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -5335,7 +5507,6 @@ func (ec *executionContext) unmarshalInputUserFilterInput(ctx context.Context, o
 			it.Position = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -5397,10 +5568,10 @@ func (ec *executionContext) _Law(ctx context.Context, sel ast.SelectionSet, obj 
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -5433,10 +5604,10 @@ func (ec *executionContext) _Mutatio(ctx context.Context, sel ast.SelectionSet, 
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -5501,6 +5672,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "createInviteCode":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createInviteCode(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "joinRestaurant":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_joinRestaurant(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "deleteRestaurant":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteRestaurant(ctx, field)
@@ -5538,10 +5723,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -5619,10 +5804,10 @@ func (ec *executionContext) _Position(ctx context.Context, sel ast.SelectionSet,
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -5820,10 +6005,10 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -5900,10 +6085,10 @@ func (ec *executionContext) _Restaurant(ctx context.Context, sel ast.SelectionSe
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -5978,10 +6163,10 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -6027,10 +6212,10 @@ func (ec *executionContext) _UserJob(ctx context.Context, sel ast.SelectionSet, 
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -6081,10 +6266,10 @@ func (ec *executionContext) _UserPagination(ctx context.Context, sel ast.Selecti
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -6140,10 +6325,10 @@ func (ec *executionContext) _UserRestaurant(ctx context.Context, sel ast.Selecti
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -6196,10 +6381,10 @@ func (ec *executionContext) ___Directive(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -6244,10 +6429,10 @@ func (ec *executionContext) ___EnumValue(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -6302,10 +6487,10 @@ func (ec *executionContext) ___Field(ctx context.Context, sel ast.SelectionSet, 
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -6357,10 +6542,10 @@ func (ec *executionContext) ___InputValue(ctx context.Context, sel ast.Selection
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -6412,10 +6597,10 @@ func (ec *executionContext) ___Schema(ctx context.Context, sel ast.SelectionSet,
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -6471,10 +6656,10 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -6503,6 +6688,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNCreateInviteCodeInput2shiftyᚑbackendᚋgraphᚋmodelᚐCreateInviteCodeInput(ctx context.Context, v any) (model.CreateInviteCodeInput, error) {
+	res, err := ec.unmarshalInputCreateInviteCodeInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNCreatePositionInput2shiftyᚑbackendᚋgraphᚋmodelᚐCreatePositionInput(ctx context.Context, v any) (model.CreatePositionInput, error) {
@@ -6547,6 +6737,11 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) unmarshalNJoinRestaurantInput2shiftyᚑbackendᚋgraphᚋmodelᚐJoinRestaurantInput(ctx context.Context, v any) (model.JoinRestaurantInput, error) {
+	res, err := ec.unmarshalInputJoinRestaurantInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNLaw2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐLaw(ctx context.Context, sel ast.SelectionSet, v *model.Law) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -6562,39 +6757,11 @@ func (ec *executionContext) marshalNPosition2shiftyᚑbackendᚋgraphᚋmodelᚐ
 }
 
 func (ec *executionContext) marshalNPosition2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐPositionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Position) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNPosition2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐPosition(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNPosition2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐPosition(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -6620,39 +6787,11 @@ func (ec *executionContext) marshalNRestaurant2shiftyᚑbackendᚋgraphᚋmodel�
 }
 
 func (ec *executionContext) marshalNRestaurant2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐRestaurantᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Restaurant) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNRestaurant2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐRestaurant(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNRestaurant2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐRestaurant(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -6720,39 +6859,11 @@ func (ec *executionContext) marshalNUser2shiftyᚑbackendᚋgraphᚋmodelᚐUser
 }
 
 func (ec *executionContext) marshalNUser2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.User) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNUser2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐUser(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNUser2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐUser(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -6774,39 +6885,11 @@ func (ec *executionContext) marshalNUser2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐU
 }
 
 func (ec *executionContext) marshalNUserJob2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐUserJobᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserJob) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNUserJob2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐUserJob(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNUserJob2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐUserJob(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -6860,39 +6943,11 @@ func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlge
 }
 
 func (ec *executionContext) marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.Directive) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -6935,39 +6990,11 @@ func (ec *executionContext) unmarshalN__DirectiveLocation2ᚕstringᚄ(ctx conte
 }
 
 func (ec *executionContext) marshalN__DirectiveLocation2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__DirectiveLocation2string(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__DirectiveLocation2string(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -6991,39 +7018,11 @@ func (ec *executionContext) marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlg
 }
 
 func (ec *executionContext) marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.InputValue) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -7039,39 +7038,11 @@ func (ec *executionContext) marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋg
 }
 
 func (ec *executionContext) marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -7160,39 +7131,11 @@ func (ec *executionContext) marshalOLaw2ᚕᚖshiftyᚑbackendᚋgraphᚋmodel�
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNLaw2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐLaw(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNLaw2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐLaw(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -7207,39 +7150,11 @@ func (ec *executionContext) marshalOPosition2ᚕᚖshiftyᚑbackendᚋgraphᚋmo
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNPosition2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐPosition(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNPosition2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐPosition(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -7288,39 +7203,11 @@ func (ec *executionContext) marshalOUser2ᚕᚖshiftyᚑbackendᚋgraphᚋmodel�
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNUser2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐUser(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNUser2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐUser(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -7343,39 +7230,11 @@ func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgq
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__EnumValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__EnumValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -7390,39 +7249,11 @@ func (ec *executionContext) marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgen
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Field2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Field2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -7437,39 +7268,11 @@ func (ec *executionContext) marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋg
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -7491,39 +7294,11 @@ func (ec *executionContext) marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgen�
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
