@@ -16,7 +16,7 @@ type UserRestaurantRepository interface {
 	CheckAuthority(ctx context.Context, targetID, requestID, resID string) (bool, error)
 	CheckAuthorityToUpdate(ctx context.Context, userID, resID string) (bool, error)
 	CheckAuthorityToDelete(ctx context.Context, userID, resID string) (bool, error)
-	CheckAuthorityToInvite(ctx context.Context, userID, resID string) (bool, error)
+	HasManagementAuthority(ctx context.Context, userID, resID string) (bool, error)
 	Update(ctx context.Context, userID, resID string, updateData map[string]interface{}) (*entity.UserRestaurant, error)
 	DeleteAllByUserID(ctx context.Context, userID string) error
 	DeleteAllByRestaurantID(ctx context.Context, resID string) error
@@ -37,10 +37,8 @@ func NewUserRestaurantRepository(db *gorm.DB) UserRestaurantRepository {
 func (r *userRestaurantRepo) Create(ctx context.Context, userRes *entity.UserRestaurant) (*entity.UserRestaurant, error) {
 	db := Extract(ctx, r.db)
 
-	result := db.WithContext(ctx).Clauses(clause.Returning{}).Create(userRes)
-
-	if result.Error != nil {
-		return nil, result.Error
+	if err := db.WithContext(ctx).Clauses(clause.Returning{}).Create(userRes).Error; err != nil {
+		return nil, err
 	}
 
 	return userRes, nil
@@ -53,7 +51,7 @@ func (r *userRestaurantRepo) CheckUserInRestaurant(ctx context.Context, userID, 
 	if err := r.db.
 		WithContext(ctx).
 		Model(&entity.UserRestaurant{}).
-		Where("user_id = ? AND restaurant_id = ?", userID, resID).
+		Where("user_id = ? AND restaurant_id = ? AND is_deleted = ?", userID, resID, false).
 		Count(&count).Error; err != nil {
 		return false, err
 	}
@@ -73,7 +71,7 @@ func (r *userRestaurantRepo) CheckAuthority(ctx context.Context, targetID, reque
 		WithContext(ctx).
 		Select("user_restaurants.user_id, positions.rank").
 		Joins("JOIN positions ON positions.id = user_restaurants.position_id").
-		Where("user_restaurants.restaurant_id = ? AND user_restaurants.user_id IN ?", resID, []string{requestID, targetID}).
+		Where("user_restaurants.restaurant_id = ? AND user_restaurants.user_id IN ? AND user_restaurant.is_deleted = ?", resID, []string{requestID, targetID},false).
 		Scan(&ranks).Error; err != nil {
 		return false, err
 	}
@@ -110,7 +108,7 @@ func (r *userRestaurantRepo) CheckAuthorityToUpdate(ctx context.Context, userID,
 		Model(&entity.UserRestaurant{}).
 		Select("positions.can_update_restaurant").
 		Joins("JOIN positions ON user_restaurants.position_id = positions.id").
-		Where("user_restaurants.user_id = ? AND user_restaurants.restaurant_id = ?", userID, resID).
+		Where("user_restaurants.user_id = ? AND user_restaurants.restaurant_id = ? AND user_restaurants.is_deleted = ?", userID, resID,false).
 		Scan(&canUpdate).Error; err != nil {
 		return false, err
 	}
@@ -126,7 +124,7 @@ func (r *userRestaurantRepo) CheckAuthorityToDelete(ctx context.Context, userID,
 		Model(&entity.UserRestaurant{}).
 		Select("positions.can_delete_restaurant").
 		Joins("JOIN positions ON user_restaurants.position_id = positions.id").
-		Where("user_restaurants.user_id = ? AND user_restaurants.restaurant_id = ?", userID, resID).
+		Where("user_restaurants.user_id = ? AND user_restaurants.restaurant_id = ? AND user_restaurants.is_deleted = ?", userID, resID,false).
 		Scan(&canDelete).Error; err != nil {
 		return false, err
 	}
@@ -134,14 +132,15 @@ func (r *userRestaurantRepo) CheckAuthorityToDelete(ctx context.Context, userID,
 
 }
 
-func (r *userRestaurantRepo) CheckAuthorityToInvite(ctx context.Context, userID, resID string) (bool, error) {
+
+func (r *userRestaurantRepo) HasManagementAuthority(ctx context.Context, userID, resID string) (bool, error) {
 	var rank int
 
 	if err := r.db.WithContext(ctx).
 		Model(&entity.UserRestaurant{}).
 		Select("positions.rank").
 		Joins("JOIN positions ON user_restaurants.position_id = positions.id").
-		Where("user_restaurants.user_id = ? AND user_restaurants.restaurant_id = ?", userID, resID).
+		Where("user_restaurants.user_id = ? AND user_restaurants.restaurant_id = ? AND user_restaurants.is_deleted = ?", userID, resID,false).
 		Scan(&rank).Error; err != nil {
 		return false, err
 	}
@@ -180,12 +179,11 @@ func (r *userRestaurantRepo) Update(ctx context.Context, userID, resID string, u
 func (r *userRestaurantRepo) DeleteAllByUserID(ctx context.Context, userID string) error {
 	db := Extract(ctx, r.db)
 
-	result := db.WithContext(ctx).Model(&entity.UserRestaurant{}).Where("user_id = ?", userID).Updates(map[string]interface{}{
+	return db.WithContext(ctx).Model(&entity.UserRestaurant{}).Where("user_id = ?", userID).Updates(map[string]interface{}{
 		"is_deleted": true,
 		"deleted_at": time.Now(),
-	})
+	}).Error
 
-	return result.Error
 }
 
 func (r *userRestaurantRepo) DeleteAllByRestaurantID(ctx context.Context, resID string) error {

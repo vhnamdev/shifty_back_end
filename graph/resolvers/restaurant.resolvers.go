@@ -1,4 +1,4 @@
-package graph
+package resolvers
 
 // This file will be automatically regenerated based on the schema, any resolver
 // implementations
@@ -7,6 +7,7 @@ package graph
 
 import (
 	"context"
+	"shifty-backend/graph/mapper"
 	"shifty-backend/graph/model"
 	"shifty-backend/pkg/xerror"
 )
@@ -19,15 +20,20 @@ func (r *mutationResolver) CreateRestaurant(ctx context.Context, input model.Cre
 		return nil, xerror.BadRequest("You are not logged in")
 	}
 
-	mapRestaurant := MapRestaurantModelToEntity(&input)
-
+	mapRestaurant, err := mapper.MapRestaurantModelToEntity(&input)
+	if err != nil {
+		return nil, xerror.Internal("Can not map restaurant from model to entity")
+	}
 	newRestaurant, err := r.RestaurantUseCase.Create(ctx, userID, mapRestaurant)
 
 	if err != nil {
 		return nil, err
 	}
-
-	return MapRestaurantEntityToModel(newRestaurant), nil
+	restaurantModel, err := mapper.MapRestaurantEntityToModel(newRestaurant)
+	if err != nil {
+		return nil, err
+	}
+	return restaurantModel, nil
 }
 
 // UpdateRestaurant is the resolver for the updateRestaurant field.
@@ -38,7 +44,7 @@ func (r *mutationResolver) UpdateRestaurant(ctx context.Context, input model.Upd
 		return nil, xerror.BadRequest("You are not logged in")
 	}
 
-	updateData, err := MapRestaurantUpdateToMap(&input)
+	updateData, err := mapper.MapRestaurantUpdateToMap(&input)
 
 	if err != nil {
 		return nil, xerror.Internal("Can not map restaurant data")
@@ -49,8 +55,11 @@ func (r *mutationResolver) UpdateRestaurant(ctx context.Context, input model.Upd
 	if err != nil {
 		return nil, err
 	}
-
-	return MapRestaurantEntityToModel(updatedRestaurant), nil
+	restaurantMode, err := mapper.MapRestaurantEntityToModel(updatedRestaurant)
+	if err != nil {
+		return nil, err
+	}
+	return restaurantMode, nil
 }
 
 // CreateInviteCode is the resolver for the createInviteCode field.
@@ -112,8 +121,10 @@ func (r *queryResolver) Restaurant(ctx context.Context, resID string) (*model.Re
 		return nil, err
 	}
 
-	mapRestaurant := MapRestaurantEntityToModel(restaurant)
-
+	mapRestaurant, err := mapper.MapRestaurantEntityToModel(restaurant)
+	if err != nil {
+		return nil, err
+	}
 	return mapRestaurant, nil
 }
 
@@ -132,7 +143,10 @@ func (r *queryResolver) MyRestaurants(ctx context.Context) ([]*model.Restaurant,
 	myRestaurants := make([]*model.Restaurant, 0, len(restaurants))
 
 	for _, restaurant := range restaurants {
-		mappedRestaurant := MapRestaurantEntityToModel(restaurant)
+		mappedRestaurant, err := mapper.MapRestaurantEntityToModel(restaurant)
+		if err != nil {
+			return nil, err
+		}
 		myRestaurants = append(myRestaurants, mappedRestaurant)
 	}
 	return myRestaurants, nil

@@ -190,7 +190,7 @@ func (m *MockUserRestaurantRepo) Update(ctx context.Context, userID, resID strin
 	}
 	return args.Get(0).(*entity.UserRestaurant), args.Error(1)
 }
-func (m *MockUserRestaurantRepo) CheckAuthorityToInvite(ctx context.Context, userID, resID string) (bool, error) {
+func (m *MockUserRestaurantRepo) HasManagementAuthority(ctx context.Context, userID, resID string) (bool, error) {
 	args := m.Called(ctx, userID, resID)
 	return args.Bool(0), args.Error(1)
 }

@@ -1,0 +1,34 @@
+type Schedule {
+  id:ID!
+  startTime:Time!
+  endTime:Time!
+  numberOfMembers:Int!
+  numberOfShifts:Int!
+  restaurantID:String!
+  createdAt:Time!
+}
+
+input CreateScheduleInput{
+
+    startTime:Time!
+    endTime:Time!
+    restaurantID:String!
+}
+
+input UpdateScheduleInput{
+    restaurantID:String!
+    scheduleID:ID!
+    startTime:Time
+    endTime:Time
+}
+
+extend type Query {
+  schedule(scheID:ID!,resID:String!): Schedule!
+  allSchedule(resID:String!):[Schedule!]!
+}
+
+extend type Mutation{
+    createSchedule(input: CreateScheduleInput!): Schedule!
+    updateSchedule(input: UpdateScheduleInput!): Schedule!
+    deleteSchedule(resID:String!,scheID:String!):Boolean!
+}

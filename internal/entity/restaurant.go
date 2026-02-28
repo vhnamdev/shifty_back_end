@@ -21,7 +21,7 @@ type Restaurant struct {
 	Laws            []Law            `gorm:"foreignKey:RestaurantID" json:"laws,omitempty"`
 	CreatedAt       time.Time        `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt       time.Time        `json:"updated_at"`
-	DeletedAt       time.Time        `json:"deleted_at"`
+	DeletedAt       *time.Time        `json:"deleted_at"`
 }
 
 func (r *Restaurant) BeforeCreate(tx *gorm.DB) (err error) {

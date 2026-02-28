@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"shifty-backend/configs"
-	"shifty-backend/graph"
+	"shifty-backend/graph/resolvers"
 	"shifty-backend/internal/delivery/graphql"
 	"shifty-backend/internal/delivery/http/handler"
 	"shifty-backend/internal/delivery/http/middleware"
@@ -14,6 +14,7 @@ import (
 	"shifty-backend/internal/usecase"
 	"shifty-backend/pkg/database"
 	"shifty-backend/pkg/mailer"
+	"shifty-backend/pkg/monitoring"
 	"shifty-backend/pkg/token"
 	"shifty-backend/pkg/uploader"
 	"syscall"
@@ -44,6 +45,14 @@ func main() {
 			log.Fatal("Can not disconnect PostgresSQL Database!")
 		}
 	}()
+
+	if cfg.SentryDSN != "" {
+		err := monitoring.Init(cfg.SentryDSN, cfg.AppEnv, cfg.SentryTraceRate)
+		if err != nil {
+			log.Printf("[SENTRY] Sentry initialization failed: %v", err)
+		}
+	}
+	defer monitoring.Flush()
 
 	// Connect to Redis Database
 	redisClient := database.ConnectRedis(cfg)
@@ -103,6 +112,7 @@ func main() {
 	userRestaurantRepo := repository.NewUserRestaurantRepository(db)
 	restaurantRepo := repository.NewRestaurantRepository(db)
 	positionRepo := repository.NewPositionRepository(db)
+	schedulRepo := repository.NewScheduleRepository(db)
 	// ------------------------------USECASE----------------------------------
 
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenMaster, timeoutContext, redisRepo, emailService, googleService)
@@ -110,6 +120,7 @@ func main() {
 	userRestaurantUseCase := usecase.NewUserRestaurantUseCase(userRestaurantRepo)
 	restaurantUseCase := usecase.NewRestaurantUseCase(transactor, restaurantRepo, userRestaurantRepo, positionRepo, redisRepo, userRepo, emailService, cloudinaryService)
 	positionUseCase := usecase.NewPositionUseCase(positionRepo, userRestaurantRepo, transactor)
+	scheduleUseCase := usecase.NewScheduleUseCase(schedulRepo, userRestaurantRepo)
 	// ------------------------------HANDLER----------------------------------
 
 	authHandler := handler.NewAuthHandler(authUseCase, cloudinaryService, emailService)
@@ -118,11 +129,12 @@ func main() {
 		AuthHandler: authHandler,
 		UserHandler: userHandler,
 	}
-	gqlResolver := &graph.Resolver{
+	gqlResolver := &resolvers.Resolver{
 		UserUseCase:           userUseCase,
 		UserRestaurantUseCase: userRestaurantUseCase,
 		RestaurantUseCase:     restaurantUseCase,
 		PositionUseCase:       positionUseCase,
+		ScheduleUseCase:       scheduleUseCase,
 	}
 
 	playgroundHandler, queryHandler := graphql.NewGraphQLHandler(gqlResolver)
