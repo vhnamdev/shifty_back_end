@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"shifty-backend/graph"
+	"shifty-backend/graph/resolvers"
 
 	"shifty-backend/pkg/xerror"
 
@@ -16,7 +17,7 @@ import (
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
-func NewGraphQLHandler(resolver *graph.Resolver) (fiber.Handler, fiber.Handler) {
+func NewGraphQLHandler(resolver *resolvers.Resolver) (fiber.Handler, fiber.Handler) {
 
 	// Initialize GraphQL Server Core
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))

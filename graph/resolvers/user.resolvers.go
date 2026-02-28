@@ -1,4 +1,4 @@
-package graph
+package resolvers
 
 // This file will be automatically regenerated based on the schema, any resolver
 // implementations
@@ -7,6 +7,7 @@ package graph
 
 import (
 	"context"
+	"shifty-backend/graph/mapper"
 	"shifty-backend/graph/model"
 	"shifty-backend/internal/dto"
 	"shifty-backend/pkg/xerror"
@@ -21,17 +22,22 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, input *model.UpdateUs
 	}
 
 	// Map updateuserinput to entity
-	userEntity := MapUserUpdateInputToEntity(userID, input)
-
+	userEntity, err := mapper.MapUserUpdateInputToEntity(userID, input)
+	if err != nil {
+		return nil, xerror.Internal("Can not map user to entity")
+	}
 	// Call usecase to update
 	updatedUser, err := r.UserUseCase.UpdateUser(ctx, userEntity)
 
 	if err != nil {
 		return nil, err
 	}
-
+	userModel, err := mapper.MapUserEntityToModel(updatedUser)
+	if err != nil {
+		return nil, xerror.Internal("Can not map user from entity to model")
+	}
 	// Return back with map user fro entity to model
-	return MapUserEntityToModel(updatedUser), nil
+	return userModel, nil
 }
 
 // UpdateStaffByManager is the resolver for the updateStaffByManager field.
@@ -44,9 +50,9 @@ func (r *mutationResolver) UpdateStaffByManager(ctx context.Context, input *mode
 	if input.Restaurant == nil || input.StaffID == nil {
 		return nil, xerror.BadRequest("Restaurant ID and Staff ID are required")
 	}
-	updateData, err := MapStaffUpdateToMap(input)
+	updateData, err := mapper.MapStaffUpdateToMap(input)
 	if err != nil {
-		return nil, err
+		return nil, xerror.Internal("Can not map update staff")
 	}
 
 	updatedStaff, err := r.UserRestaurantUseCase.UpdateStaffByManager(ctx, userID, *input.StaffID, *input.Restaurant, updateData)
@@ -54,8 +60,11 @@ func (r *mutationResolver) UpdateStaffByManager(ctx context.Context, input *mode
 	if err != nil {
 		return nil, err
 	}
-
-	return MapUserRestaurantEntityToModel(updatedStaff), nil
+	userResModel, err := mapper.MapUserRestaurantEntityToModel(updatedStaff)
+	if err != nil {
+		return nil, err
+	}
+	return userResModel, nil
 }
 
 // Delete is the resolver for the delete field.

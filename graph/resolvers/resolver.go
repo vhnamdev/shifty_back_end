@@ -1,4 +1,5 @@
-package graph
+//go:generate go run github.com/99designs/gqlgen generate
+package resolvers
 
 import "shifty-backend/internal/usecase"
 
@@ -12,4 +13,5 @@ type Resolver struct {
 	UserRestaurantUseCase usecase.UserRestaurantUseCase
 	RestaurantUseCase     usecase.RestaurantUseCase
 	PositionUseCase       usecase.PositionUseCase
+	ScheduleUseCase       usecase.ScheduleUseCase
 }

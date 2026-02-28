@@ -292,7 +292,7 @@ func (u *restaurantUseCase) GetMyRestaurants(ctx context.Context, userID string)
 
 func (u *restaurantUseCase) CreateInviteCode(ctx context.Context, userID, email, resID, positionID string) error {
 
-	isAuthority, err := u.userRestaurantRepo.CheckAuthorityToInvite(ctx, userID, resID)
+	isAuthority, err := u.userRestaurantRepo.HasManagementAuthority(ctx, userID, resID)
 
 	if err != nil {
 		return xerror.Internal("Can not check authority")

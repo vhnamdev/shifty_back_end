@@ -54,12 +54,15 @@ type ComplexityRoot struct {
 		CreateInviteCode     func(childComplexity int, input model.CreateInviteCodeInput) int
 		CreatePosition       func(childComplexity int, input model.CreatePositionInput) int
 		CreateRestaurant     func(childComplexity int, input model.CreateRestaurantInput) int
+		CreateSchedule       func(childComplexity int, input model.CreateScheduleInput) int
 		Delete               func(childComplexity int) int
 		DeletePosition       func(childComplexity int, posID string, resID string) int
 		DeleteRestaurant     func(childComplexity int, resID string) int
+		DeleteSchedule       func(childComplexity int, resID string, scheID string) int
 		JoinRestaurant       func(childComplexity int, input model.JoinRestaurantInput) int
 		UpdatePosition       func(childComplexity int, input model.UpdatePositionInput) int
 		UpdateRestaurant     func(childComplexity int, input model.UpdateRestaurantInput) int
+		UpdateSchedule       func(childComplexity int, input model.UpdateScheduleInput) int
 		UpdateStaffByManager func(childComplexity int, input *model.UpdateStaffByManagerInput) int
 		UpdateUser           func(childComplexity int, input *model.UpdateUserInput) int
 	}
@@ -78,6 +81,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		AllSchedule           func(childComplexity int, resID string) int
 		Empty                 func(childComplexity int) int
 		Me                    func(childComplexity int) int
 		MyRestaurants         func(childComplexity int) int
@@ -85,6 +89,7 @@ type ComplexityRoot struct {
 		PositionsByRestaurant func(childComplexity int, resID string) int
 		Restaurant            func(childComplexity int, resID string) int
 		RestaurantMembers     func(childComplexity int, restaurantID string, limit *int, page *int, filter *model.UserFilterInput) int
+		Schedule              func(childComplexity int, scheID string, resID string) int
 	}
 
 	Restaurant struct {
@@ -99,6 +104,16 @@ type ComplexityRoot struct {
 		PhoneNumber func(childComplexity int) int
 		Positions   func(childComplexity int) int
 		Status      func(childComplexity int) int
+	}
+
+	Schedule struct {
+		CreatedAt       func(childComplexity int) int
+		EndTime         func(childComplexity int) int
+		ID              func(childComplexity int) int
+		NumberOfMembers func(childComplexity int) int
+		NumberOfShifts  func(childComplexity int) int
+		RestaurantID    func(childComplexity int) int
+		StartTime       func(childComplexity int) int
 	}
 
 	User struct {
@@ -145,6 +160,9 @@ type MutationResolver interface {
 	CreateInviteCode(ctx context.Context, input model.CreateInviteCodeInput) (bool, error)
 	JoinRestaurant(ctx context.Context, input model.JoinRestaurantInput) (bool, error)
 	DeleteRestaurant(ctx context.Context, resID string) (bool, error)
+	CreateSchedule(ctx context.Context, input model.CreateScheduleInput) (*model.Schedule, error)
+	UpdateSchedule(ctx context.Context, input model.UpdateScheduleInput) (*model.Schedule, error)
+	DeleteSchedule(ctx context.Context, resID string, scheID string) (bool, error)
 	UpdateUser(ctx context.Context, input *model.UpdateUserInput) (*model.User, error)
 	UpdateStaffByManager(ctx context.Context, input *model.UpdateStaffByManagerInput) (*model.UserRestaurant, error)
 	Delete(ctx context.Context) (bool, error)
@@ -155,6 +173,8 @@ type QueryResolver interface {
 	PositionsByRestaurant(ctx context.Context, resID string) ([]*model.Position, error)
 	Restaurant(ctx context.Context, resID string) (*model.Restaurant, error)
 	MyRestaurants(ctx context.Context) ([]*model.Restaurant, error)
+	Schedule(ctx context.Context, scheID string, resID string) (*model.Schedule, error)
+	AllSchedule(ctx context.Context, resID string) ([]*model.Schedule, error)
 	Me(ctx context.Context) (*model.User, error)
 	RestaurantMembers(ctx context.Context, restaurantID string, limit *int, page *int, filter *model.UserFilterInput) (*model.UserPagination, error)
 }
@@ -250,6 +270,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.CreateRestaurant(childComplexity, args["input"].(model.CreateRestaurantInput)), true
+	case "Mutation.createSchedule":
+		if e.ComplexityRoot.Mutation.CreateSchedule == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createSchedule_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CreateSchedule(childComplexity, args["input"].(model.CreateScheduleInput)), true
 	case "Mutation.delete":
 		if e.ComplexityRoot.Mutation.Delete == nil {
 			break
@@ -278,6 +309,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.DeleteRestaurant(childComplexity, args["resID"].(string)), true
+	case "Mutation.deleteSchedule":
+		if e.ComplexityRoot.Mutation.DeleteSchedule == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteSchedule_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.DeleteSchedule(childComplexity, args["resID"].(string), args["scheID"].(string)), true
 	case "Mutation.joinRestaurant":
 		if e.ComplexityRoot.Mutation.JoinRestaurant == nil {
 			break
@@ -311,6 +353,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.UpdateRestaurant(childComplexity, args["input"].(model.UpdateRestaurantInput)), true
+	case "Mutation.updateSchedule":
+		if e.ComplexityRoot.Mutation.UpdateSchedule == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateSchedule_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.UpdateSchedule(childComplexity, args["input"].(model.UpdateScheduleInput)), true
 	case "Mutation.updateStaffByManager":
 		if e.ComplexityRoot.Mutation.UpdateStaffByManager == nil {
 			break
@@ -395,6 +448,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.Position.UpdatedAt(childComplexity), true
 
+	case "Query.allSchedule":
+		if e.ComplexityRoot.Query.AllSchedule == nil {
+			break
+		}
+
+		args, err := ec.field_Query_allSchedule_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.AllSchedule(childComplexity, args["resID"].(string)), true
 	case "Query._empty":
 		if e.ComplexityRoot.Query.Empty == nil {
 			break
@@ -458,6 +522,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.RestaurantMembers(childComplexity, args["restaurantID"].(string), args["limit"].(*int), args["page"].(*int), args["filter"].(*model.UserFilterInput)), true
+	case "Query.schedule":
+		if e.ComplexityRoot.Query.Schedule == nil {
+			break
+		}
+
+		args, err := ec.field_Query_schedule_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.Schedule(childComplexity, args["scheID"].(string), args["resID"].(string)), true
 
 	case "Restaurant.address":
 		if e.ComplexityRoot.Restaurant.Address == nil {
@@ -525,6 +600,49 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Restaurant.Status(childComplexity), true
+
+	case "Schedule.createdAt":
+		if e.ComplexityRoot.Schedule.CreatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Schedule.CreatedAt(childComplexity), true
+	case "Schedule.endTime":
+		if e.ComplexityRoot.Schedule.EndTime == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Schedule.EndTime(childComplexity), true
+	case "Schedule.id":
+		if e.ComplexityRoot.Schedule.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Schedule.ID(childComplexity), true
+	case "Schedule.numberOfMembers":
+		if e.ComplexityRoot.Schedule.NumberOfMembers == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Schedule.NumberOfMembers(childComplexity), true
+	case "Schedule.numberOfShifts":
+		if e.ComplexityRoot.Schedule.NumberOfShifts == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Schedule.NumberOfShifts(childComplexity), true
+	case "Schedule.restaurantID":
+		if e.ComplexityRoot.Schedule.RestaurantID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Schedule.RestaurantID(childComplexity), true
+	case "Schedule.startTime":
+		if e.ComplexityRoot.Schedule.StartTime == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Schedule.StartTime(childComplexity), true
 
 	case "User.address":
 		if e.ComplexityRoot.User.Address == nil {
@@ -673,9 +791,11 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateInviteCodeInput,
 		ec.unmarshalInputCreatePositionInput,
 		ec.unmarshalInputCreateRestaurantInput,
+		ec.unmarshalInputCreateScheduleInput,
 		ec.unmarshalInputJoinRestaurantInput,
 		ec.unmarshalInputUpdatePositionInput,
 		ec.unmarshalInputUpdateRestaurantInput,
+		ec.unmarshalInputUpdateScheduleInput,
 		ec.unmarshalInputUpdateStaffByManagerInput,
 		ec.unmarshalInputUpdateUserInput,
 		ec.unmarshalInputUserFilterInput,
@@ -753,7 +873,7 @@ func newExecutionContext(
 	}
 }
 
-//go:embed "law.graphqls" "position.graphqls" "restaurant.graphqls" "schema.graphqls" "user.graphqls" "user_restaurant.graphqls"
+//go:embed "schema/law.graphqls" "schema/position.graphqls" "schema/restaurant.graphqls" "schema/schedule.graphqls" "schema/schema.graphqls" "schema/user.graphqls" "schema/user_restaurant.graphqls"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -765,12 +885,13 @@ func sourceData(filename string) string {
 }
 
 var sources = []*ast.Source{
-	{Name: "law.graphqls", Input: sourceData("law.graphqls"), BuiltIn: false},
-	{Name: "position.graphqls", Input: sourceData("position.graphqls"), BuiltIn: false},
-	{Name: "restaurant.graphqls", Input: sourceData("restaurant.graphqls"), BuiltIn: false},
-	{Name: "schema.graphqls", Input: sourceData("schema.graphqls"), BuiltIn: false},
-	{Name: "user.graphqls", Input: sourceData("user.graphqls"), BuiltIn: false},
-	{Name: "user_restaurant.graphqls", Input: sourceData("user_restaurant.graphqls"), BuiltIn: false},
+	{Name: "schema/law.graphqls", Input: sourceData("schema/law.graphqls"), BuiltIn: false},
+	{Name: "schema/position.graphqls", Input: sourceData("schema/position.graphqls"), BuiltIn: false},
+	{Name: "schema/restaurant.graphqls", Input: sourceData("schema/restaurant.graphqls"), BuiltIn: false},
+	{Name: "schema/schedule.graphqls", Input: sourceData("schema/schedule.graphqls"), BuiltIn: false},
+	{Name: "schema/schema.graphqls", Input: sourceData("schema/schema.graphqls"), BuiltIn: false},
+	{Name: "schema/user.graphqls", Input: sourceData("schema/user.graphqls"), BuiltIn: false},
+	{Name: "schema/user_restaurant.graphqls", Input: sourceData("schema/user_restaurant.graphqls"), BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -811,6 +932,17 @@ func (ec *executionContext) field_Mutation_createRestaurant_args(ctx context.Con
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createSchedule_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateScheduleInput2shiftyᚑbackendᚋgraphᚋmodelᚐCreateScheduleInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deletePosition_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -835,6 +967,22 @@ func (ec *executionContext) field_Mutation_deleteRestaurant_args(ctx context.Con
 		return nil, err
 	}
 	args["resID"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteSchedule_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "resID", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["resID"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "scheID", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["scheID"] = arg1
 	return args, nil
 }
 
@@ -864,6 +1012,17 @@ func (ec *executionContext) field_Mutation_updateRestaurant_args(ctx context.Con
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateRestaurantInput2shiftyᚑbackendᚋgraphᚋmodelᚐUpdateRestaurantInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateSchedule_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateScheduleInput2shiftyᚑbackendᚋgraphᚋmodelᚐUpdateScheduleInput)
 	if err != nil {
 		return nil, err
 	}
@@ -901,6 +1060,17 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		return nil, err
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_allSchedule_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "resID", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["resID"] = arg0
 	return args, nil
 }
 
@@ -965,6 +1135,22 @@ func (ec *executionContext) field_Query_restaurant_args(ctx context.Context, raw
 		return nil, err
 	}
 	args["resID"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_schedule_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "scheID", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["scheID"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "resID", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["resID"] = arg1
 	return args, nil
 }
 
@@ -1637,6 +1823,161 @@ func (ec *executionContext) fieldContext_Mutation_deleteRestaurant(ctx context.C
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deleteRestaurant_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createSchedule(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createSchedule,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CreateSchedule(ctx, fc.Args["input"].(model.CreateScheduleInput))
+		},
+		nil,
+		ec.marshalNSchedule2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐSchedule,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createSchedule(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Schedule_id(ctx, field)
+			case "startTime":
+				return ec.fieldContext_Schedule_startTime(ctx, field)
+			case "endTime":
+				return ec.fieldContext_Schedule_endTime(ctx, field)
+			case "numberOfMembers":
+				return ec.fieldContext_Schedule_numberOfMembers(ctx, field)
+			case "numberOfShifts":
+				return ec.fieldContext_Schedule_numberOfShifts(ctx, field)
+			case "restaurantID":
+				return ec.fieldContext_Schedule_restaurantID(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Schedule_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Schedule", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createSchedule_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateSchedule(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateSchedule,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().UpdateSchedule(ctx, fc.Args["input"].(model.UpdateScheduleInput))
+		},
+		nil,
+		ec.marshalNSchedule2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐSchedule,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateSchedule(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Schedule_id(ctx, field)
+			case "startTime":
+				return ec.fieldContext_Schedule_startTime(ctx, field)
+			case "endTime":
+				return ec.fieldContext_Schedule_endTime(ctx, field)
+			case "numberOfMembers":
+				return ec.fieldContext_Schedule_numberOfMembers(ctx, field)
+			case "numberOfShifts":
+				return ec.fieldContext_Schedule_numberOfShifts(ctx, field)
+			case "restaurantID":
+				return ec.fieldContext_Schedule_restaurantID(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Schedule_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Schedule", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateSchedule_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteSchedule(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_deleteSchedule,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().DeleteSchedule(ctx, fc.Args["resID"].(string), fc.Args["scheID"].(string))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteSchedule(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteSchedule_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -2351,6 +2692,120 @@ func (ec *executionContext) fieldContext_Query_myRestaurants(_ context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_schedule(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_schedule,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().Schedule(ctx, fc.Args["scheID"].(string), fc.Args["resID"].(string))
+		},
+		nil,
+		ec.marshalNSchedule2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐSchedule,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_schedule(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Schedule_id(ctx, field)
+			case "startTime":
+				return ec.fieldContext_Schedule_startTime(ctx, field)
+			case "endTime":
+				return ec.fieldContext_Schedule_endTime(ctx, field)
+			case "numberOfMembers":
+				return ec.fieldContext_Schedule_numberOfMembers(ctx, field)
+			case "numberOfShifts":
+				return ec.fieldContext_Schedule_numberOfShifts(ctx, field)
+			case "restaurantID":
+				return ec.fieldContext_Schedule_restaurantID(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Schedule_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Schedule", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_schedule_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_allSchedule(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_allSchedule,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().AllSchedule(ctx, fc.Args["resID"].(string))
+		},
+		nil,
+		ec.marshalNSchedule2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐScheduleᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_allSchedule(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Schedule_id(ctx, field)
+			case "startTime":
+				return ec.fieldContext_Schedule_startTime(ctx, field)
+			case "endTime":
+				return ec.fieldContext_Schedule_endTime(ctx, field)
+			case "numberOfMembers":
+				return ec.fieldContext_Schedule_numberOfMembers(ctx, field)
+			case "numberOfShifts":
+				return ec.fieldContext_Schedule_numberOfShifts(ctx, field)
+			case "restaurantID":
+				return ec.fieldContext_Schedule_restaurantID(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Schedule_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Schedule", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_allSchedule_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -2928,6 +3383,209 @@ func (ec *executionContext) _Restaurant_createdAt(ctx context.Context, field gra
 func (ec *executionContext) fieldContext_Restaurant_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Restaurant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Schedule_id(ctx context.Context, field graphql.CollectedField, obj *model.Schedule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Schedule_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Schedule_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Schedule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Schedule_startTime(ctx context.Context, field graphql.CollectedField, obj *model.Schedule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Schedule_startTime,
+		func(ctx context.Context) (any, error) {
+			return obj.StartTime, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Schedule_startTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Schedule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Schedule_endTime(ctx context.Context, field graphql.CollectedField, obj *model.Schedule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Schedule_endTime,
+		func(ctx context.Context) (any, error) {
+			return obj.EndTime, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Schedule_endTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Schedule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Schedule_numberOfMembers(ctx context.Context, field graphql.CollectedField, obj *model.Schedule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Schedule_numberOfMembers,
+		func(ctx context.Context) (any, error) {
+			return obj.NumberOfMembers, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Schedule_numberOfMembers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Schedule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Schedule_numberOfShifts(ctx context.Context, field graphql.CollectedField, obj *model.Schedule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Schedule_numberOfShifts,
+		func(ctx context.Context) (any, error) {
+			return obj.NumberOfShifts, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Schedule_numberOfShifts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Schedule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Schedule_restaurantID(ctx context.Context, field graphql.CollectedField, obj *model.Schedule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Schedule_restaurantID,
+		func(ctx context.Context) (any, error) {
+			return obj.RestaurantID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Schedule_restaurantID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Schedule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Schedule_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Schedule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Schedule_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Schedule_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Schedule",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -5214,6 +5872,46 @@ func (ec *executionContext) unmarshalInputCreateRestaurantInput(ctx context.Cont
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreateScheduleInput(ctx context.Context, obj any) (model.CreateScheduleInput, error) {
+	var it model.CreateScheduleInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"startTime", "endTime", "restaurantID"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "startTime":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startTime"))
+			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartTime = data
+		case "endTime":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endTime"))
+			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EndTime = data
+		case "restaurantID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("restaurantID"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RestaurantID = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputJoinRestaurantInput(ctx context.Context, obj any) (model.JoinRestaurantInput, error) {
 	var it model.JoinRestaurantInput
 	asMap := map[string]any{}
@@ -5371,6 +6069,53 @@ func (ec *executionContext) unmarshalInputUpdateRestaurantInput(ctx context.Cont
 				return it, err
 			}
 			it.Address = data
+		}
+	}
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateScheduleInput(ctx context.Context, obj any) (model.UpdateScheduleInput, error) {
+	var it model.UpdateScheduleInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"restaurantID", "scheduleID", "startTime", "endTime"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "restaurantID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("restaurantID"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RestaurantID = data
+		case "scheduleID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("scheduleID"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ScheduleID = data
+		case "startTime":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startTime"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartTime = data
+		case "endTime":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endTime"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EndTime = data
 		}
 	}
 	return it, nil
@@ -5693,6 +6438,27 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "createSchedule":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createSchedule(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateSchedule":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateSchedule(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteSchedule":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteSchedule(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "updateUser":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateUser(ctx, field)
@@ -5944,6 +6710,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "schedule":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_schedule(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "allSchedule":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_allSchedule(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "me":
 			field := field
 
@@ -6073,6 +6883,75 @@ func (ec *executionContext) _Restaurant(ctx context.Context, sel ast.SelectionSe
 			}
 		case "createdAt":
 			out.Values[i] = ec._Restaurant_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var scheduleImplementors = []string{"Schedule"}
+
+func (ec *executionContext) _Schedule(ctx context.Context, sel ast.SelectionSet, obj *model.Schedule) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, scheduleImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Schedule")
+		case "id":
+			out.Values[i] = ec._Schedule_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "startTime":
+			out.Values[i] = ec._Schedule_startTime(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "endTime":
+			out.Values[i] = ec._Schedule_endTime(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "numberOfMembers":
+			out.Values[i] = ec._Schedule_numberOfMembers(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "numberOfShifts":
+			out.Values[i] = ec._Schedule_numberOfShifts(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "restaurantID":
+			out.Values[i] = ec._Schedule_restaurantID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._Schedule_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -6705,6 +7584,11 @@ func (ec *executionContext) unmarshalNCreateRestaurantInput2shiftyᚑbackendᚋg
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNCreateScheduleInput2shiftyᚑbackendᚋgraphᚋmodelᚐCreateScheduleInput(ctx context.Context, v any) (model.CreateScheduleInput, error) {
+	res, err := ec.unmarshalInputCreateScheduleInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -6812,6 +7696,36 @@ func (ec *executionContext) marshalNRestaurant2ᚖshiftyᚑbackendᚋgraphᚋmod
 	return ec._Restaurant(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNSchedule2shiftyᚑbackendᚋgraphᚋmodelᚐSchedule(ctx context.Context, sel ast.SelectionSet, v model.Schedule) graphql.Marshaler {
+	return ec._Schedule(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSchedule2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐScheduleᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Schedule) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNSchedule2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐSchedule(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSchedule2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐSchedule(ctx context.Context, sel ast.SelectionSet, v *model.Schedule) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Schedule(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -6851,6 +7765,11 @@ func (ec *executionContext) unmarshalNUpdatePositionInput2shiftyᚑbackendᚋgra
 
 func (ec *executionContext) unmarshalNUpdateRestaurantInput2shiftyᚑbackendᚋgraphᚋmodelᚐUpdateRestaurantInput(ctx context.Context, v any) (model.UpdateRestaurantInput, error) {
 	res, err := ec.unmarshalInputUpdateRestaurantInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateScheduleInput2shiftyᚑbackendᚋgraphᚋmodelᚐUpdateScheduleInput(ctx context.Context, v any) (model.UpdateScheduleInput, error) {
+	res, err := ec.unmarshalInputUpdateScheduleInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -7180,6 +8099,24 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	_ = sel
 	_ = ctx
 	res := graphql.MarshalString(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOTime2ᚖtimeᚐTime(ctx context.Context, v any) (*time.Time, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalTime(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel ast.SelectionSet, v *time.Time) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	_ = ctx
+	res := graphql.MarshalTime(*v)
 	return res
 }
 

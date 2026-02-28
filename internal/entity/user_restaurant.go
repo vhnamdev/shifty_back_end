@@ -14,7 +14,7 @@ type UserRestaurant struct {
 	Restaurant   Restaurant `gorm:"foreignKey:RestaurantID"`
 	IsBanned     bool       `gorm:"default:false" json:"is_banned"`
 	IsDeleted    bool       `gorm:"default:false" json:"is_deleted"`
-	DeletedAt    time.Time  `json:"deleted_at"`
-	BannedAt     time.Time  `json:"banned_at"`
+	DeletedAt    *time.Time `json:"deleted_at"`
+	BannedAt     *time.Time `json:"banned_at"`
 	JoinedAt     time.Time  `gorm:"autoCreateTime"`
 }
