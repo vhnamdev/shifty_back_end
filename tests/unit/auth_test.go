@@ -7,6 +7,7 @@ import (
 
 	"shifty-backend/internal/entity"
 	"shifty-backend/internal/usecase"
+	"shifty-backend/pkg/token"
 	"shifty-backend/pkg/utils"
 
 	"github.com/google/uuid"
@@ -15,6 +16,15 @@ import (
 	"gorm.io/gorm"
 )
 
+// Helper tạo Token dùng chung
+func newTestTokenMaster() *token.TokenMaster {
+	return token.NewToken(
+		"secret_access_test_key",
+		"secret_refresh_test_key",
+		time.Minute*15,
+		time.Hour*24,
+	)
+}
 func TestAuthUseCase_RegisterLocal(t *testing.T) {
 	mockUser := &entity.User{
 		Email:    "newuser@gmail.com",
