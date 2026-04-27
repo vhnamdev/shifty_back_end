@@ -22,5 +22,5 @@ type ResetPassword struct {
 }
 
 type GoogleLogin struct {
-	Code string `json:code validate:"required"`
+	Code string `json:"code" validate:"required"`
 }
