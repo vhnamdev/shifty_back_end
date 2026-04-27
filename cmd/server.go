@@ -36,15 +36,8 @@ func main() {
 
 	// Connect to PostgreSQL Database
 	db := database.ConnectPostgres(cfg)
-	sqlDB, err := db.DB()
-	if err != nil {
-		log.Fatal("Can not connect to PostgreSQL Database!")
-	}
-	defer func() {
-		if err := sqlDB.Close(); err != nil {
-			log.Fatal("Can not disconnect PostgresSQL Database!")
-		}
-	}()
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
 
 	if cfg.SentryDSN != "" {
 		err := monitoring.Init(cfg.SentryDSN, cfg.AppEnv, cfg.SentryTraceRate)

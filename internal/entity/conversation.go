@@ -13,7 +13,7 @@ const (
 )
 
 type Conversation struct {
-	ID            uuid.UUID     `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
+	ID            uuid.UUID     `gorm:"type:uuid;primaryKey" json:"id"`
 	Type          string        `gorm:"type:varchar(20);default:'DIRECT';index" json:"type"`
 	Name          *string       `gorm:"type:varchar(100)" json:"name,omitempty"`
 	Avatar        *string       `gorm:"type:text" json:"image_url,omitempty"`

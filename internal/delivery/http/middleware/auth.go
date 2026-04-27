@@ -17,8 +17,8 @@ func Protected(tokenMaster *token.TokenMaster) fiber.Handler {
 			return xerror.Unauthorized("Missing Authorization Header")
 		}
 
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
+		parts := strings.Fields(authHeader)
+		if len(parts) > 2 || strings.ToLower(parts[0]) != "bearer" {
 			return xerror.Unauthorized("Invalid Authorization Header Format")
 		}
 

@@ -1,5 +1,11 @@
 package utils
 
+import (
+	"errors"
+
+	"gorm.io/gorm"
+)
+
 func GetString(s *string) string {
 	if s == nil {
 		return ""
@@ -8,5 +14,5 @@ func GetString(s *string) string {
 }
 
 func IsRecordNotFoundError(err error) bool {
-	return err != nil
+	return errors.Is(err, gorm.ErrRecordNotFound)
 }
