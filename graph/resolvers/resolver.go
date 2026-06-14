@@ -14,4 +14,5 @@ type Resolver struct {
 	RestaurantUseCase     usecase.RestaurantUseCase
 	PositionUseCase       usecase.PositionUseCase
 	ScheduleUseCase       usecase.ScheduleUseCase
+	ShiftUseCase          usecase.ShiftUseCase
 }

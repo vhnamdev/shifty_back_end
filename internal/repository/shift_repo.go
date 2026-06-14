@@ -42,7 +42,7 @@ func (r *shiftRepo) Update(ctx context.Context, shiftID, scheID string, updateDa
 		WithContext(ctx).
 		Model(&shift).
 		Clauses(clause.Returning{}).
-		Where("id = ? AND schedule_id = ? AND is_deleted = ?", shift, scheID, false).
+		Where("id = ? AND schedule_id = ? AND is_deleted = ?", shiftID, scheID, false).
 		Updates(updateData).Error; err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (r *shiftRepo) Update(ctx context.Context, shiftID, scheID string, updateDa
 
 func (r *shiftRepo) Delete(ctx context.Context, scheID, shiftID string) error {
 	return r.db.WithContext(ctx).Model(&entity.Shift{}).Where("id = ? AND schedule_id = ?", shiftID, scheID).Updates(map[string]interface{}{
-		"is_deleted": false,
+		"is_deleted": true,
 		"deleted_at": time.Now(),
 	}).Error
 }

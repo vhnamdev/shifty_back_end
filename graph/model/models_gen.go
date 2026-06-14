@@ -35,6 +35,17 @@ type CreateScheduleInput struct {
 	RestaurantID string    `json:"restaurantID"`
 }
 
+type CreateShiftInput struct {
+	ResID           string    `json:"resID"`
+	ScheduleID      string    `json:"scheduleID"`
+	StartTime       time.Time `json:"startTime"`
+	EndTime         time.Time `json:"endTime"`
+	NumberOfMembers int       `json:"numberOfMembers"`
+	Type            string    `json:"type"`
+	IsHoliday       *bool     `json:"isHoliday,omitempty"`
+	WageMultiplier  *float64  `json:"wageMultiplier,omitempty"`
+}
+
 type JoinRestaurantInput struct {
 	InviteCode string `json:"inviteCode"`
 }
@@ -95,6 +106,20 @@ type Schedule struct {
 	CreatedAt       time.Time `json:"createdAt"`
 }
 
+type Shift struct {
+	ID              string    `json:"id"`
+	StartTime       time.Time `json:"startTime"`
+	EndTime         time.Time `json:"endTime"`
+	NumberOfMembers int       `json:"numberOfMembers"`
+	Type            string    `json:"type"`
+	ScheduleID      string    `json:"scheduleID"`
+	IsHoliday       bool      `json:"isHoliday"`
+	WageMultiplier  float64   `json:"wageMultiplier"`
+	IsDeleted       bool      `json:"isDeleted"`
+	CreatedAt       time.Time `json:"createdAt"`
+	UpdatedAt       time.Time `json:"updatedAt"`
+}
+
 type UpdatePositionInput struct {
 	ID                  string  `json:"id"`
 	RestaurantID        string  `json:"restaurantID"`
@@ -120,6 +145,18 @@ type UpdateScheduleInput struct {
 	ScheduleID   string     `json:"scheduleID"`
 	StartTime    *time.Time `json:"startTime,omitempty"`
 	EndTime      *time.Time `json:"endTime,omitempty"`
+}
+
+type UpdateShiftInput struct {
+	ID              string     `json:"id"`
+	ResID           string     `json:"resID"`
+	ScheduleID      string     `json:"scheduleID"`
+	StartTime       *time.Time `json:"startTime,omitempty"`
+	EndTime         *time.Time `json:"endTime,omitempty"`
+	NumberOfMembers *int       `json:"numberOfMembers,omitempty"`
+	Type            *string    `json:"type,omitempty"`
+	IsHoliday       *bool      `json:"isHoliday,omitempty"`
+	WageMultiplier  *float64   `json:"wageMultiplier,omitempty"`
 }
 
 type UpdateStaffByManagerInput struct {
