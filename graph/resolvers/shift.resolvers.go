@@ -7,7 +7,6 @@ package resolvers
 
 import (
 	"context"
-	"fmt"
 	"shifty-backend/graph/mapper"
 	"shifty-backend/graph/model"
 	"shifty-backend/pkg/xerror"
@@ -47,20 +46,89 @@ func (r *mutationResolver) UpdateShift(ctx context.Context, input model.UpdateSh
 	if !ok || userID == "" {
 		return nil, xerror.BadRequest("You are not logged in")
 	}
-	return nil, nil
+
+	shiftEntity, err := mapper.MapUpdateShiftToEntity(&input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	shiftUpdate, err := r.ShiftUseCase.Update(ctx, userID, input.ResID, input.ScheduleID, input.ID, shiftEntity)
+
+	if err != nil {
+		return nil, err
+	}
+
+	shiftModel, err := mapper.MapShiftEntityToModel(shiftUpdate)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return shiftModel, nil
 }
 
 // DeleteShift is the resolver for the deleteShift field.
 func (r *mutationResolver) DeleteShift(ctx context.Context, shiftID string, scheID string, resID string) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteShift - deleteShift"))
+	userID, ok := ctx.Value("user_id").(string)
+
+	if !ok || userID != "" {
+		return false, xerror.BadRequest("You are not logged in")
+	}
+
+	if err := r.ShiftUseCase.Delete(ctx, userID, resID, scheID, shiftID); err != nil {
+		return false, err
+	}
+
+	return true, nil
+
 }
 
 // Shift is the resolver for the shift field.
 func (r *queryResolver) Shift(ctx context.Context, shiftID string, scheID string, resID string) (*model.Shift, error) {
-	panic(fmt.Errorf("not implemented: Shift - shift"))
+
+	userID, ok := ctx.Value("user_id").(string)
+
+	if !ok || userID != "" {
+		return nil, xerror.BadRequest("You are not logged in")
+	}
+
+	shift, err := r.ShiftUseCase.FindByID(ctx, userID, resID, scheID, shiftID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	shiftModel, err := mapper.MapShiftEntityToModel(shift)
+
+	if err != nil {
+		return nil, err
+	}
+	return shiftModel, nil
 }
 
 // ShiftsBySchedule is the resolver for the shiftsBySchedule field.
 func (r *queryResolver) ShiftsBySchedule(ctx context.Context, scheID string, resID string) ([]*model.Shift, error) {
-	panic(fmt.Errorf("not implemented: ShiftsBySchedule - shiftsBySchedule"))
+	userID, ok := ctx.Value("user_id").(string)
+
+	if !ok || userID != "" {
+		return nil, xerror.BadRequest("You are not logged in")
+	}
+
+	shifts, err := r.ShiftUseCase.FindAllByScheduleID(ctx, userID, resID, scheID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	shiftModels := make([]*model.Shift, 0, len(shifts))
+
+	for _, shift := range shifts {
+		mappedShift, err := mapper.MapShiftEntityToModel(shift)
+		if err != nil {
+			return nil, err
+		}
+		shiftModels = append(shiftModels, mappedShift)
+	}
+	return shiftModels, nil
 }
