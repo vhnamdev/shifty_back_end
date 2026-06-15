@@ -7,7 +7,6 @@ package resolvers
 
 import (
 	"context"
-	"shifty-backend/graph"
 	"shifty-backend/graph/mapper"
 	"shifty-backend/graph/model"
 	"shifty-backend/pkg/xerror"
@@ -47,13 +46,13 @@ func (r *mutationResolver) UpdatePosition(ctx context.Context, input model.Updat
 	if !ok || userID == "" {
 		return nil, xerror.BadRequest("You are not logged in")
 	}
-	updateData, err := mapper.MapUpdatePositionToEntity(&input)
+	positionEntity, err := mapper.MapUpdatePositionToEntity(&input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	updatedPosition, err := r.PositionUseCase.Update(ctx, input.ID, userID, input.RestaurantID, updateData)
+	updatedPosition, err := r.PositionUseCase.Update(ctx, input.ID, userID, input.RestaurantID, positionEntity)
 
 	if err != nil {
 		return nil, err
@@ -129,8 +128,3 @@ func (r *queryResolver) PositionsByRestaurant(ctx context.Context, resID string)
 
 	return positionModel, nil
 }
-
-// Mutation returns graph.MutationResolver implementation.
-func (r *Resolver) Mutation() graph.MutationResolver { return &mutationResolver{r} }
-
-type mutationResolver struct{ *Resolver }
