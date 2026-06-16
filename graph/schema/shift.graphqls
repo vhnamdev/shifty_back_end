@@ -1,0 +1,47 @@
+type Shift {
+  id: ID!
+  startTime: Time!
+  endTime: Time!
+  numberOfMembers: Int!
+  type: String!
+  scheduleID: String!
+  isHoliday: Boolean!
+  wageMultiplier: Float!
+  isDeleted: Boolean!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+input CreateShiftInput {
+  resID: String!
+  scheduleID: String!
+  startTime: Time!
+  endTime: Time!
+  numberOfMembers: Int!
+  type: String!
+  isHoliday: Boolean = false
+  wageMultiplier: Float = 1.0
+}
+
+input UpdateShiftInput {
+  id: ID!
+  resID: String!
+  scheduleID: String!
+  startTime: Time
+  endTime: Time
+  numberOfMembers: Int
+  type: String
+  isHoliday: Boolean
+  wageMultiplier: Float
+}
+
+extend type Query {
+  shift(shiftID: ID!, scheID: String!, resID: String!): Shift!
+  shiftsBySchedule(scheID: String!, resID: String!): [Shift!]!
+}
+
+extend type Mutation {
+  createShift(input: CreateShiftInput!): Shift!
+  updateShift(input: UpdateShiftInput!): Shift!
+  deleteShift(shiftID: ID!, scheID: String!, resID: String!): Boolean!
+}

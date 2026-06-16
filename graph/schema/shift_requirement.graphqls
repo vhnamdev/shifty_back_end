@@ -1,0 +1,44 @@
+type ShiftRequirement {
+  id: ID!
+  shiftID: String!
+  positionID: String  # Có thể null (vị trí linh hoạt chưa xác định)
+  startTime: Time!
+  endTime: Time!
+  quantity: Int!
+  note: String
+  isDeleted: Boolean!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+input CreateRequirementInput {
+  resID: String!
+  shiftID: String!
+  positionID: String
+  startTime: Time!
+  endTime: Time!
+  quantity: Int!
+  note: String
+}
+
+input UpdateRequirementInput {
+  id: ID!
+  resID: String!
+  shiftID: String!
+  positionID: String
+  startTime: Time
+  endTime: Time
+  quantity: Int
+  note: String
+}
+
+extend type Query {
+  shiftRequirement(reqID: ID!, shiftID: String!, resID: String!): ShiftRequirement!
+  shiftRequirementsByShift(shiftID: String!, resID: String!): [ShiftRequirement!]!
+}
+
+extend type Mutation {
+  createShiftRequirement(input: CreateRequirementInput!): ShiftRequirement!
+  updateShiftRequirement(input: UpdateRequirementInput!): ShiftRequirement!
+  deleteShiftRequirement(reqID: ID!, shiftID: String!, resID: String!): Boolean!
+}

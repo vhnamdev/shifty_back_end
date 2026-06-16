@@ -38,7 +38,12 @@ func (r *scheduleRepo) Create(ctx context.Context, schedule *entity.Schedule) (*
 func (r *scheduleRepo) Update(ctx context.Context, resID, scheID string, updateData map[string]interface{}) (*entity.Schedule, error) {
 	var schedule entity.Schedule
 
-	if err := r.db.WithContext(ctx).Model(&schedule).Clauses(clause.Returning{}).Where("id = ? AND restaurant_id = ?", scheID, resID).Updates(updateData).Error; err != nil {
+	if err := r.db.
+		WithContext(ctx).
+		Model(&schedule).
+		Clauses(clause.Returning{}).
+		Where("id = ? AND restaurant_id = ?", scheID, resID).
+		Updates(updateData).Error; err != nil {
 		return nil, err
 	}
 
@@ -78,4 +83,3 @@ func (r *scheduleRepo) FindAllByResID(ctx context.Context, resID string) ([]*ent
 	}
 	return schedules, nil
 }
-

@@ -22,6 +22,16 @@ type CreatePositionInput struct {
 	CanDeleteRestaurant *bool  `json:"canDeleteRestaurant,omitempty"`
 }
 
+type CreateRequirementInput struct {
+	ResID      string    `json:"resID"`
+	ShiftID    string    `json:"shiftID"`
+	PositionID *string   `json:"positionID,omitempty"`
+	StartTime  time.Time `json:"startTime"`
+	EndTime    time.Time `json:"endTime"`
+	Quantity   int       `json:"quantity"`
+	Note       *string   `json:"note,omitempty"`
+}
+
 type CreateRestaurantInput struct {
 	Name        string `json:"name"`
 	Email       string `json:"email"`
@@ -33,6 +43,17 @@ type CreateScheduleInput struct {
 	StartTime    time.Time `json:"startTime"`
 	EndTime      time.Time `json:"endTime"`
 	RestaurantID string    `json:"restaurantID"`
+}
+
+type CreateShiftInput struct {
+	ResID           string    `json:"resID"`
+	ScheduleID      string    `json:"scheduleID"`
+	StartTime       time.Time `json:"startTime"`
+	EndTime         time.Time `json:"endTime"`
+	NumberOfMembers int       `json:"numberOfMembers"`
+	Type            string    `json:"type"`
+	IsHoliday       *bool     `json:"isHoliday,omitempty"`
+	WageMultiplier  *float64  `json:"wageMultiplier,omitempty"`
 }
 
 type JoinRestaurantInput struct {
@@ -95,6 +116,33 @@ type Schedule struct {
 	CreatedAt       time.Time `json:"createdAt"`
 }
 
+type Shift struct {
+	ID              string    `json:"id"`
+	StartTime       time.Time `json:"startTime"`
+	EndTime         time.Time `json:"endTime"`
+	NumberOfMembers int       `json:"numberOfMembers"`
+	Type            string    `json:"type"`
+	ScheduleID      string    `json:"scheduleID"`
+	IsHoliday       bool      `json:"isHoliday"`
+	WageMultiplier  float64   `json:"wageMultiplier"`
+	IsDeleted       bool      `json:"isDeleted"`
+	CreatedAt       time.Time `json:"createdAt"`
+	UpdatedAt       time.Time `json:"updatedAt"`
+}
+
+type ShiftRequirement struct {
+	ID         string    `json:"id"`
+	ShiftID    string    `json:"shiftID"`
+	PositionID *string   `json:"positionID,omitempty"`
+	StartTime  time.Time `json:"startTime"`
+	EndTime    time.Time `json:"endTime"`
+	Quantity   int       `json:"quantity"`
+	Note       *string   `json:"note,omitempty"`
+	IsDeleted  bool      `json:"isDeleted"`
+	CreatedAt  time.Time `json:"createdAt"`
+	UpdatedAt  time.Time `json:"updatedAt"`
+}
+
 type UpdatePositionInput struct {
 	ID                  string  `json:"id"`
 	RestaurantID        string  `json:"restaurantID"`
@@ -104,6 +152,17 @@ type UpdatePositionInput struct {
 	Salary              *int    `json:"salary,omitempty"`
 	CanUpdateRestaurant *bool   `json:"canUpdateRestaurant,omitempty"`
 	CanDeleteRestaurant *bool   `json:"canDeleteRestaurant,omitempty"`
+}
+
+type UpdateRequirementInput struct {
+	ID         string     `json:"id"`
+	ResID      string     `json:"resID"`
+	ShiftID    string     `json:"shiftID"`
+	PositionID *string    `json:"positionID,omitempty"`
+	StartTime  *time.Time `json:"startTime,omitempty"`
+	EndTime    *time.Time `json:"endTime,omitempty"`
+	Quantity   *int       `json:"quantity,omitempty"`
+	Note       *string    `json:"note,omitempty"`
 }
 
 type UpdateRestaurantInput struct {
@@ -120,6 +179,18 @@ type UpdateScheduleInput struct {
 	ScheduleID   string     `json:"scheduleID"`
 	StartTime    *time.Time `json:"startTime,omitempty"`
 	EndTime      *time.Time `json:"endTime,omitempty"`
+}
+
+type UpdateShiftInput struct {
+	ID              string     `json:"id"`
+	ResID           string     `json:"resID"`
+	ScheduleID      string     `json:"scheduleID"`
+	StartTime       *time.Time `json:"startTime,omitempty"`
+	EndTime         *time.Time `json:"endTime,omitempty"`
+	NumberOfMembers *int       `json:"numberOfMembers,omitempty"`
+	Type            *string    `json:"type,omitempty"`
+	IsHoliday       *bool      `json:"isHoliday,omitempty"`
+	WageMultiplier  *float64   `json:"wageMultiplier,omitempty"`
 }
 
 type UpdateStaffByManagerInput struct {

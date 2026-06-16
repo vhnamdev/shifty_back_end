@@ -36,15 +36,8 @@ func main() {
 
 	// Connect to PostgreSQL Database
 	db := database.ConnectPostgres(cfg)
-	sqlDB, err := db.DB()
-	if err != nil {
-		log.Fatal("Can not connect to PostgreSQL Database!")
-	}
-	defer func() {
-		if err := sqlDB.Close(); err != nil {
-			log.Fatal("Can not disconnect PostgresSQL Database!")
-		}
-	}()
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
 
 	if cfg.SentryDSN != "" {
 		err := monitoring.Init(cfg.SentryDSN, cfg.AppEnv, cfg.SentryTraceRate)
@@ -113,6 +106,7 @@ func main() {
 	restaurantRepo := repository.NewRestaurantRepository(db)
 	positionRepo := repository.NewPositionRepository(db)
 	schedulRepo := repository.NewScheduleRepository(db)
+	shiftRepo := repository.NewShiftRepository(db)
 	// ------------------------------USECASE----------------------------------
 
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenMaster, timeoutContext, redisRepo, emailService, googleService)
@@ -121,6 +115,7 @@ func main() {
 	restaurantUseCase := usecase.NewRestaurantUseCase(transactor, restaurantRepo, userRestaurantRepo, positionRepo, redisRepo, userRepo, emailService, cloudinaryService)
 	positionUseCase := usecase.NewPositionUseCase(positionRepo, userRestaurantRepo, transactor)
 	scheduleUseCase := usecase.NewScheduleUseCase(schedulRepo, userRestaurantRepo)
+	shiftUseCase := usecase.NewShiftUseCase(shiftRepo, userRestaurantRepo)
 	// ------------------------------HANDLER----------------------------------
 
 	authHandler := handler.NewAuthHandler(authUseCase, cloudinaryService, emailService)
@@ -135,6 +130,7 @@ func main() {
 		RestaurantUseCase:     restaurantUseCase,
 		PositionUseCase:       positionUseCase,
 		ScheduleUseCase:       scheduleUseCase,
+		ShiftUseCase:          shiftUseCase,
 	}
 
 	playgroundHandler, queryHandler := graphql.NewGraphQLHandler(gqlResolver)
