@@ -81,12 +81,10 @@ func (r *mutationResolver) DeleteShift(ctx context.Context, shiftID string, sche
 	}
 
 	return true, nil
-
 }
 
 // Shift is the resolver for the shift field.
 func (r *queryResolver) Shift(ctx context.Context, shiftID string, scheID string, resID string) (*model.Shift, error) {
-
 	userID, ok := ctx.Value("user_id").(string)
 
 	if !ok || userID != "" {

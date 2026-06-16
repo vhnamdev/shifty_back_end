@@ -60,7 +60,11 @@ func (r *shiftRepo) Delete(ctx context.Context, scheID, shiftID string) error {
 func (r *shiftRepo) FindByID(ctx context.Context, scheID, shiftID string) (*entity.Shift, error) {
 	var shift entity.Shift
 
-	if err := r.db.WithContext(ctx).Preload("Schedule", "is_deleted = ?", false).Where("id = ? AND schedule_id = ? AND is_deleted = ?", shift, scheID, false).First(&shift).Error; err != nil {
+	if err := r.db.
+		WithContext(ctx).
+		Preload("Schedule", "is_deleted = ?", false).
+		Where("id = ? AND schedule_id = ? AND is_deleted = ?", shift, scheID, false).
+		First(&shift).Error; err != nil {
 		return nil, err
 	}
 
