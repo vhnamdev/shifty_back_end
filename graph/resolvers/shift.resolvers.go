@@ -72,7 +72,7 @@ func (r *mutationResolver) UpdateShift(ctx context.Context, input model.UpdateSh
 func (r *mutationResolver) DeleteShift(ctx context.Context, shiftID string, scheID string, resID string) (bool, error) {
 	userID, ok := ctx.Value("user_id").(string)
 
-	if !ok || userID != "" {
+	if !ok || userID == "" {
 		return false, xerror.BadRequest("You are not logged in")
 	}
 
@@ -87,7 +87,7 @@ func (r *mutationResolver) DeleteShift(ctx context.Context, shiftID string, sche
 func (r *queryResolver) Shift(ctx context.Context, shiftID string, scheID string, resID string) (*model.Shift, error) {
 	userID, ok := ctx.Value("user_id").(string)
 
-	if !ok || userID != "" {
+	if !ok || userID == "" {
 		return nil, xerror.BadRequest("You are not logged in")
 	}
 
@@ -109,7 +109,7 @@ func (r *queryResolver) Shift(ctx context.Context, shiftID string, scheID string
 func (r *queryResolver) ShiftsBySchedule(ctx context.Context, scheID string, resID string) ([]*model.Shift, error) {
 	userID, ok := ctx.Value("user_id").(string)
 
-	if !ok || userID != "" {
+	if !ok || userID == "" {
 		return nil, xerror.BadRequest("You are not logged in")
 	}
 
