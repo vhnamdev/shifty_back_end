@@ -12,12 +12,13 @@ import (
 // here.
 
 type Resolver struct {
-	UserUseCase           usecase.UserUseCase
-	UserRestaurantUseCase usecase.UserRestaurantUseCase
-	RestaurantUseCase     usecase.RestaurantUseCase
-	PositionUseCase       usecase.PositionUseCase
-	ScheduleUseCase       usecase.ScheduleUseCase
-	ShiftUseCase          usecase.ShiftUseCase
+	UserUseCase             usecase.UserUseCase
+	UserRestaurantUseCase   usecase.UserRestaurantUseCase
+	RestaurantUseCase       usecase.RestaurantUseCase
+	PositionUseCase         usecase.PositionUseCase
+	ScheduleUseCase         usecase.ScheduleUseCase
+	ShiftUseCase            usecase.ShiftUseCase
+	ShiftRequirementUseCase usecase.ShiftRequirementUseCase
 }
 
 // Mutation returns graph.MutationResolver implementation.

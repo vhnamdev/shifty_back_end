@@ -122,7 +122,10 @@ func (u *shiftUseCase) FindAllByScheduleID(ctx context.Context, userID, resID, s
 	shifts, err := u.shiftRepo.FindAllByScheduleID(ctx, scheID)
 
 	if err != nil {
-		return nil, err
+		if utils.IsRecordNotFoundError(err) {
+			return nil, xerror.NotFound("Shifts are not found")
+		}
+		return nil, xerror.Internal("Database failed")
 	}
 
 	return shifts, nil

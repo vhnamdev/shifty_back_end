@@ -17,6 +17,8 @@ type ShiftRequirement struct {
 	PositionID *uuid.UUID `gorm:"type:uuid" json:"position_id"`
 	Position   Position   `gorm:"foreignKey:PositionID" json:"position,omitempty"`
 	Note       *string    `gorm:"type:text" json:"note"`
+	IsDeleted  bool       `gorm:"default:false" json:"is_deleted"`
+	DeletedAt  *time.Time `json:"deleted_at"`
 	CreatedAt  time.Time  `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt  time.Time  `json:"updated_at"`
 }
