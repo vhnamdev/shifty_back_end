@@ -7,31 +7,116 @@ package resolvers
 
 import (
 	"context"
-	"fmt"
+	"shifty-backend/graph/mapper"
 	"shifty-backend/graph/model"
+	"shifty-backend/pkg/xerror"
 )
 
 // CreateShiftRequirement is the resolver for the createShiftRequirement field.
 func (r *mutationResolver) CreateShiftRequirement(ctx context.Context, input model.CreateRequirementInput) (*model.ShiftRequirement, error) {
-	panic(fmt.Errorf("not implemented: CreateShiftRequirement - createShiftRequirement"))
+	userID, ok := ctx.Value("user_id").(string)
+	if !ok || userID == "" {
+		return nil, xerror.BadRequest("You are not logged in")
+	}
+
+	reqEntity, err := mapper.MapCreateRequirementToEntity(&input)
+	if err != nil {
+		return nil, err
+	}
+
+	newReq, err := r.ShiftRequirementUseCase.Create(ctx, userID, input.ResID, input.ShiftID, reqEntity)
+	if err != nil {
+		return nil, err
+	}
+
+	reqModel, err := mapper.MapRequirementEntityToModel(newReq)
+	if err != nil {
+		return nil, xerror.Internal("Can not map requirement from entity to model")
+	}
+
+	return reqModel, nil
 }
 
 // UpdateShiftRequirement is the resolver for the updateShiftRequirement field.
 func (r *mutationResolver) UpdateShiftRequirement(ctx context.Context, input model.UpdateRequirementInput) (*model.ShiftRequirement, error) {
-	panic(fmt.Errorf("not implemented: UpdateShiftRequirement - updateShiftRequirement"))
+	userID, ok := ctx.Value("user_id").(string)
+	if !ok || userID == "" {
+		return nil, xerror.BadRequest("You are not logged in")
+	}
+
+	updateData, err := mapper.MapUpdateRequirementToEntity(&input)
+	if err != nil {
+		return nil, err
+	}
+
+	updatedReq, err := r.ShiftRequirementUseCase.Update(ctx, userID, input.ResID, input.ShiftID, input.ID, updateData)
+	if err != nil {
+		return nil, err
+	}
+
+	reqModel, err := mapper.MapRequirementEntityToModel(updatedReq)
+	if err != nil {
+		return nil, xerror.Internal("Can not map requirement from entity to model")
+	}
+
+	return reqModel, nil
 }
 
 // DeleteShiftRequirement is the resolver for the deleteShiftRequirement field.
 func (r *mutationResolver) DeleteShiftRequirement(ctx context.Context, reqID string, shiftID string, resID string) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteShiftRequirement - deleteShiftRequirement"))
+	userID, ok := ctx.Value("user_id").(string)
+	if !ok || userID == "" {
+		return false, xerror.BadRequest("You are not logged in")
+	}
+
+	err := r.ShiftRequirementUseCase.Delete(ctx, userID, resID, shiftID, reqID)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 // ShiftRequirement is the resolver for the shiftRequirement field.
 func (r *queryResolver) ShiftRequirement(ctx context.Context, reqID string, shiftID string, resID string) (*model.ShiftRequirement, error) {
-	panic(fmt.Errorf("not implemented: ShiftRequirement - shiftRequirement"))
+	userID, ok := ctx.Value("user_id").(string)
+	if !ok || userID == "" {
+		return nil, xerror.BadRequest("You are not logged in")
+	}
+
+	req, err := r.ShiftRequirementUseCase.FindByID(ctx, userID, resID, shiftID, reqID)
+	if err != nil {
+		return nil, err
+	}
+
+	reqModel, err := mapper.MapRequirementEntityToModel(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return reqModel, nil
 }
 
 // ShiftRequirementsByShift is the resolver for the shiftRequirementsByShift field.
 func (r *queryResolver) ShiftRequirementsByShift(ctx context.Context, shiftID string, resID string) ([]*model.ShiftRequirement, error) {
-	panic(fmt.Errorf("not implemented: ShiftRequirementsByShift - shiftRequirementsByShift"))
+	userID, ok := ctx.Value("user_id").(string)
+	if !ok || userID == "" {
+		return nil, xerror.BadRequest("You are not logged in")
+	}
+
+	reqs, err := r.ShiftRequirementUseCase.FindAllByShiftID(ctx, userID, resID, shiftID)
+	if err != nil {
+		return nil, err
+	}
+
+	reqModels := make([]*model.ShiftRequirement, 0, len(reqs))
+	for _, req := range reqs {
+		mappedReq, err := mapper.MapRequirementEntityToModel(req)
+		if err != nil {
+			return nil, err
+		}
+		reqModels = append(reqModels, mappedReq)
+	}
+
+	return reqModels, nil
 }

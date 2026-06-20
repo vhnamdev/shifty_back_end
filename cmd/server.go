@@ -107,6 +107,7 @@ func main() {
 	positionRepo := repository.NewPositionRepository(db)
 	schedulRepo := repository.NewScheduleRepository(db)
 	shiftRepo := repository.NewShiftRepository(db)
+	shiftRequirementRepo := repository.NewShiftRequirementRepository(db)
 	// ------------------------------USECASE----------------------------------
 
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenMaster, timeoutContext, redisRepo, emailService, googleService)
@@ -116,6 +117,7 @@ func main() {
 	positionUseCase := usecase.NewPositionUseCase(positionRepo, userRestaurantRepo, transactor)
 	scheduleUseCase := usecase.NewScheduleUseCase(schedulRepo, userRestaurantRepo)
 	shiftUseCase := usecase.NewShiftUseCase(shiftRepo, userRestaurantRepo)
+	shiftRequirementUseCase := usecase.NewShiftRequirementUseCase(shiftRequirementRepo, userRestaurantRepo)
 	// ------------------------------HANDLER----------------------------------
 
 	authHandler := handler.NewAuthHandler(authUseCase, cloudinaryService, emailService)
@@ -125,12 +127,13 @@ func main() {
 		UserHandler: userHandler,
 	}
 	gqlResolver := &resolvers.Resolver{
-		UserUseCase:           userUseCase,
-		UserRestaurantUseCase: userRestaurantUseCase,
-		RestaurantUseCase:     restaurantUseCase,
-		PositionUseCase:       positionUseCase,
-		ScheduleUseCase:       scheduleUseCase,
-		ShiftUseCase:          shiftUseCase,
+		UserUseCase:             userUseCase,
+		UserRestaurantUseCase:   userRestaurantUseCase,
+		RestaurantUseCase:       restaurantUseCase,
+		PositionUseCase:         positionUseCase,
+		ScheduleUseCase:         scheduleUseCase,
+		ShiftUseCase:            shiftUseCase,
+		ShiftRequirementUseCase: shiftRequirementUseCase,
 	}
 
 	playgroundHandler, queryHandler := graphql.NewGraphQLHandler(gqlResolver)
