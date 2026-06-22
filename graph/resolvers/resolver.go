@@ -21,6 +21,7 @@ type Resolver struct {
 	ShiftRequirementUseCase usecase.ShiftRequirementUseCase
 	ShiftRuleUseCase        usecase.ShiftRuleUseCase
 	ShiftAssignmentUseCase  usecase.ShiftAssignmentUseCase
+	ShiftRequestUseCase     usecase.ShiftRequestUseCase
 }
 
 // Mutation returns graph.MutationResolver implementation.

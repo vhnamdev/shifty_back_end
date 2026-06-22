@@ -66,6 +66,16 @@ type CreateShiftInput struct {
 	WageMultiplier  *float64  `json:"wageMultiplier,omitempty"`
 }
 
+type CreateShiftRequestInput struct {
+	ResID      string    `json:"resID"`
+	ShiftID    string    `json:"shiftID"`
+	UserID     string    `json:"userID"`
+	PositionID *string   `json:"positionID,omitempty"`
+	StartTime  time.Time `json:"startTime"`
+	EndTime    time.Time `json:"endTime"`
+	Note       *string   `json:"note,omitempty"`
+}
+
 type CreateShiftRuleInput struct {
 	ResID  string `json:"resID"`
 	Type   string `json:"type"`
@@ -160,6 +170,20 @@ type ShiftAssignment struct {
 	UpdatedAt    time.Time  `json:"updatedAt"`
 }
 
+type ShiftRequest struct {
+	ID         string    `json:"id"`
+	StartTime  time.Time `json:"startTime"`
+	EndTime    time.Time `json:"endTime"`
+	Status     string    `json:"status"`
+	UserID     string    `json:"userID"`
+	ShiftID    string    `json:"shiftID"`
+	PositionID *string   `json:"positionID,omitempty"`
+	Note       *string   `json:"note,omitempty"`
+	IsDeleted  bool      `json:"isDeleted"`
+	CreatedAt  time.Time `json:"createdAt"`
+	UpdatedAt  time.Time `json:"updatedAt"`
+}
+
 type ShiftRequirement struct {
 	ID         string    `json:"id"`
 	ShiftID    string    `json:"shiftID"`
@@ -242,6 +266,17 @@ type UpdateShiftInput struct {
 	Type            *string    `json:"type,omitempty"`
 	IsHoliday       *bool      `json:"isHoliday,omitempty"`
 	WageMultiplier  *float64   `json:"wageMultiplier,omitempty"`
+}
+
+type UpdateShiftRequestInput struct {
+	ID         string     `json:"id"`
+	ResID      string     `json:"resID"`
+	ShiftID    string     `json:"shiftID"`
+	PositionID *string    `json:"positionID,omitempty"`
+	StartTime  *time.Time `json:"startTime,omitempty"`
+	EndTime    *time.Time `json:"endTime,omitempty"`
+	Status     *string    `json:"status,omitempty"`
+	Note       *string    `json:"note,omitempty"`
 }
 
 type UpdateShiftRuleInput struct {
