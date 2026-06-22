@@ -1,0 +1,46 @@
+type ShiftRequest {
+  id: ID!
+  startTime: Time!
+  endTime: Time!
+  status: String!
+  userID: String!
+  shiftID: String!
+  positionID: String
+  note: String
+  isDeleted: Boolean!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+input CreateShiftRequestInput {
+  resID: String!
+  shiftID: String!
+  userID: String!
+  positionID: String
+  startTime: Time!
+  endTime: Time!
+  note: String
+}
+
+input UpdateShiftRequestInput {
+  id: ID!
+  resID: String!
+  shiftID: String!
+  positionID: String
+  startTime: Time
+  endTime: Time
+  status: String
+  note: String
+}
+
+extend type Query {
+  shiftRequest(requestID: ID!, shiftID: String!, resID: String!): ShiftRequest!
+  shiftRequestsByShift(shiftID: String!, resID: String!): [ShiftRequest!]!
+  shiftRequestsByUser(targetUserID: String!, resID: String!): [ShiftRequest!]!
+}
+
+extend type Mutation {
+  createShiftRequest(input: CreateShiftRequestInput!): ShiftRequest!
+  updateShiftRequest(input: UpdateShiftRequestInput!): ShiftRequest!
+  deleteShiftRequest(requestID: ID!, shiftID: String!, resID: String!): Boolean!
+}
