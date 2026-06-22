@@ -6,6 +6,7 @@ import (
 
 	"shifty-backend/internal/entity"
 	"shifty-backend/internal/repository"
+	"shifty-backend/pkg/constants"
 	"shifty-backend/pkg/utils"
 	"shifty-backend/pkg/xerror"
 
@@ -42,28 +43,28 @@ func formatRuleConfig(ruleType string, rawConfig datatypes.JSON) (datatypes.JSON
 	safeMap := make(map[string]interface{})
 
 	switch ruleType {
-	case entity.RuleTypeMaxHoursPerDay, entity.RuleTypeMaxHoursPerWeek:
+	case constants.RuleTypeMaxHoursPerDay, constants.RuleTypeMaxHoursPerWeek:
 		val, ok := rawData["hours"]
 		if !ok {
 			return nil, xerror.BadRequest("Missing 'hours' parameter for this rule")
 		}
 		safeMap["max_hours"] = val
 
-	case entity.RuleTypeMinRestTime:
+	case constants.RuleTypeMinRestTime:
 		val, ok := rawData["hours"]
 		if !ok {
 			return nil, xerror.BadRequest("Missing 'hours' parameter for this rule")
 		}
 		safeMap["min_hours"] = val
 
-	case entity.RuleTypeMustWorkWith, entity.RuleTypeBanWorkWith:
+	case constants.RuleTypeMustWorkWith, constants.RuleTypeBanWorkWith:
 		val, ok := rawData["user_ids"]
 		if !ok {
 			return nil, xerror.BadRequest("Missing 'user_ids' parameter for this rule")
 		}
 		safeMap["user_ids"] = val
 
-	case entity.RuleTypeQualification:
+	case constants.RuleTypeQualification:
 		val, ok := rawData["position_id"]
 		if !ok {
 			return nil, xerror.BadRequest("Missing 'position_id' parameter for this rule")
@@ -93,7 +94,6 @@ func (u *shiftRuleUseCase) Create(ctx context.Context, userID, resID string, shi
 		return nil, xerror.Forbidden("You are not allowed to create shift rule")
 	}
 
-
 	formattedConfig, err := formatRuleConfig(shiftRule.Type, shiftRule.Config)
 	if err != nil {
 		return nil, err
@@ -120,15 +120,20 @@ func (u *shiftRuleUseCase) Update(ctx context.Context, userID, resID string, upd
 		return nil, xerror.Forbidden("You are not allowed to update shift rule")
 	}
 
+	_, hasType := updateData["type"]
+	rawConfig, hasConfig := updateData["config"]
 
-	if rawConfig, exists := updateData["config"]; exists {
+	if hasType && !hasConfig {
+		return nil, xerror.BadRequest("You must provide a new 'config' when changing the rule 'type'")
+	}
+
+	if hasConfig {
 		var ruleType string
-
 
 		if rt, ok := updateData["type"].(string); ok {
 			ruleType = rt
 		} else {
-		
+
 			existingRule, err := u.shiftRuleRepo.GetByID(ctx, shiftRuleID, restaurantID)
 			if err != nil {
 				return nil, xerror.NotFound("Shift rule not found for config validation")

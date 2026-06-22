@@ -108,6 +108,8 @@ func main() {
 	schedulRepo := repository.NewScheduleRepository(db)
 	shiftRepo := repository.NewShiftRepository(db)
 	shiftRequirementRepo := repository.NewShiftRequirementRepository(db)
+	shiftRuleRepo := repository.NewShiftRuleRepository(db)
+	shiftAssignmentRepo := repository.NewShiftAssignmentRepository(db)
 	// ------------------------------USECASE----------------------------------
 
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenMaster, timeoutContext, redisRepo, emailService, googleService)
@@ -118,6 +120,8 @@ func main() {
 	scheduleUseCase := usecase.NewScheduleUseCase(schedulRepo, userRestaurantRepo)
 	shiftUseCase := usecase.NewShiftUseCase(shiftRepo, userRestaurantRepo)
 	shiftRequirementUseCase := usecase.NewShiftRequirementUseCase(shiftRequirementRepo, userRestaurantRepo)
+	shiftRuleUseCase := usecase.NewShiftRuleUseCase(shiftRuleRepo, userRestaurantRepo)
+	shiftAssignmentUseCase := usecase.NewShiftAssignmentUseCase(shiftAssignmentRepo, userRestaurantRepo)
 	// ------------------------------HANDLER----------------------------------
 
 	authHandler := handler.NewAuthHandler(authUseCase, cloudinaryService, emailService)
@@ -134,6 +138,8 @@ func main() {
 		ScheduleUseCase:         scheduleUseCase,
 		ShiftUseCase:            shiftUseCase,
 		ShiftRequirementUseCase: shiftRequirementUseCase,
+		ShiftRuleUseCase:        shiftRuleUseCase,
+		ShiftAssignmentUseCase:  shiftAssignmentUseCase,
 	}
 
 	playgroundHandler, queryHandler := graphql.NewGraphQLHandler(gqlResolver)

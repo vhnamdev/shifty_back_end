@@ -45,6 +45,16 @@ type CreateScheduleInput struct {
 	RestaurantID string    `json:"restaurantID"`
 }
 
+type CreateShiftAssignmentInput struct {
+	ResID        string     `json:"resID"`
+	ShiftID      string     `json:"shiftID"`
+	UserID       string     `json:"userID"`
+	PositionID   *string    `json:"positionID,omitempty"`
+	CheckInTime  *time.Time `json:"checkInTime,omitempty"`
+	CheckOutTime *time.Time `json:"checkOutTime,omitempty"`
+	Note         *string    `json:"note,omitempty"`
+}
+
 type CreateShiftInput struct {
 	ResID           string    `json:"resID"`
 	ScheduleID      string    `json:"scheduleID"`
@@ -137,6 +147,19 @@ type Shift struct {
 	UpdatedAt       time.Time `json:"updatedAt"`
 }
 
+type ShiftAssignment struct {
+	ID           string     `json:"id"`
+	CheckInTime  *time.Time `json:"checkInTime,omitempty"`
+	CheckOutTime *time.Time `json:"checkOutTime,omitempty"`
+	UserID       string     `json:"userID"`
+	ShiftID      string     `json:"shiftID"`
+	PositionID   *string    `json:"positionID,omitempty"`
+	Note         *string    `json:"note,omitempty"`
+	IsDeleted    bool       `json:"isDeleted"`
+	CreatedAt    time.Time  `json:"createdAt"`
+	UpdatedAt    time.Time  `json:"updatedAt"`
+}
+
 type ShiftRequirement struct {
 	ID         string    `json:"id"`
 	ShiftID    string    `json:"shiftID"`
@@ -197,6 +220,16 @@ type UpdateScheduleInput struct {
 	ScheduleID   string     `json:"scheduleID"`
 	StartTime    *time.Time `json:"startTime,omitempty"`
 	EndTime      *time.Time `json:"endTime,omitempty"`
+}
+
+type UpdateShiftAssignmentInput struct {
+	ID           string     `json:"id"`
+	ResID        string     `json:"resID"`
+	ShiftID      string     `json:"shiftID"`
+	PositionID   *string    `json:"positionID,omitempty"`
+	CheckInTime  *time.Time `json:"checkInTime,omitempty"`
+	CheckOutTime *time.Time `json:"checkOutTime,omitempty"`
+	Note         *string    `json:"note,omitempty"`
 }
 
 type UpdateShiftInput struct {

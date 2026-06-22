@@ -9,15 +9,17 @@ import (
 
 type ShiftAssignment struct {
 	ID           uuid.UUID  `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
-	CheckInTime  time.Time  `json:"check_in_time"`
-	CheckOutTime time.Time  `json:"check_out_time"`
-	UserID       uuid.UUID  `gorm:"type:uuid;not null" json:"user_id"`
+	CheckInTime  *time.Time `json:"check_in_time"`
+	CheckOutTime *time.Time `json:"check_out_time"`
+	UserID       uuid.UUID  `gorm:"type:uuid;not null;uniqueIndex:idx_shift_assignment_user_shift_active,where:is_deleted = false" json:"user_id"`
 	User         User       `gorm:"foreignKey:UserID" json:"user,omitempty"`
-	ShiftID      uuid.UUID  `gorm:"type:uuid;not null" json:"shift_id"`
+	ShiftID      uuid.UUID  `gorm:"type:uuid;not null;uniqueIndex:idx_shift_assignment_user_shift_active,where:is_deleted = false" json:"shift_id"`
 	Shift        Shift      `gorm:"foreignKey:ShiftID" json:"shift,omitempty"`
 	PositionID   *uuid.UUID `gorm:"type:uuid" json:"position_id"`
 	Position     Position   `gorm:"foreignKey:PositionID" json:"position,omitempty"`
 	Note         *string    `gorm:"type:text" json:"note"`
+	IsDeleted    bool       `gorm:"default:false" json:"is_deleted"`
+	DeletedAt    *time.Time `json:"deleted_at"`
 	CreatedAt    time.Time  `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt    time.Time  `json:"updated_at"`
 }
