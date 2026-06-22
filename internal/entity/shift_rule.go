@@ -8,15 +8,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	RuleTypeMaxHoursPerDay  = "MAX_HOURS_PER_DAY"
-	RuleTypeMaxHoursPerWeek = "MAX_HOURS_PER_WEEK"
-	RuleTypeMinRestTime     = "MIN_REST_TIME"
-	RuleTypeQualification   = "QUALIFICATION_REQ"
-	RuleTypeMustWorkWith    = "MUST_WORK_WITH"
-	RuleTypeBanWorkWith     = "BAN_WORK_WITH"
-)
-
 type ShiftRule struct {
 	ID           uuid.UUID      `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 	Type         string         `gorm:"type:varchar(50); not null;index" json:"type"`

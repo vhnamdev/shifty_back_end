@@ -6,6 +6,7 @@ import (
 
 	"shifty-backend/internal/entity"
 	"shifty-backend/internal/usecase"
+	"shifty-backend/pkg/constants"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -30,13 +31,13 @@ func TestShiftRuleUseCase_Create(t *testing.T) {
 		mockShiftRuleRepo, mockUserResRepo, u := setupShiftRuleUseCase()
 
 		inputShiftRule := &entity.ShiftRule{
-			Type:   entity.RuleTypeMaxHoursPerDay,
+			Type:   constants.RuleTypeMaxHoursPerDay,
 			Name:   "Max hours per day",
 			Config: datatypes.JSON(`{"hours":8,"ignored":"value"}`),
 		}
 		expectedShiftRule := &entity.ShiftRule{
 			ID:     uuid.New(),
-			Type:   entity.RuleTypeMaxHoursPerDay,
+			Type:   constants.RuleTypeMaxHoursPerDay,
 			Name:   "Max hours per day",
 			Config: datatypes.JSON(`{"max_hours":8}`),
 		}
@@ -56,7 +57,7 @@ func TestShiftRuleUseCase_Create(t *testing.T) {
 	t.Run("Fail Forbidden", func(t *testing.T) {
 		mockShiftRuleRepo, mockUserResRepo, u := setupShiftRuleUseCase()
 		inputShiftRule := &entity.ShiftRule{
-			Type:   entity.RuleTypeMaxHoursPerDay,
+			Type:   constants.RuleTypeMaxHoursPerDay,
 			Name:   "Max hours per day",
 			Config: datatypes.JSON(`{"hours":8}`),
 		}
@@ -74,7 +75,7 @@ func TestShiftRuleUseCase_Create(t *testing.T) {
 	t.Run("Fail Invalid Config", func(t *testing.T) {
 		mockShiftRuleRepo, mockUserResRepo, u := setupShiftRuleUseCase()
 		inputShiftRule := &entity.ShiftRule{
-			Type:   entity.RuleTypeMaxHoursPerDay,
+			Type:   constants.RuleTypeMaxHoursPerDay,
 			Name:   "Max hours per day",
 			Config: datatypes.JSON(`{"max_hours":8}`),
 		}
@@ -100,10 +101,10 @@ func TestShiftRuleUseCase_Update(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		mockShiftRuleRepo, mockUserResRepo, u := setupShiftRuleUseCase()
 		updateData := map[string]interface{}{
-			"type":   entity.RuleTypeMinRestTime,
+			"type":   constants.RuleTypeMinRestTime,
 			"config": datatypes.JSON(`{"hours":12}`),
 		}
-		expectedShiftRule := &entity.ShiftRule{Type: entity.RuleTypeMinRestTime}
+		expectedShiftRule := &entity.ShiftRule{Type: constants.RuleTypeMinRestTime}
 
 		mockUserResRepo.On("HasManagementAuthority", ctx, userID, resID).Return(true, nil)
 		mockShiftRuleRepo.On("Update", ctx, updateData, shiftRuleID, restaurantID).Return(expectedShiftRule, nil)
@@ -120,8 +121,8 @@ func TestShiftRuleUseCase_Update(t *testing.T) {
 		updateData := map[string]interface{}{
 			"config": datatypes.JSON(`{"user_ids":["user-2","user-3"]}`),
 		}
-		existingShiftRule := &entity.ShiftRule{Type: entity.RuleTypeMustWorkWith}
-		expectedShiftRule := &entity.ShiftRule{Type: entity.RuleTypeMustWorkWith}
+		existingShiftRule := &entity.ShiftRule{Type: constants.RuleTypeMustWorkWith}
+		expectedShiftRule := &entity.ShiftRule{Type: constants.RuleTypeMustWorkWith}
 
 		mockUserResRepo.On("HasManagementAuthority", ctx, userID, resID).Return(true, nil)
 		mockShiftRuleRepo.On("GetByID", ctx, shiftRuleID, restaurantID).Return(existingShiftRule, nil)
@@ -210,7 +211,7 @@ func TestShiftRuleUseCase_FindAllByRestaurantID(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		mockShiftRuleRepo, mockUserResRepo, u := setupShiftRuleUseCase()
 		expectedList := []*entity.ShiftRule{
-			{Type: entity.RuleTypeMaxHoursPerDay}, {Type: entity.RuleTypeMinRestTime},
+			{Type: constants.RuleTypeMaxHoursPerDay}, {Type: constants.RuleTypeMinRestTime},
 		}
 
 		mockUserResRepo.On("CheckUserInRestaurant", ctx, userID, resID).Return(true, nil)

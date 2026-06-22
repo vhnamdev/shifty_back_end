@@ -1,0 +1,43 @@
+type ShiftAssignment {
+  id: ID!
+  checkInTime: Time
+  checkOutTime: Time
+  userID: String!
+  shiftID: String!
+  positionID: String
+  note: String
+  isDeleted: Boolean!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+input CreateShiftAssignmentInput {
+  resID: String!
+  shiftID: String!
+  userID: String!
+  positionID: String
+  checkInTime: Time
+  checkOutTime: Time
+  note: String
+}
+
+input UpdateShiftAssignmentInput {
+  id: ID!
+  resID: String!
+  shiftID: String!
+  positionID: String
+  checkInTime: Time
+  checkOutTime: Time
+  note: String
+}
+
+extend type Query {
+  shiftAssignment(assignmentID: ID!, shiftID: String!, resID: String!): ShiftAssignment!
+  shiftAssignmentsByShift(shiftID: String!, resID: String!): [ShiftAssignment!]!
+}
+
+extend type Mutation {
+  createShiftAssignment(input: CreateShiftAssignmentInput!): ShiftAssignment!
+  updateShiftAssignment(input: UpdateShiftAssignmentInput!): ShiftAssignment!
+  deleteShiftAssignment(assignmentID: ID!, shiftID: String!, resID: String!): Boolean!
+}
