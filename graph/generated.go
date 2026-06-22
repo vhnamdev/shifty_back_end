@@ -57,18 +57,21 @@ type ComplexityRoot struct {
 		CreateSchedule         func(childComplexity int, input model.CreateScheduleInput) int
 		CreateShift            func(childComplexity int, input model.CreateShiftInput) int
 		CreateShiftRequirement func(childComplexity int, input model.CreateRequirementInput) int
+		CreateShiftRule        func(childComplexity int, input model.CreateShiftRuleInput) int
 		Delete                 func(childComplexity int) int
 		DeletePosition         func(childComplexity int, posID string, resID string) int
 		DeleteRestaurant       func(childComplexity int, resID string) int
 		DeleteSchedule         func(childComplexity int, resID string, scheID string) int
 		DeleteShift            func(childComplexity int, shiftID string, scheID string, resID string) int
 		DeleteShiftRequirement func(childComplexity int, reqID string, shiftID string, resID string) int
+		DeleteShiftRule        func(childComplexity int, ruleID string, resID string) int
 		JoinRestaurant         func(childComplexity int, input model.JoinRestaurantInput) int
 		UpdatePosition         func(childComplexity int, input model.UpdatePositionInput) int
 		UpdateRestaurant       func(childComplexity int, input model.UpdateRestaurantInput) int
 		UpdateSchedule         func(childComplexity int, input model.UpdateScheduleInput) int
 		UpdateShift            func(childComplexity int, input model.UpdateShiftInput) int
 		UpdateShiftRequirement func(childComplexity int, input model.UpdateRequirementInput) int
+		UpdateShiftRule        func(childComplexity int, input model.UpdateShiftRuleInput) int
 		UpdateStaffByManager   func(childComplexity int, input *model.UpdateStaffByManagerInput) int
 		UpdateUser             func(childComplexity int, input *model.UpdateUserInput) int
 	}
@@ -99,6 +102,8 @@ type ComplexityRoot struct {
 		Shift                    func(childComplexity int, shiftID string, scheID string, resID string) int
 		ShiftRequirement         func(childComplexity int, reqID string, shiftID string, resID string) int
 		ShiftRequirementsByShift func(childComplexity int, shiftID string, resID string) int
+		ShiftRule                func(childComplexity int, ruleID string, resID string) int
+		ShiftRulesByRestaurant   func(childComplexity int, resID string) int
 		ShiftsBySchedule         func(childComplexity int, scheID string, resID string) int
 	}
 
@@ -151,6 +156,17 @@ type ComplexityRoot struct {
 		ShiftID    func(childComplexity int) int
 		StartTime  func(childComplexity int) int
 		UpdatedAt  func(childComplexity int) int
+	}
+
+	ShiftRule struct {
+		Config       func(childComplexity int) int
+		CreatedAt    func(childComplexity int) int
+		ID           func(childComplexity int) int
+		IsDeleted    func(childComplexity int) int
+		Name         func(childComplexity int) int
+		RestaurantID func(childComplexity int) int
+		Type         func(childComplexity int) int
+		UpdatedAt    func(childComplexity int) int
 	}
 
 	User struct {
@@ -206,6 +222,9 @@ type MutationResolver interface {
 	CreateShiftRequirement(ctx context.Context, input model.CreateRequirementInput) (*model.ShiftRequirement, error)
 	UpdateShiftRequirement(ctx context.Context, input model.UpdateRequirementInput) (*model.ShiftRequirement, error)
 	DeleteShiftRequirement(ctx context.Context, reqID string, shiftID string, resID string) (bool, error)
+	CreateShiftRule(ctx context.Context, input model.CreateShiftRuleInput) (*model.ShiftRule, error)
+	UpdateShiftRule(ctx context.Context, input model.UpdateShiftRuleInput) (*model.ShiftRule, error)
+	DeleteShiftRule(ctx context.Context, ruleID string, resID string) (bool, error)
 	UpdateUser(ctx context.Context, input *model.UpdateUserInput) (*model.User, error)
 	UpdateStaffByManager(ctx context.Context, input *model.UpdateStaffByManagerInput) (*model.UserRestaurant, error)
 	Delete(ctx context.Context) (bool, error)
@@ -222,6 +241,8 @@ type QueryResolver interface {
 	ShiftsBySchedule(ctx context.Context, scheID string, resID string) ([]*model.Shift, error)
 	ShiftRequirement(ctx context.Context, reqID string, shiftID string, resID string) (*model.ShiftRequirement, error)
 	ShiftRequirementsByShift(ctx context.Context, shiftID string, resID string) ([]*model.ShiftRequirement, error)
+	ShiftRule(ctx context.Context, ruleID string, resID string) (*model.ShiftRule, error)
+	ShiftRulesByRestaurant(ctx context.Context, resID string) ([]*model.ShiftRule, error)
 	Me(ctx context.Context) (*model.User, error)
 	RestaurantMembers(ctx context.Context, restaurantID string, limit *int, page *int, filter *model.UserFilterInput) (*model.UserPagination, error)
 }
@@ -350,6 +371,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.CreateShiftRequirement(childComplexity, args["input"].(model.CreateRequirementInput)), true
+	case "Mutation.createShiftRule":
+		if e.ComplexityRoot.Mutation.CreateShiftRule == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createShiftRule_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CreateShiftRule(childComplexity, args["input"].(model.CreateShiftRuleInput)), true
 	case "Mutation.delete":
 		if e.ComplexityRoot.Mutation.Delete == nil {
 			break
@@ -411,6 +443,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.DeleteShiftRequirement(childComplexity, args["reqID"].(string), args["shiftID"].(string), args["resID"].(string)), true
+	case "Mutation.deleteShiftRule":
+		if e.ComplexityRoot.Mutation.DeleteShiftRule == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteShiftRule_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.DeleteShiftRule(childComplexity, args["ruleID"].(string), args["resID"].(string)), true
 	case "Mutation.joinRestaurant":
 		if e.ComplexityRoot.Mutation.JoinRestaurant == nil {
 			break
@@ -477,6 +520,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.UpdateShiftRequirement(childComplexity, args["input"].(model.UpdateRequirementInput)), true
+	case "Mutation.updateShiftRule":
+		if e.ComplexityRoot.Mutation.UpdateShiftRule == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateShiftRule_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.UpdateShiftRule(childComplexity, args["input"].(model.UpdateShiftRuleInput)), true
 	case "Mutation.updateStaffByManager":
 		if e.ComplexityRoot.Mutation.UpdateStaffByManager == nil {
 			break
@@ -679,6 +733,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.ShiftRequirementsByShift(childComplexity, args["shiftID"].(string), args["resID"].(string)), true
+	case "Query.shiftRule":
+		if e.ComplexityRoot.Query.ShiftRule == nil {
+			break
+		}
+
+		args, err := ec.field_Query_shiftRule_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.ShiftRule(childComplexity, args["ruleID"].(string), args["resID"].(string)), true
+	case "Query.shiftRulesByRestaurant":
+		if e.ComplexityRoot.Query.ShiftRulesByRestaurant == nil {
+			break
+		}
+
+		args, err := ec.field_Query_shiftRulesByRestaurant_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.ShiftRulesByRestaurant(childComplexity, args["resID"].(string)), true
 	case "Query.shiftsBySchedule":
 		if e.ComplexityRoot.Query.ShiftsBySchedule == nil {
 			break
@@ -929,6 +1005,55 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.ShiftRequirement.UpdatedAt(childComplexity), true
 
+	case "ShiftRule.config":
+		if e.ComplexityRoot.ShiftRule.Config == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ShiftRule.Config(childComplexity), true
+	case "ShiftRule.createdAt":
+		if e.ComplexityRoot.ShiftRule.CreatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ShiftRule.CreatedAt(childComplexity), true
+	case "ShiftRule.id":
+		if e.ComplexityRoot.ShiftRule.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ShiftRule.ID(childComplexity), true
+	case "ShiftRule.isDeleted":
+		if e.ComplexityRoot.ShiftRule.IsDeleted == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ShiftRule.IsDeleted(childComplexity), true
+	case "ShiftRule.name":
+		if e.ComplexityRoot.ShiftRule.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ShiftRule.Name(childComplexity), true
+	case "ShiftRule.restaurantID":
+		if e.ComplexityRoot.ShiftRule.RestaurantID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ShiftRule.RestaurantID(childComplexity), true
+	case "ShiftRule.type":
+		if e.ComplexityRoot.ShiftRule.Type == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ShiftRule.Type(childComplexity), true
+	case "ShiftRule.updatedAt":
+		if e.ComplexityRoot.ShiftRule.UpdatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ShiftRule.UpdatedAt(childComplexity), true
+
 	case "User.address":
 		if e.ComplexityRoot.User.Address == nil {
 			break
@@ -1079,12 +1204,14 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateRestaurantInput,
 		ec.unmarshalInputCreateScheduleInput,
 		ec.unmarshalInputCreateShiftInput,
+		ec.unmarshalInputCreateShiftRuleInput,
 		ec.unmarshalInputJoinRestaurantInput,
 		ec.unmarshalInputUpdatePositionInput,
 		ec.unmarshalInputUpdateRequirementInput,
 		ec.unmarshalInputUpdateRestaurantInput,
 		ec.unmarshalInputUpdateScheduleInput,
 		ec.unmarshalInputUpdateShiftInput,
+		ec.unmarshalInputUpdateShiftRuleInput,
 		ec.unmarshalInputUpdateStaffByManagerInput,
 		ec.unmarshalInputUpdateUserInput,
 		ec.unmarshalInputUserFilterInput,
@@ -1162,7 +1289,7 @@ func newExecutionContext(
 	}
 }
 
-//go:embed "schema/law.graphqls" "schema/position.graphqls" "schema/restaurant.graphqls" "schema/schedule.graphqls" "schema/schema.graphqls" "schema/shift.graphqls" "schema/shift_requirement.graphqls" "schema/user.graphqls" "schema/user_restaurant.graphqls"
+//go:embed "schema/law.graphqls" "schema/position.graphqls" "schema/restaurant.graphqls" "schema/schedule.graphqls" "schema/schema.graphqls" "schema/shift.graphqls" "schema/shift_requirement.graphqls" "schema/shift_rule.graphqls" "schema/user.graphqls" "schema/user_restaurant.graphqls"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -1181,6 +1308,7 @@ var sources = []*ast.Source{
 	{Name: "schema/schema.graphqls", Input: sourceData("schema/schema.graphqls"), BuiltIn: false},
 	{Name: "schema/shift.graphqls", Input: sourceData("schema/shift.graphqls"), BuiltIn: false},
 	{Name: "schema/shift_requirement.graphqls", Input: sourceData("schema/shift_requirement.graphqls"), BuiltIn: false},
+	{Name: "schema/shift_rule.graphqls", Input: sourceData("schema/shift_rule.graphqls"), BuiltIn: false},
 	{Name: "schema/user.graphqls", Input: sourceData("schema/user.graphqls"), BuiltIn: false},
 	{Name: "schema/user_restaurant.graphqls", Input: sourceData("schema/user_restaurant.graphqls"), BuiltIn: false},
 }
@@ -1238,6 +1366,17 @@ func (ec *executionContext) field_Mutation_createShiftRequirement_args(ctx conte
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateRequirementInput2shiftyᚑbackendᚋgraphᚋmodelᚐCreateRequirementInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createShiftRule_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateShiftRuleInput2shiftyᚑbackendᚋgraphᚋmodelᚐCreateShiftRuleInput)
 	if err != nil {
 		return nil, err
 	}
@@ -1320,6 +1459,22 @@ func (ec *executionContext) field_Mutation_deleteShiftRequirement_args(ctx conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_deleteShiftRule_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "ruleID", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["ruleID"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "resID", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["resID"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteShift_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -1389,6 +1544,17 @@ func (ec *executionContext) field_Mutation_updateShiftRequirement_args(ctx conte
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateRequirementInput2shiftyᚑbackendᚋgraphᚋmodelᚐUpdateRequirementInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateShiftRule_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateShiftRuleInput2shiftyᚑbackendᚋgraphᚋmodelᚐUpdateShiftRuleInput)
 	if err != nil {
 		return nil, err
 	}
@@ -1565,6 +1731,33 @@ func (ec *executionContext) field_Query_shiftRequirementsByShift_args(ctx contex
 		return nil, err
 	}
 	args["resID"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_shiftRule_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "ruleID", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["ruleID"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "resID", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["resID"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_shiftRulesByRestaurant_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "resID", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["resID"] = arg0
 	return args, nil
 }
 
@@ -2773,6 +2966,165 @@ func (ec *executionContext) fieldContext_Mutation_deleteShiftRequirement(ctx con
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createShiftRule(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createShiftRule,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CreateShiftRule(ctx, fc.Args["input"].(model.CreateShiftRuleInput))
+		},
+		nil,
+		ec.marshalNShiftRule2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐShiftRule,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createShiftRule(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ShiftRule_id(ctx, field)
+			case "type":
+				return ec.fieldContext_ShiftRule_type(ctx, field)
+			case "name":
+				return ec.fieldContext_ShiftRule_name(ctx, field)
+			case "config":
+				return ec.fieldContext_ShiftRule_config(ctx, field)
+			case "isDeleted":
+				return ec.fieldContext_ShiftRule_isDeleted(ctx, field)
+			case "restaurantID":
+				return ec.fieldContext_ShiftRule_restaurantID(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ShiftRule_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_ShiftRule_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ShiftRule", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createShiftRule_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateShiftRule(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateShiftRule,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().UpdateShiftRule(ctx, fc.Args["input"].(model.UpdateShiftRuleInput))
+		},
+		nil,
+		ec.marshalNShiftRule2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐShiftRule,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateShiftRule(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ShiftRule_id(ctx, field)
+			case "type":
+				return ec.fieldContext_ShiftRule_type(ctx, field)
+			case "name":
+				return ec.fieldContext_ShiftRule_name(ctx, field)
+			case "config":
+				return ec.fieldContext_ShiftRule_config(ctx, field)
+			case "isDeleted":
+				return ec.fieldContext_ShiftRule_isDeleted(ctx, field)
+			case "restaurantID":
+				return ec.fieldContext_ShiftRule_restaurantID(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ShiftRule_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_ShiftRule_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ShiftRule", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateShiftRule_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteShiftRule(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_deleteShiftRule,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().DeleteShiftRule(ctx, fc.Args["ruleID"].(string), fc.Args["resID"].(string))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteShiftRule(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteShiftRule_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -3845,6 +4197,124 @@ func (ec *executionContext) fieldContext_Query_shiftRequirementsByShift(ctx cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_shiftRequirementsByShift_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_shiftRule(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_shiftRule,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().ShiftRule(ctx, fc.Args["ruleID"].(string), fc.Args["resID"].(string))
+		},
+		nil,
+		ec.marshalNShiftRule2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐShiftRule,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_shiftRule(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ShiftRule_id(ctx, field)
+			case "type":
+				return ec.fieldContext_ShiftRule_type(ctx, field)
+			case "name":
+				return ec.fieldContext_ShiftRule_name(ctx, field)
+			case "config":
+				return ec.fieldContext_ShiftRule_config(ctx, field)
+			case "isDeleted":
+				return ec.fieldContext_ShiftRule_isDeleted(ctx, field)
+			case "restaurantID":
+				return ec.fieldContext_ShiftRule_restaurantID(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ShiftRule_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_ShiftRule_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ShiftRule", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_shiftRule_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_shiftRulesByRestaurant(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_shiftRulesByRestaurant,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().ShiftRulesByRestaurant(ctx, fc.Args["resID"].(string))
+		},
+		nil,
+		ec.marshalNShiftRule2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐShiftRuleᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_shiftRulesByRestaurant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ShiftRule_id(ctx, field)
+			case "type":
+				return ec.fieldContext_ShiftRule_type(ctx, field)
+			case "name":
+				return ec.fieldContext_ShiftRule_name(ctx, field)
+			case "config":
+				return ec.fieldContext_ShiftRule_config(ctx, field)
+			case "isDeleted":
+				return ec.fieldContext_ShiftRule_isDeleted(ctx, field)
+			case "restaurantID":
+				return ec.fieldContext_ShiftRule_restaurantID(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ShiftRule_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_ShiftRule_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ShiftRule", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_shiftRulesByRestaurant_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -5240,6 +5710,238 @@ func (ec *executionContext) _ShiftRequirement_updatedAt(ctx context.Context, fie
 func (ec *executionContext) fieldContext_ShiftRequirement_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ShiftRequirement",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ShiftRule_id(ctx context.Context, field graphql.CollectedField, obj *model.ShiftRule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ShiftRule_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ShiftRule_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ShiftRule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ShiftRule_type(ctx context.Context, field graphql.CollectedField, obj *model.ShiftRule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ShiftRule_type,
+		func(ctx context.Context) (any, error) {
+			return obj.Type, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ShiftRule_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ShiftRule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ShiftRule_name(ctx context.Context, field graphql.CollectedField, obj *model.ShiftRule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ShiftRule_name,
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ShiftRule_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ShiftRule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ShiftRule_config(ctx context.Context, field graphql.CollectedField, obj *model.ShiftRule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ShiftRule_config,
+		func(ctx context.Context) (any, error) {
+			return obj.Config, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ShiftRule_config(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ShiftRule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ShiftRule_isDeleted(ctx context.Context, field graphql.CollectedField, obj *model.ShiftRule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ShiftRule_isDeleted,
+		func(ctx context.Context) (any, error) {
+			return obj.IsDeleted, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ShiftRule_isDeleted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ShiftRule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ShiftRule_restaurantID(ctx context.Context, field graphql.CollectedField, obj *model.ShiftRule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ShiftRule_restaurantID,
+		func(ctx context.Context) (any, error) {
+			return obj.RestaurantID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ShiftRule_restaurantID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ShiftRule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ShiftRule_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.ShiftRule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ShiftRule_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ShiftRule_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ShiftRule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ShiftRule_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.ShiftRule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ShiftRule_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ShiftRule_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ShiftRule",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -7716,6 +8418,53 @@ func (ec *executionContext) unmarshalInputCreateShiftInput(ctx context.Context, 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreateShiftRuleInput(ctx context.Context, obj any) (model.CreateShiftRuleInput, error) {
+	var it model.CreateShiftRuleInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"resID", "type", "name", "config"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "resID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resID"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ResID = data
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "config":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("config"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Config = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputJoinRestaurantInput(ctx context.Context, obj any) (model.JoinRestaurantInput, error) {
 	var it model.JoinRestaurantInput
 	asMap := map[string]any{}
@@ -8077,6 +8826,60 @@ func (ec *executionContext) unmarshalInputUpdateShiftInput(ctx context.Context, 
 				return it, err
 			}
 			it.WageMultiplier = data
+		}
+	}
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateShiftRuleInput(ctx context.Context, obj any) (model.UpdateShiftRuleInput, error) {
+	var it model.UpdateShiftRuleInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "resID", "type", "name", "config"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "resID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resID"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ResID = data
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "config":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("config"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Config = data
 		}
 	}
 	return it, nil
@@ -8458,6 +9261,27 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "deleteShiftRequirement":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteShiftRequirement(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createShiftRule":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createShiftRule(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateShiftRule":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateShiftRule(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteShiftRule":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteShiftRule(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -8845,6 +9669,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "shiftRule":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_shiftRule(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "shiftRulesByRestaurant":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_shiftRulesByRestaurant(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "me":
 			field := field
 
@@ -9210,6 +10078,80 @@ func (ec *executionContext) _ShiftRequirement(ctx context.Context, sel ast.Selec
 			}
 		case "updatedAt":
 			out.Values[i] = ec._ShiftRequirement_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var shiftRuleImplementors = []string{"ShiftRule"}
+
+func (ec *executionContext) _ShiftRule(ctx context.Context, sel ast.SelectionSet, obj *model.ShiftRule) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, shiftRuleImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ShiftRule")
+		case "id":
+			out.Values[i] = ec._ShiftRule_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "type":
+			out.Values[i] = ec._ShiftRule_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._ShiftRule_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "config":
+			out.Values[i] = ec._ShiftRule_config(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isDeleted":
+			out.Values[i] = ec._ShiftRule_isDeleted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "restaurantID":
+			out.Values[i] = ec._ShiftRule_restaurantID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._ShiftRule_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._ShiftRule_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -9857,6 +10799,11 @@ func (ec *executionContext) unmarshalNCreateShiftInput2shiftyᚑbackendᚋgraph�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNCreateShiftRuleInput2shiftyᚑbackendᚋgraphᚋmodelᚐCreateShiftRuleInput(ctx context.Context, v any) (model.CreateShiftRuleInput, error) {
+	res, err := ec.unmarshalInputCreateShiftRuleInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v any) (float64, error) {
 	res, err := graphql.UnmarshalFloatContext(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -10070,6 +11017,36 @@ func (ec *executionContext) marshalNShiftRequirement2ᚖshiftyᚑbackendᚋgraph
 	return ec._ShiftRequirement(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNShiftRule2shiftyᚑbackendᚋgraphᚋmodelᚐShiftRule(ctx context.Context, sel ast.SelectionSet, v model.ShiftRule) graphql.Marshaler {
+	return ec._ShiftRule(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNShiftRule2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐShiftRuleᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ShiftRule) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNShiftRule2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐShiftRule(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNShiftRule2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐShiftRule(ctx context.Context, sel ast.SelectionSet, v *model.ShiftRule) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ShiftRule(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -10124,6 +11101,11 @@ func (ec *executionContext) unmarshalNUpdateScheduleInput2shiftyᚑbackendᚋgra
 
 func (ec *executionContext) unmarshalNUpdateShiftInput2shiftyᚑbackendᚋgraphᚋmodelᚐUpdateShiftInput(ctx context.Context, v any) (model.UpdateShiftInput, error) {
 	res, err := ec.unmarshalInputUpdateShiftInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateShiftRuleInput2shiftyᚑbackendᚋgraphᚋmodelᚐUpdateShiftRuleInput(ctx context.Context, v any) (model.UpdateShiftRuleInput, error) {
+	res, err := ec.unmarshalInputUpdateShiftRuleInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

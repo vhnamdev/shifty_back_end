@@ -1,0 +1,36 @@
+type ShiftRule {
+  id: ID!
+  type: String!
+  name: String!
+  config: String!     # Dữ liệu JSON sẽ được truyền dưới dạng chuỗi (Stringified JSON)
+  isDeleted: Boolean!
+  restaurantID: String!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+input CreateShiftRuleInput {
+  resID: String!
+  type: String!
+  name: String!
+  config: String!     
+}
+
+input UpdateShiftRuleInput {
+  id: ID!
+  resID: String!
+  type: String
+  name: String
+  config: String
+}
+
+extend type Query {
+  shiftRule(ruleID: ID!, resID: String!): ShiftRule!
+  shiftRulesByRestaurant(resID: String!): [ShiftRule!]!
+}
+
+extend type Mutation {
+  createShiftRule(input: CreateShiftRuleInput!): ShiftRule!
+  updateShiftRule(input: UpdateShiftRuleInput!): ShiftRule!
+  deleteShiftRule(ruleID: ID!, resID: String!): Boolean!
+}

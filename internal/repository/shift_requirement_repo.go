@@ -49,10 +49,14 @@ func (r *shiftRequirementRepo) Update(ctx context.Context, updateData map[string
 }
 
 func (r *shiftRequirementRepo) Delete(ctx context.Context, shiftID, shiftRequireID string) error {
-	return r.db.WithContext(ctx).Model(&entity.ShiftRequirement{}).Where("id = ? AND shift_id = ?", shiftRequireID, shiftID).Updates(map[string]interface{}{
-		"is_deleted": true,
-		"deleted_at": time.Now(),
-	}).Error
+	return r.db.
+		WithContext(ctx).
+		Model(&entity.ShiftRequirement{}).
+		Where("id = ? AND shift_id = ?", shiftRequireID, shiftID).
+		Updates(map[string]interface{}{
+			"is_deleted": true,
+			"deleted_at": time.Now(),
+		}).Error
 }
 
 func (r *shiftRequirementRepo) GetByID(ctx context.Context, shiftID, shiftRequireID string) (*entity.ShiftRequirement, error) {
