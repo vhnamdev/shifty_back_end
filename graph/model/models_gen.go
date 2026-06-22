@@ -56,6 +56,13 @@ type CreateShiftInput struct {
 	WageMultiplier  *float64  `json:"wageMultiplier,omitempty"`
 }
 
+type CreateShiftRuleInput struct {
+	ResID  string `json:"resID"`
+	Type   string `json:"type"`
+	Name   string `json:"name"`
+	Config string `json:"config"`
+}
+
 type JoinRestaurantInput struct {
 	InviteCode string `json:"inviteCode"`
 }
@@ -143,6 +150,17 @@ type ShiftRequirement struct {
 	UpdatedAt  time.Time `json:"updatedAt"`
 }
 
+type ShiftRule struct {
+	ID           string    `json:"id"`
+	Type         string    `json:"type"`
+	Name         string    `json:"name"`
+	Config       string    `json:"config"`
+	IsDeleted    bool      `json:"isDeleted"`
+	RestaurantID string    `json:"restaurantID"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
+}
+
 type UpdatePositionInput struct {
 	ID                  string  `json:"id"`
 	RestaurantID        string  `json:"restaurantID"`
@@ -191,6 +209,14 @@ type UpdateShiftInput struct {
 	Type            *string    `json:"type,omitempty"`
 	IsHoliday       *bool      `json:"isHoliday,omitempty"`
 	WageMultiplier  *float64   `json:"wageMultiplier,omitempty"`
+}
+
+type UpdateShiftRuleInput struct {
+	ID     string  `json:"id"`
+	ResID  string  `json:"resID"`
+	Type   *string `json:"type,omitempty"`
+	Name   *string `json:"name,omitempty"`
+	Config *string `json:"config,omitempty"`
 }
 
 type UpdateStaffByManagerInput struct {
