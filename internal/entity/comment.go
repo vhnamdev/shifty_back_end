@@ -17,8 +17,10 @@ type Comment struct {
 	User      User       `gorm:"foreignKey:AuthorID" json:"user,omitempty"`
 	ParentID  *uuid.UUID `gorm:"type:uuid" json:"parent_id,omitempty"`
 	Replies   []Comment  `gorm:"foreignKey:ParentID;constraint:OnDelete:CASCADE" json:"replies,omitempty"`
+	IsDeleted bool       `gorm:"default:false" json:"is_deleted"`
 	CreatedAt time.Time  `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at"`
 }
 
 func (c *Comment) BeforeCreate(tx *gorm.DB) (err error) {

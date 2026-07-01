@@ -1,0 +1,47 @@
+type Comment {
+  id: ID!
+  content: String!
+  imageUrl: String
+  postID: String!
+  authorID: String!
+  parentID: String
+  replies: [Comment!]!
+  isDeleted: Boolean!
+  createdAt: Time!
+  updatedAt: Time!
+  deletedAt: Time
+}
+
+type CommentPagination {
+  data: [Comment!]!
+  total: Int!
+  currentPage: Int!
+  totalPages: Int!
+}
+
+input CreateCommentInput {
+  resID: String!
+  postID: ID!
+  content: String!
+  imageUrl: String
+  parentID: ID
+}
+
+input UpdateCommentInput {
+  id: ID!
+  resID: String!
+  postID: ID!
+  content: String
+  imageUrl: String
+}
+
+extend type Query {
+  comment(commentID: ID!, postID: ID!, resID: String!): Comment!
+  commentsByPost(postID: ID!, resID: String!, limit: Int = 10, page: Int = 1): CommentPagination!
+}
+
+extend type Mutation {
+  createComment(input: CreateCommentInput!): Comment!
+  updateComment(input: UpdateCommentInput!): Comment!
+  deleteComment(commentID: ID!, postID: ID!, resID: String!): Boolean!
+}

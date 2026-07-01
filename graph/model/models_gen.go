@@ -6,6 +6,35 @@ import (
 	"time"
 )
 
+type Comment struct {
+	ID        string     `json:"id"`
+	Content   string     `json:"content"`
+	ImageURL  *string    `json:"imageUrl,omitempty"`
+	PostID    string     `json:"postID"`
+	AuthorID  string     `json:"authorID"`
+	ParentID  *string    `json:"parentID,omitempty"`
+	Replies   []*Comment `json:"replies"`
+	IsDeleted bool       `json:"isDeleted"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+	DeletedAt *time.Time `json:"deletedAt,omitempty"`
+}
+
+type CommentPagination struct {
+	Data        []*Comment `json:"data"`
+	Total       int        `json:"total"`
+	CurrentPage int        `json:"currentPage"`
+	TotalPages  int        `json:"totalPages"`
+}
+
+type CreateCommentInput struct {
+	ResID    string  `json:"resID"`
+	PostID   string  `json:"postID"`
+	Content  string  `json:"content"`
+	ImageURL *string `json:"imageUrl,omitempty"`
+	ParentID *string `json:"parentID,omitempty"`
+}
+
 type CreateInviteCodeInput struct {
 	Email      string `json:"email"`
 	ResID      string `json:"resID"`
@@ -100,10 +129,6 @@ type Law struct {
 	Description   string    `json:"description"`
 	RestaurantID  string    `json:"restaurantID"`
 	CreatedAt     time.Time `json:"createdAt"`
-}
-
-type Mutatio struct {
-	Empty *string `json:"_empty,omitempty"`
 }
 
 type Mutation struct {
@@ -231,6 +256,14 @@ type ShiftRule struct {
 	RestaurantID string    `json:"restaurantID"`
 	CreatedAt    time.Time `json:"createdAt"`
 	UpdatedAt    time.Time `json:"updatedAt"`
+}
+
+type UpdateCommentInput struct {
+	ID       string  `json:"id"`
+	ResID    string  `json:"resID"`
+	PostID   string  `json:"postID"`
+	Content  *string `json:"content,omitempty"`
+	ImageURL *string `json:"imageUrl,omitempty"`
 }
 
 type UpdatePositionInput struct {
