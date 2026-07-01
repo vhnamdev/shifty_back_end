@@ -111,6 +111,7 @@ func main() {
 	shiftRuleRepo := repository.NewShiftRuleRepository(db)
 	shiftAssignmentRepo := repository.NewShiftAssignmentRepository(db)
 	shiftRequestRepo := repository.NewShiftRequestRepository(db)
+	postRepo := repository.NewPostRepository(db)
 	// ------------------------------USECASE----------------------------------
 
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenMaster, timeoutContext, redisRepo, emailService, googleService)
@@ -124,6 +125,7 @@ func main() {
 	shiftRuleUseCase := usecase.NewShiftRuleUseCase(shiftRuleRepo, userRestaurantRepo)
 	shiftAssignmentUseCase := usecase.NewShiftAssignmentUseCase(shiftAssignmentRepo, userRestaurantRepo)
 	shiftRequestUseCase := usecase.NewShiftRequestUseCase(shiftRequestRepo, userRestaurantRepo)
+	postUseCase := usecase.NewPostUseCase(postRepo, userRestaurantRepo)
 	// ------------------------------HANDLER----------------------------------
 
 	authHandler := handler.NewAuthHandler(authUseCase, cloudinaryService, emailService)
@@ -143,6 +145,7 @@ func main() {
 		ShiftRuleUseCase:        shiftRuleUseCase,
 		ShiftAssignmentUseCase:  shiftAssignmentUseCase,
 		ShiftRequestUseCase:     shiftRequestUseCase,
+		PostUseCase:             postUseCase,
 	}
 
 	playgroundHandler, queryHandler := graphql.NewGraphQLHandler(gqlResolver)

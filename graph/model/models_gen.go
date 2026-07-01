@@ -22,6 +22,12 @@ type CreatePositionInput struct {
 	CanDeleteRestaurant *bool  `json:"canDeleteRestaurant,omitempty"`
 }
 
+type CreatePostInput struct {
+	ResID    string  `json:"resID"`
+	Content  string  `json:"content"`
+	ImageURL *string `json:"imageUrl,omitempty"`
+}
+
 type CreateRequirementInput struct {
 	ResID      string    `json:"resID"`
 	ShiftID    string    `json:"shiftID"`
@@ -114,6 +120,25 @@ type Position struct {
 	RestaurantID        string    `json:"restaurantID"`
 	CreatedAt           time.Time `json:"createdAt"`
 	UpdatedAt           time.Time `json:"updatedAt"`
+}
+
+type Post struct {
+	ID           string     `json:"id"`
+	Content      string     `json:"content"`
+	ImageURL     string     `json:"imageUrl"`
+	RestaurantID string     `json:"restaurantID"`
+	AuthorID     string     `json:"authorID"`
+	IsDeleted    bool       `json:"isDeleted"`
+	CreatedAt    time.Time  `json:"createdAt"`
+	UpdatedAt    time.Time  `json:"updatedAt"`
+	DeletedAt    *time.Time `json:"deletedAt,omitempty"`
+}
+
+type PostPagination struct {
+	Data        []*Post `json:"data"`
+	Total       int     `json:"total"`
+	CurrentPage int     `json:"currentPage"`
+	TotalPages  int     `json:"totalPages"`
 }
 
 type Query struct {
@@ -217,6 +242,13 @@ type UpdatePositionInput struct {
 	Salary              *int    `json:"salary,omitempty"`
 	CanUpdateRestaurant *bool   `json:"canUpdateRestaurant,omitempty"`
 	CanDeleteRestaurant *bool   `json:"canDeleteRestaurant,omitempty"`
+}
+
+type UpdatePostInput struct {
+	ID       string  `json:"id"`
+	ResID    string  `json:"resID"`
+	Content  *string `json:"content,omitempty"`
+	ImageURL *string `json:"imageUrl,omitempty"`
 }
 
 type UpdateRequirementInput struct {
