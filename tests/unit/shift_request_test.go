@@ -88,17 +88,20 @@ func TestShiftRequestUseCase_Update(t *testing.T) {
 	resID := "res-1"
 	shiftID := "shift-1"
 	requestID := "request-1"
-	updateData := map[string]interface{}{"status": constants.ShiftRequestStatusApproved}
+	statusUpdate := func() map[string]interface{} {
+		return map[string]interface{}{"status": constants.ShiftRequestStatusApproved}
+	}
 
 	t.Run("Success Owner", func(t *testing.T) {
 		mockShiftRequestRepo, mockUserResRepo, u := setupShiftRequestUseCase()
 		existingRequest := &entity.ShiftRequest{ID: uuid.New(), UserID: userID}
-		expectedRequest := &entity.ShiftRequest{ID: existingRequest.ID, UserID: userID, Status: constants.ShiftRequestStatusApproved}
+		inputUpdate := map[string]interface{}{"note": "updated"}
+		expectedRequest := &entity.ShiftRequest{ID: existingRequest.ID, UserID: userID}
 
 		mockShiftRequestRepo.On("GetByID", ctx, shiftID, requestID).Return(existingRequest, nil)
-		mockShiftRequestRepo.On("Update", ctx, updateData, shiftID, requestID).Return(expectedRequest, nil)
+		mockShiftRequestRepo.On("Update", ctx, inputUpdate, shiftID, requestID).Return(expectedRequest, nil)
 
-		res, err := u.Update(ctx, userID.String(), resID, shiftID, requestID, updateData)
+		res, err := u.Update(ctx, userID.String(), resID, shiftID, requestID, inputUpdate)
 
 		assert.NoError(t, err)
 		assert.Equal(t, expectedRequest, res)
@@ -106,16 +109,37 @@ func TestShiftRequestUseCase_Update(t *testing.T) {
 		mockShiftRequestRepo.AssertExpectations(t)
 	})
 
+	t.Run("Owner Status Ignored Without Manager Authority", func(t *testing.T) {
+		mockShiftRequestRepo, mockUserResRepo, u := setupShiftRequestUseCase()
+		existingRequest := &entity.ShiftRequest{ID: uuid.New(), UserID: userID}
+		inputUpdate := statusUpdate()
+		expectedUpdate := map[string]interface{}{}
+		expectedRequest := &entity.ShiftRequest{ID: existingRequest.ID, UserID: userID}
+
+		mockShiftRequestRepo.On("GetByID", ctx, shiftID, requestID).Return(existingRequest, nil)
+		mockUserResRepo.On("HasManagementAuthority", ctx, userID.String(), resID).Return(false, nil)
+		mockShiftRequestRepo.On("Update", ctx, expectedUpdate, shiftID, requestID).Return(expectedRequest, nil)
+
+		res, err := u.Update(ctx, userID.String(), resID, shiftID, requestID, inputUpdate)
+
+		assert.NoError(t, err)
+		assert.Equal(t, expectedRequest, res)
+		assert.Equal(t, constants.ShiftRequestStatusApproved, inputUpdate["status"])
+		mockUserResRepo.AssertExpectations(t)
+		mockShiftRequestRepo.AssertExpectations(t)
+	})
+
 	t.Run("Success Manager", func(t *testing.T) {
 		mockShiftRequestRepo, mockUserResRepo, u := setupShiftRequestUseCase()
 		existingRequest := &entity.ShiftRequest{ID: uuid.New(), UserID: ownerID}
+		inputUpdate := statusUpdate()
 		expectedRequest := &entity.ShiftRequest{ID: existingRequest.ID, UserID: ownerID, Status: constants.ShiftRequestStatusApproved}
 
 		mockShiftRequestRepo.On("GetByID", ctx, shiftID, requestID).Return(existingRequest, nil)
 		mockUserResRepo.On("HasManagementAuthority", ctx, userID.String(), resID).Return(true, nil)
-		mockShiftRequestRepo.On("Update", ctx, updateData, shiftID, requestID).Return(expectedRequest, nil)
+		mockShiftRequestRepo.On("Update", ctx, inputUpdate, shiftID, requestID).Return(expectedRequest, nil)
 
-		res, err := u.Update(ctx, userID.String(), resID, shiftID, requestID, updateData)
+		res, err := u.Update(ctx, userID.String(), resID, shiftID, requestID, inputUpdate)
 
 		assert.NoError(t, err)
 		assert.Equal(t, expectedRequest, res)
@@ -126,11 +150,12 @@ func TestShiftRequestUseCase_Update(t *testing.T) {
 	t.Run("Fail Forbidden", func(t *testing.T) {
 		mockShiftRequestRepo, mockUserResRepo, u := setupShiftRequestUseCase()
 		existingRequest := &entity.ShiftRequest{ID: uuid.New(), UserID: ownerID}
+		inputUpdate := statusUpdate()
 
 		mockShiftRequestRepo.On("GetByID", ctx, shiftID, requestID).Return(existingRequest, nil)
 		mockUserResRepo.On("HasManagementAuthority", ctx, userID.String(), resID).Return(false, nil)
 
-		res, err := u.Update(ctx, userID.String(), resID, shiftID, requestID, updateData)
+		res, err := u.Update(ctx, userID.String(), resID, shiftID, requestID, inputUpdate)
 
 		assert.Error(t, err)
 		assert.Nil(t, res)

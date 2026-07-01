@@ -62,25 +62,30 @@ func (u *shiftRequestUseCase) Update(ctx context.Context, userID, resID, shiftID
 		}
 		return nil, xerror.Internal("Database failed")
 	}
-	isManager, err := u.userRestaurantRepo.HasManagementAuthority(ctx, userID, resID)
-	if err != nil {
-		return nil, xerror.Internal("Can not check authority")
+	sanitizedUpdateData := make(map[string]interface{}, len(updateData))
+	for key, value := range updateData {
+		sanitizedUpdateData[key] = value
 	}
 
 	isOwner := userID == shiftRequest.UserID.String()
+	_, updatesStatus := sanitizedUpdateData["status"]
+	isManager := false
 
+	if !isOwner || updatesStatus {
+		var err error
+		isManager, err = u.userRestaurantRepo.HasManagementAuthority(ctx, userID, resID)
+		if err != nil {
+			return nil, xerror.Internal("Can not check authority")
+		}
+	}
 
 	if isOwner && !isManager {
-
-		delete(updateData, "status")
-
+		delete(sanitizedUpdateData, "status")
 	} else if !isOwner && !isManager {
-
 		return nil, xerror.Forbidden("You are not allowed to update shift request")
 	}
 
-
-	updatedShiftRequest, err := u.shiftRequestRepo.Update(ctx, updateData, shiftID, shiftRequestID)
+	updatedShiftRequest, err := u.shiftRequestRepo.Update(ctx, sanitizedUpdateData, shiftID, shiftRequestID)
 
 	if err != nil {
 		return nil, xerror.Internal("Can not update shift request")

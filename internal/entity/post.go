@@ -17,8 +17,10 @@ type Post struct {
 	User         User       `gorm:"foreignKey:AuthorID" json:"user,omitempty"`
 	Reactions    []Reaction `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE" json:"reactions,omitempty"`
 	Comments     []Comment  `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE" json:"comments,omitempty"`
+	IsDeleted    bool       `gorm:"default:false" json:"is_deleted"`
 	CreatedAt    time.Time  `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt    time.Time  `json:"updated_at"`
+	DeletedAt    *time.Time `json:"deleted_at"`
 }
 
 func (p *Post) BeforeCreate(tx *gorm.DB) (err error) {

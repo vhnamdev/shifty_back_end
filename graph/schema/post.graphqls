@@ -1,0 +1,42 @@
+type Post {
+  id: ID!
+  content: String!
+  imageUrl: String!
+  restaurantID: String!
+  authorID: String!
+  isDeleted: Boolean!
+  createdAt: Time!
+  updatedAt: Time!
+  deletedAt: Time
+}
+
+type PostPagination {
+  data: [Post!]!
+  total: Int!
+  currentPage: Int!
+  totalPages: Int!
+}
+
+input CreatePostInput {
+  resID: String!
+  content: String!
+  imageUrl: String
+}
+
+input UpdatePostInput {
+  id: ID!
+  resID: String!
+  content: String
+  imageUrl: String
+}
+
+extend type Query {
+  post(postID: ID!, resID: String!): Post!
+  postsByRestaurant(resID: String!, limit: Int = 10, page: Int = 1): PostPagination!
+}
+
+extend type Mutation {
+  createPost(input: CreatePostInput!): Post!
+  updatePost(input: UpdatePostInput!): Post!
+  deletePost(postID: ID!, resID: String!): Boolean!
+}
