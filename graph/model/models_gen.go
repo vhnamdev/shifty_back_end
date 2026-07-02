@@ -39,6 +39,12 @@ type CreateCommentInput struct {
 	ParentID *string `json:"parentID,omitempty"`
 }
 
+type CreateFeedbackInput struct {
+	ResID    string `json:"resID"`
+	MemberID string `json:"memberID"`
+	Content  string `json:"content"`
+}
+
 type CreateInviteCodeInput struct {
 	Email      string `json:"email"`
 	ResID      string `json:"resID"`
@@ -120,6 +126,25 @@ type CreateShiftRuleInput struct {
 	Type   string `json:"type"`
 	Name   string `json:"name"`
 	Config string `json:"config"`
+}
+
+type Feedback struct {
+	ID           string     `json:"id"`
+	Content      string     `json:"content"`
+	RestaurantID string     `json:"restaurantID"`
+	MemberID     string     `json:"memberID"`
+	ReviewerID   string     `json:"reviewerID"`
+	IsDeleted    bool       `json:"isDeleted"`
+	CreatedAt    time.Time  `json:"createdAt"`
+	UpdatedAt    time.Time  `json:"updatedAt"`
+	DeletedAt    *time.Time `json:"deletedAt,omitempty"`
+}
+
+type FeedbackPagination struct {
+	Data        []*Feedback `json:"data"`
+	Total       int         `json:"total"`
+	CurrentPage int         `json:"currentPage"`
+	TotalPages  int         `json:"totalPages"`
 }
 
 type JoinRestaurantInput struct {
@@ -295,6 +320,12 @@ type UpdateCommentInput struct {
 	PostID   string  `json:"postID"`
 	Content  *string `json:"content,omitempty"`
 	ImageURL *string `json:"imageUrl,omitempty"`
+}
+
+type UpdateFeedbackInput struct {
+	ID      string `json:"id"`
+	ResID   string `json:"resID"`
+	Content string `json:"content"`
 }
 
 type UpdatePositionInput struct {
