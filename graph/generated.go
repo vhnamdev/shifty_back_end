@@ -92,6 +92,7 @@ type ComplexityRoot struct {
 		DeleteShiftRule        func(childComplexity int, ruleID string, resID string) int
 		Empty                  func(childComplexity int) int
 		JoinRestaurant         func(childComplexity int, input model.JoinRestaurantInput) int
+		ReactToPost            func(childComplexity int, postID string, resID string, typeArg model.ReactionType) int
 		UpdateComment          func(childComplexity int, input model.UpdateCommentInput) int
 		UpdatePosition         func(childComplexity int, input model.UpdatePositionInput) int
 		UpdatePost             func(childComplexity int, input model.UpdatePostInput) int
@@ -149,6 +150,7 @@ type ComplexityRoot struct {
 		PositionsByRestaurant    func(childComplexity int, resID string) int
 		Post                     func(childComplexity int, postID string, resID string) int
 		PostsByRestaurant        func(childComplexity int, resID string, limit *int, page *int) int
+		ReactionsByPost          func(childComplexity int, postID string, resID string) int
 		Restaurant               func(childComplexity int, resID string) int
 		RestaurantMembers        func(childComplexity int, restaurantID string, limit *int, page *int, filter *model.UserFilterInput) int
 		Schedule                 func(childComplexity int, scheID string, resID string) int
@@ -163,6 +165,33 @@ type ComplexityRoot struct {
 		ShiftRule                func(childComplexity int, ruleID string, resID string) int
 		ShiftRulesByRestaurant   func(childComplexity int, resID string) int
 		ShiftsBySchedule         func(childComplexity int, scheID string, resID string) int
+	}
+
+	Reaction struct {
+		AuthorID  func(childComplexity int) int
+		CreatedAt func(childComplexity int) int
+		ID        func(childComplexity int) int
+		PostID    func(childComplexity int) int
+		Type      func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
+	}
+
+	ReactionCount struct {
+		Count func(childComplexity int) int
+		Type  func(childComplexity int) int
+	}
+
+	ReactionResult struct {
+		Action   func(childComplexity int) int
+		Reaction func(childComplexity int) int
+		Summary  func(childComplexity int) int
+	}
+
+	ReactionSummary struct {
+		Counts     func(childComplexity int) int
+		MyReaction func(childComplexity int) int
+		PostID     func(childComplexity int) int
+		Total      func(childComplexity int) int
 	}
 
 	Restaurant struct {
@@ -300,6 +329,7 @@ type MutationResolver interface {
 	CreatePost(ctx context.Context, input model.CreatePostInput) (*model.Post, error)
 	UpdatePost(ctx context.Context, input model.UpdatePostInput) (*model.Post, error)
 	DeletePost(ctx context.Context, postID string, resID string) (bool, error)
+	ReactToPost(ctx context.Context, postID string, resID string, typeArg model.ReactionType) (*model.ReactionResult, error)
 	CreateRestaurant(ctx context.Context, input model.CreateRestaurantInput) (*model.Restaurant, error)
 	UpdateRestaurant(ctx context.Context, input model.UpdateRestaurantInput) (*model.Restaurant, error)
 	CreateInviteCode(ctx context.Context, input model.CreateInviteCodeInput) (bool, error)
@@ -335,6 +365,7 @@ type QueryResolver interface {
 	PositionsByRestaurant(ctx context.Context, resID string) ([]*model.Position, error)
 	Post(ctx context.Context, postID string, resID string) (*model.Post, error)
 	PostsByRestaurant(ctx context.Context, resID string, limit *int, page *int) (*model.PostPagination, error)
+	ReactionsByPost(ctx context.Context, postID string, resID string) (*model.ReactionSummary, error)
 	Restaurant(ctx context.Context, resID string) (*model.Restaurant, error)
 	MyRestaurants(ctx context.Context) ([]*model.Restaurant, error)
 	Schedule(ctx context.Context, scheID string, resID string) (*model.Schedule, error)
@@ -751,6 +782,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.JoinRestaurant(childComplexity, args["input"].(model.JoinRestaurantInput)), true
+	case "Mutation.reactToPost":
+		if e.ComplexityRoot.Mutation.ReactToPost == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_reactToPost_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.ReactToPost(childComplexity, args["postID"].(string), args["resID"].(string), args["type"].(model.ReactionType)), true
 	case "Mutation.updateComment":
 		if e.ComplexityRoot.Mutation.UpdateComment == nil {
 			break
@@ -1121,6 +1163,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.PostsByRestaurant(childComplexity, args["resID"].(string), args["limit"].(*int), args["page"].(*int)), true
+	case "Query.reactionsByPost":
+		if e.ComplexityRoot.Query.ReactionsByPost == nil {
+			break
+		}
+
+		args, err := ec.field_Query_reactionsByPost_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.ReactionsByPost(childComplexity, args["postID"].(string), args["resID"].(string)), true
 	case "Query.restaurant":
 		if e.ComplexityRoot.Query.Restaurant == nil {
 			break
@@ -1275,6 +1328,100 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.ShiftsBySchedule(childComplexity, args["scheID"].(string), args["resID"].(string)), true
+
+	case "Reaction.authorID":
+		if e.ComplexityRoot.Reaction.AuthorID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Reaction.AuthorID(childComplexity), true
+	case "Reaction.createdAt":
+		if e.ComplexityRoot.Reaction.CreatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Reaction.CreatedAt(childComplexity), true
+	case "Reaction.id":
+		if e.ComplexityRoot.Reaction.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Reaction.ID(childComplexity), true
+	case "Reaction.postID":
+		if e.ComplexityRoot.Reaction.PostID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Reaction.PostID(childComplexity), true
+	case "Reaction.type":
+		if e.ComplexityRoot.Reaction.Type == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Reaction.Type(childComplexity), true
+	case "Reaction.updatedAt":
+		if e.ComplexityRoot.Reaction.UpdatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Reaction.UpdatedAt(childComplexity), true
+
+	case "ReactionCount.count":
+		if e.ComplexityRoot.ReactionCount.Count == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ReactionCount.Count(childComplexity), true
+	case "ReactionCount.type":
+		if e.ComplexityRoot.ReactionCount.Type == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ReactionCount.Type(childComplexity), true
+
+	case "ReactionResult.action":
+		if e.ComplexityRoot.ReactionResult.Action == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ReactionResult.Action(childComplexity), true
+	case "ReactionResult.reaction":
+		if e.ComplexityRoot.ReactionResult.Reaction == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ReactionResult.Reaction(childComplexity), true
+	case "ReactionResult.summary":
+		if e.ComplexityRoot.ReactionResult.Summary == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ReactionResult.Summary(childComplexity), true
+
+	case "ReactionSummary.counts":
+		if e.ComplexityRoot.ReactionSummary.Counts == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ReactionSummary.Counts(childComplexity), true
+	case "ReactionSummary.myReaction":
+		if e.ComplexityRoot.ReactionSummary.MyReaction == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ReactionSummary.MyReaction(childComplexity), true
+	case "ReactionSummary.postID":
+		if e.ComplexityRoot.ReactionSummary.PostID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ReactionSummary.PostID(childComplexity), true
+	case "ReactionSummary.total":
+		if e.ComplexityRoot.ReactionSummary.Total == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ReactionSummary.Total(childComplexity), true
 
 	case "Restaurant.address":
 		if e.ComplexityRoot.Restaurant.Address == nil {
@@ -1934,7 +2081,7 @@ func newExecutionContext(
 	}
 }
 
-//go:embed "schema/comment.graphqls" "schema/law.graphqls" "schema/position.graphqls" "schema/post.graphqls" "schema/restaurant.graphqls" "schema/schedule.graphqls" "schema/schema.graphqls" "schema/shift.graphqls" "schema/shift_assignment.graphqls" "schema/shift_request.graphqls" "schema/shift_requirement.graphqls" "schema/shift_rule.graphqls" "schema/user.graphqls" "schema/user_restaurant.graphqls"
+//go:embed "schema/comment.graphqls" "schema/law.graphqls" "schema/position.graphqls" "schema/post.graphqls" "schema/reaction.graphqls" "schema/restaurant.graphqls" "schema/schedule.graphqls" "schema/schema.graphqls" "schema/shift.graphqls" "schema/shift_assignment.graphqls" "schema/shift_request.graphqls" "schema/shift_requirement.graphqls" "schema/shift_rule.graphqls" "schema/user.graphqls" "schema/user_restaurant.graphqls"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -1950,6 +2097,7 @@ var sources = []*ast.Source{
 	{Name: "schema/law.graphqls", Input: sourceData("schema/law.graphqls"), BuiltIn: false},
 	{Name: "schema/position.graphqls", Input: sourceData("schema/position.graphqls"), BuiltIn: false},
 	{Name: "schema/post.graphqls", Input: sourceData("schema/post.graphqls"), BuiltIn: false},
+	{Name: "schema/reaction.graphqls", Input: sourceData("schema/reaction.graphqls"), BuiltIn: false},
 	{Name: "schema/restaurant.graphqls", Input: sourceData("schema/restaurant.graphqls"), BuiltIn: false},
 	{Name: "schema/schedule.graphqls", Input: sourceData("schema/schedule.graphqls"), BuiltIn: false},
 	{Name: "schema/schema.graphqls", Input: sourceData("schema/schema.graphqls"), BuiltIn: false},
@@ -2279,6 +2427,27 @@ func (ec *executionContext) field_Mutation_joinRestaurant_args(ctx context.Conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_reactToPost_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "postID", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["postID"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "resID", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["resID"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "type", ec.unmarshalNReactionType2shiftyᚑbackendᚋgraphᚋmodelᚐReactionType)
+	if err != nil {
+		return nil, err
+	}
+	args["type"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_updateComment_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2541,6 +2710,22 @@ func (ec *executionContext) field_Query_postsByRestaurant_args(ctx context.Conte
 		return nil, err
 	}
 	args["page"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_reactionsByPost_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "postID", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["postID"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "resID", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["resID"] = arg1
 	return args, nil
 }
 
@@ -4021,6 +4206,55 @@ func (ec *executionContext) fieldContext_Mutation_deletePost(ctx context.Context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deletePost_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_reactToPost(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_reactToPost,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().ReactToPost(ctx, fc.Args["postID"].(string), fc.Args["resID"].(string), fc.Args["type"].(model.ReactionType))
+		},
+		nil,
+		ec.marshalNReactionResult2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐReactionResult,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_reactToPost(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "action":
+				return ec.fieldContext_ReactionResult_action(ctx, field)
+			case "reaction":
+				return ec.fieldContext_ReactionResult_reaction(ctx, field)
+			case "summary":
+				return ec.fieldContext_ReactionResult_summary(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ReactionResult", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_reactToPost_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -6485,6 +6719,57 @@ func (ec *executionContext) fieldContext_Query_postsByRestaurant(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_reactionsByPost(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_reactionsByPost,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().ReactionsByPost(ctx, fc.Args["postID"].(string), fc.Args["resID"].(string))
+		},
+		nil,
+		ec.marshalNReactionSummary2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐReactionSummary,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_reactionsByPost(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "postID":
+				return ec.fieldContext_ReactionSummary_postID(ctx, field)
+			case "total":
+				return ec.fieldContext_ReactionSummary_total(ctx, field)
+			case "counts":
+				return ec.fieldContext_ReactionSummary_counts(ctx, field)
+			case "myReaction":
+				return ec.fieldContext_ReactionSummary_myReaction(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ReactionSummary", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_reactionsByPost_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_restaurant(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -7617,6 +7902,485 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Reaction_id(ctx context.Context, field graphql.CollectedField, obj *model.Reaction) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Reaction_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Reaction_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Reaction",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Reaction_type(ctx context.Context, field graphql.CollectedField, obj *model.Reaction) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Reaction_type,
+		func(ctx context.Context) (any, error) {
+			return obj.Type, nil
+		},
+		nil,
+		ec.marshalNReactionType2shiftyᚑbackendᚋgraphᚋmodelᚐReactionType,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Reaction_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Reaction",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ReactionType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Reaction_postID(ctx context.Context, field graphql.CollectedField, obj *model.Reaction) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Reaction_postID,
+		func(ctx context.Context) (any, error) {
+			return obj.PostID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Reaction_postID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Reaction",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Reaction_authorID(ctx context.Context, field graphql.CollectedField, obj *model.Reaction) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Reaction_authorID,
+		func(ctx context.Context) (any, error) {
+			return obj.AuthorID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Reaction_authorID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Reaction",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Reaction_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Reaction) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Reaction_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Reaction_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Reaction",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Reaction_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Reaction) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Reaction_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Reaction_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Reaction",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ReactionCount_type(ctx context.Context, field graphql.CollectedField, obj *model.ReactionCount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ReactionCount_type,
+		func(ctx context.Context) (any, error) {
+			return obj.Type, nil
+		},
+		nil,
+		ec.marshalNReactionType2shiftyᚑbackendᚋgraphᚋmodelᚐReactionType,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ReactionCount_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ReactionCount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ReactionType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ReactionCount_count(ctx context.Context, field graphql.CollectedField, obj *model.ReactionCount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ReactionCount_count,
+		func(ctx context.Context) (any, error) {
+			return obj.Count, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ReactionCount_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ReactionCount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ReactionResult_action(ctx context.Context, field graphql.CollectedField, obj *model.ReactionResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ReactionResult_action,
+		func(ctx context.Context) (any, error) {
+			return obj.Action, nil
+		},
+		nil,
+		ec.marshalNReactionAction2shiftyᚑbackendᚋgraphᚋmodelᚐReactionAction,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ReactionResult_action(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ReactionResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ReactionAction does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ReactionResult_reaction(ctx context.Context, field graphql.CollectedField, obj *model.ReactionResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ReactionResult_reaction,
+		func(ctx context.Context) (any, error) {
+			return obj.Reaction, nil
+		},
+		nil,
+		ec.marshalOReaction2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐReaction,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ReactionResult_reaction(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ReactionResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Reaction_id(ctx, field)
+			case "type":
+				return ec.fieldContext_Reaction_type(ctx, field)
+			case "postID":
+				return ec.fieldContext_Reaction_postID(ctx, field)
+			case "authorID":
+				return ec.fieldContext_Reaction_authorID(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Reaction_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Reaction_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Reaction", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ReactionResult_summary(ctx context.Context, field graphql.CollectedField, obj *model.ReactionResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ReactionResult_summary,
+		func(ctx context.Context) (any, error) {
+			return obj.Summary, nil
+		},
+		nil,
+		ec.marshalNReactionSummary2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐReactionSummary,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ReactionResult_summary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ReactionResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "postID":
+				return ec.fieldContext_ReactionSummary_postID(ctx, field)
+			case "total":
+				return ec.fieldContext_ReactionSummary_total(ctx, field)
+			case "counts":
+				return ec.fieldContext_ReactionSummary_counts(ctx, field)
+			case "myReaction":
+				return ec.fieldContext_ReactionSummary_myReaction(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ReactionSummary", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ReactionSummary_postID(ctx context.Context, field graphql.CollectedField, obj *model.ReactionSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ReactionSummary_postID,
+		func(ctx context.Context) (any, error) {
+			return obj.PostID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ReactionSummary_postID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ReactionSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ReactionSummary_total(ctx context.Context, field graphql.CollectedField, obj *model.ReactionSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ReactionSummary_total,
+		func(ctx context.Context) (any, error) {
+			return obj.Total, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ReactionSummary_total(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ReactionSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ReactionSummary_counts(ctx context.Context, field graphql.CollectedField, obj *model.ReactionSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ReactionSummary_counts,
+		func(ctx context.Context) (any, error) {
+			return obj.Counts, nil
+		},
+		nil,
+		ec.marshalNReactionCount2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐReactionCountᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ReactionSummary_counts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ReactionSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "type":
+				return ec.fieldContext_ReactionCount_type(ctx, field)
+			case "count":
+				return ec.fieldContext_ReactionCount_count(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ReactionCount", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ReactionSummary_myReaction(ctx context.Context, field graphql.CollectedField, obj *model.ReactionSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ReactionSummary_myReaction,
+		func(ctx context.Context) (any, error) {
+			return obj.MyReaction, nil
+		},
+		nil,
+		ec.marshalOReaction2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐReaction,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ReactionSummary_myReaction(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ReactionSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Reaction_id(ctx, field)
+			case "type":
+				return ec.fieldContext_Reaction_type(ctx, field)
+			case "postID":
+				return ec.fieldContext_Reaction_postID(ctx, field)
+			case "authorID":
+				return ec.fieldContext_Reaction_authorID(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Reaction_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Reaction_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Reaction", field.Name)
 		},
 	}
 	return fc, nil
@@ -13485,6 +14249,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "reactToPost":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_reactToPost(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createRestaurant":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createRestaurant(ctx, field)
@@ -14071,6 +14842,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "reactionsByPost":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_reactionsByPost(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "restaurant":
 			field := field
 
@@ -14453,6 +15246,211 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___schema(ctx, field)
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var reactionImplementors = []string{"Reaction"}
+
+func (ec *executionContext) _Reaction(ctx context.Context, sel ast.SelectionSet, obj *model.Reaction) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, reactionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Reaction")
+		case "id":
+			out.Values[i] = ec._Reaction_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "type":
+			out.Values[i] = ec._Reaction_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "postID":
+			out.Values[i] = ec._Reaction_postID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "authorID":
+			out.Values[i] = ec._Reaction_authorID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._Reaction_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._Reaction_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var reactionCountImplementors = []string{"ReactionCount"}
+
+func (ec *executionContext) _ReactionCount(ctx context.Context, sel ast.SelectionSet, obj *model.ReactionCount) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, reactionCountImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ReactionCount")
+		case "type":
+			out.Values[i] = ec._ReactionCount_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "count":
+			out.Values[i] = ec._ReactionCount_count(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var reactionResultImplementors = []string{"ReactionResult"}
+
+func (ec *executionContext) _ReactionResult(ctx context.Context, sel ast.SelectionSet, obj *model.ReactionResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, reactionResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ReactionResult")
+		case "action":
+			out.Values[i] = ec._ReactionResult_action(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "reaction":
+			out.Values[i] = ec._ReactionResult_reaction(ctx, field, obj)
+		case "summary":
+			out.Values[i] = ec._ReactionResult_summary(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var reactionSummaryImplementors = []string{"ReactionSummary"}
+
+func (ec *executionContext) _ReactionSummary(ctx context.Context, sel ast.SelectionSet, obj *model.ReactionSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, reactionSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ReactionSummary")
+		case "postID":
+			out.Values[i] = ec._ReactionSummary_postID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "total":
+			out.Values[i] = ec._ReactionSummary_total(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "counts":
+			out.Values[i] = ec._ReactionSummary_counts(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "myReaction":
+			out.Values[i] = ec._ReactionSummary_myReaction(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -15848,6 +16846,80 @@ func (ec *executionContext) marshalNPostPagination2ᚖshiftyᚑbackendᚋgraph�
 	return ec._PostPagination(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNReactionAction2shiftyᚑbackendᚋgraphᚋmodelᚐReactionAction(ctx context.Context, v any) (model.ReactionAction, error) {
+	var res model.ReactionAction
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNReactionAction2shiftyᚑbackendᚋgraphᚋmodelᚐReactionAction(ctx context.Context, sel ast.SelectionSet, v model.ReactionAction) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNReactionCount2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐReactionCountᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ReactionCount) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNReactionCount2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐReactionCount(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNReactionCount2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐReactionCount(ctx context.Context, sel ast.SelectionSet, v *model.ReactionCount) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ReactionCount(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNReactionResult2shiftyᚑbackendᚋgraphᚋmodelᚐReactionResult(ctx context.Context, sel ast.SelectionSet, v model.ReactionResult) graphql.Marshaler {
+	return ec._ReactionResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNReactionResult2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐReactionResult(ctx context.Context, sel ast.SelectionSet, v *model.ReactionResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ReactionResult(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNReactionSummary2shiftyᚑbackendᚋgraphᚋmodelᚐReactionSummary(ctx context.Context, sel ast.SelectionSet, v model.ReactionSummary) graphql.Marshaler {
+	return ec._ReactionSummary(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNReactionSummary2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐReactionSummary(ctx context.Context, sel ast.SelectionSet, v *model.ReactionSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ReactionSummary(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNReactionType2shiftyᚑbackendᚋgraphᚋmodelᚐReactionType(ctx context.Context, v any) (model.ReactionType, error) {
+	var res model.ReactionType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNReactionType2shiftyᚑbackendᚋgraphᚋmodelᚐReactionType(ctx context.Context, sel ast.SelectionSet, v model.ReactionType) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) marshalNRestaurant2shiftyᚑbackendᚋgraphᚋmodelᚐRestaurant(ctx context.Context, sel ast.SelectionSet, v model.Restaurant) graphql.Marshaler {
 	return ec._Restaurant(ctx, sel, &v)
 }
@@ -16484,6 +17556,13 @@ func (ec *executionContext) marshalOPosition2ᚕᚖshiftyᚑbackendᚋgraphᚋmo
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalOReaction2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐReaction(ctx context.Context, sel ast.SelectionSet, v *model.Reaction) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Reaction(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v any) (*string, error) {

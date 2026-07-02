@@ -1,0 +1,50 @@
+enum ReactionType {
+  LIKE
+  LOVE
+  CARE
+  HAHA
+  WOW
+  SAD
+  ANGRY
+}
+
+enum ReactionAction {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+type Reaction {
+  id: ID!
+  type: ReactionType!
+  postID: String!
+  authorID: String!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type ReactionCount {
+  type: ReactionType!
+  count: Int!
+}
+
+type ReactionSummary {
+  postID: String!
+  total: Int!
+  counts: [ReactionCount!]!
+  myReaction: Reaction
+}
+
+type ReactionResult {
+  action: ReactionAction!
+  reaction: Reaction
+  summary: ReactionSummary!
+}
+
+extend type Query {
+  reactionsByPost(postID: ID!, resID: String!): ReactionSummary!
+}
+
+extend type Mutation {
+  reactToPost(postID: ID!, resID: String!, type: ReactionType!): ReactionResult!
+}

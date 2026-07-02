@@ -3,6 +3,10 @@
 package model
 
 import (
+	"bytes"
+	"fmt"
+	"io"
+	"strconv"
 	"time"
 )
 
@@ -167,6 +171,33 @@ type PostPagination struct {
 }
 
 type Query struct {
+}
+
+type Reaction struct {
+	ID        string       `json:"id"`
+	Type      ReactionType `json:"type"`
+	PostID    string       `json:"postID"`
+	AuthorID  string       `json:"authorID"`
+	CreatedAt time.Time    `json:"createdAt"`
+	UpdatedAt time.Time    `json:"updatedAt"`
+}
+
+type ReactionCount struct {
+	Type  ReactionType `json:"type"`
+	Count int          `json:"count"`
+}
+
+type ReactionResult struct {
+	Action   ReactionAction   `json:"action"`
+	Reaction *Reaction        `json:"reaction,omitempty"`
+	Summary  *ReactionSummary `json:"summary"`
+}
+
+type ReactionSummary struct {
+	PostID     string           `json:"postID"`
+	Total      int              `json:"total"`
+	Counts     []*ReactionCount `json:"counts"`
+	MyReaction *Reaction        `json:"myReaction,omitempty"`
 }
 
 type Restaurant struct {
@@ -404,4 +435,126 @@ type UserRestaurant struct {
 	Position   string    `json:"position"`
 	IsBanned   bool      `json:"IsBanned"`
 	JoinedAt   time.Time `json:"JoinedAt"`
+}
+
+type ReactionAction string
+
+const (
+	ReactionActionCreated ReactionAction = "CREATED"
+	ReactionActionUpdated ReactionAction = "UPDATED"
+	ReactionActionDeleted ReactionAction = "DELETED"
+)
+
+var AllReactionAction = []ReactionAction{
+	ReactionActionCreated,
+	ReactionActionUpdated,
+	ReactionActionDeleted,
+}
+
+func (e ReactionAction) IsValid() bool {
+	switch e {
+	case ReactionActionCreated, ReactionActionUpdated, ReactionActionDeleted:
+		return true
+	}
+	return false
+}
+
+func (e ReactionAction) String() string {
+	return string(e)
+}
+
+func (e *ReactionAction) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ReactionAction(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ReactionAction", str)
+	}
+	return nil
+}
+
+func (e ReactionAction) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ReactionAction) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ReactionAction) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type ReactionType string
+
+const (
+	ReactionTypeLike  ReactionType = "LIKE"
+	ReactionTypeLove  ReactionType = "LOVE"
+	ReactionTypeCare  ReactionType = "CARE"
+	ReactionTypeHaha  ReactionType = "HAHA"
+	ReactionTypeWow   ReactionType = "WOW"
+	ReactionTypeSad   ReactionType = "SAD"
+	ReactionTypeAngry ReactionType = "ANGRY"
+)
+
+var AllReactionType = []ReactionType{
+	ReactionTypeLike,
+	ReactionTypeLove,
+	ReactionTypeCare,
+	ReactionTypeHaha,
+	ReactionTypeWow,
+	ReactionTypeSad,
+	ReactionTypeAngry,
+}
+
+func (e ReactionType) IsValid() bool {
+	switch e {
+	case ReactionTypeLike, ReactionTypeLove, ReactionTypeCare, ReactionTypeHaha, ReactionTypeWow, ReactionTypeSad, ReactionTypeAngry:
+		return true
+	}
+	return false
+}
+
+func (e ReactionType) String() string {
+	return string(e)
+}
+
+func (e *ReactionType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ReactionType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ReactionType", str)
+	}
+	return nil
+}
+
+func (e ReactionType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ReactionType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ReactionType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }

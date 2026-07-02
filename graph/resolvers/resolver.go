@@ -21,4 +21,5 @@ type Resolver struct {
 	ShiftRequestUseCase     usecase.ShiftRequestUseCase
 	PostUseCase             usecase.PostUseCase
 	CommentUseCase          usecase.CommentUseCase
+	ReactionUseCase         usecase.ReactionUseCase
 }
