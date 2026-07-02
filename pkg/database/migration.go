@@ -25,6 +25,7 @@ func RunAutoMigrate(db *gorm.DB) {
 		&entity.Reaction{},
 		&entity.Conversation{},
 		&entity.Participant{},
+		&entity.Message{},
 		&entity.Feedback{},
 		&entity.UserRestaurant{},
 	)

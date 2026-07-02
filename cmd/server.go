@@ -115,6 +115,7 @@ func main() {
 	commentRepo := repository.NewCommentRepository(db)
 	reactionRepo := repository.NewReactionRepository(db)
 	feedbackRepo := repository.NewFeedbackRepository(db)
+	conversationRepo := repository.NewConversationRepository(db)
 	// ------------------------------USECASE----------------------------------
 
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenMaster, timeoutContext, redisRepo, emailService, googleService)
@@ -132,6 +133,7 @@ func main() {
 	commentUseCase := usecase.NewCommentUseCase(commentRepo, postRepo, userRestaurantRepo)
 	reactionUseCase := usecase.NewReactionUseCase(reactionRepo, postRepo, userRestaurantRepo)
 	feedbackUseCase := usecase.NewFeedbackUseCase(feedbackRepo, userRestaurantRepo)
+	conversationUseCase := usecase.NewConversationUseCase(conversationRepo, userRestaurantRepo)
 	// ------------------------------HANDLER----------------------------------
 
 	authHandler := handler.NewAuthHandler(authUseCase, cloudinaryService, emailService)
@@ -155,6 +157,7 @@ func main() {
 		CommentUseCase:          commentUseCase,
 		ReactionUseCase:         reactionUseCase,
 		FeedbackUseCase:         feedbackUseCase,
+		ConversationUseCase:     conversationUseCase,
 	}
 
 	playgroundHandler, queryHandler := graphql.NewGraphQLHandler(gqlResolver)
