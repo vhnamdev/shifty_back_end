@@ -117,8 +117,9 @@ shifty-backend/
 │   └── utils/           # Helper functions (JWT, Hash)
 ├── deploy/              # Dockerfiles & Nginx Configs
 └── go.mod
+```
 
-🚀 Getting Started
+## Getting Started
 Prerequisites
 Go 1.22+
 
@@ -140,3 +141,17 @@ go run cmd/migrate/main.go
 
 5. Start Server
 go run cmd/server/main.go
+
+## Basic Nginx Reverse Proxy
+
+This setup assumes the backend runs on the host with `APP_PORT=8080`.
+
+```bash
+sudo cp deploy/nginx/shifty.conf /etc/nginx/sites-available/shifty
+sudo ln -s /etc/nginx/sites-available/shifty /etc/nginx/sites-enabled/shifty
+sudo nginx -t
+sudo systemctl reload nginx
+curl http://localhost/api/v1/health
+```
+
+Nginx will listen on port `80` and proxy requests to `http://127.0.0.1:8080`.
