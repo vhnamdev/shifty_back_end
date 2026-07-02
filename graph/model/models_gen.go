@@ -31,12 +31,40 @@ type CommentPagination struct {
 	TotalPages  int        `json:"totalPages"`
 }
 
+type Conversation struct {
+	ID            string           `json:"id"`
+	Type          ConversationType `json:"type"`
+	Name          *string          `json:"name,omitempty"`
+	Avatar        *string          `json:"avatar,omitempty"`
+	RestaurantID  string           `json:"restaurantID"`
+	LastMessageAt *time.Time       `json:"lastMessageAt,omitempty"`
+	Participants  []*Participant   `json:"participants"`
+	IsDeleted     bool             `json:"isDeleted"`
+	CreatedAt     time.Time        `json:"createdAt"`
+	UpdatedAt     time.Time        `json:"updatedAt"`
+	DeletedAt     *time.Time       `json:"deletedAt,omitempty"`
+}
+
+type ConversationPagination struct {
+	Data        []*Conversation `json:"data"`
+	Total       int             `json:"total"`
+	CurrentPage int             `json:"currentPage"`
+	TotalPages  int             `json:"totalPages"`
+}
+
 type CreateCommentInput struct {
 	ResID    string  `json:"resID"`
 	PostID   string  `json:"postID"`
 	Content  string  `json:"content"`
 	ImageURL *string `json:"imageUrl,omitempty"`
 	ParentID *string `json:"parentID,omitempty"`
+}
+
+type CreateGroupConversationInput struct {
+	ResID          string   `json:"resID"`
+	Name           string   `json:"name"`
+	Avatar         *string  `json:"avatar,omitempty"`
+	ParticipantIDs []string `json:"participantIDs"`
 }
 
 type CreateInviteCodeInput struct {
@@ -135,7 +163,36 @@ type Law struct {
 	CreatedAt     time.Time `json:"createdAt"`
 }
 
+type Message struct {
+	ID             string     `json:"id"`
+	ConversationID string     `json:"conversationID"`
+	SenderID       string     `json:"senderID"`
+	Content        string     `json:"content"`
+	ImageURL       *string    `json:"imageUrl,omitempty"`
+	IsDeleted      bool       `json:"isDeleted"`
+	CreatedAt      time.Time  `json:"createdAt"`
+	UpdatedAt      time.Time  `json:"updatedAt"`
+	DeletedAt      *time.Time `json:"deletedAt,omitempty"`
+}
+
+type MessagePagination struct {
+	Data        []*Message `json:"data"`
+	Total       int        `json:"total"`
+	CurrentPage int        `json:"currentPage"`
+	TotalPages  int        `json:"totalPages"`
+}
+
 type Mutation struct {
+}
+
+type Participant struct {
+	ID             string     `json:"id"`
+	ConversationID string     `json:"conversationID"`
+	AuthorID       string     `json:"authorID"`
+	IsDeleted      bool       `json:"isDeleted"`
+	CreatedAt      time.Time  `json:"createdAt"`
+	UpdatedAt      time.Time  `json:"updatedAt"`
+	DeletedAt      *time.Time `json:"deletedAt,omitempty"`
 }
 
 type Position struct {
@@ -222,6 +279,13 @@ type Schedule struct {
 	NumberOfShifts  int       `json:"numberOfShifts"`
 	RestaurantID    string    `json:"restaurantID"`
 	CreatedAt       time.Time `json:"createdAt"`
+}
+
+type SendMessageInput struct {
+	ConversationID string  `json:"conversationID"`
+	ResID          string  `json:"resID"`
+	Content        *string `json:"content,omitempty"`
+	ImageURL       *string `json:"imageUrl,omitempty"`
 }
 
 type Shift struct {
@@ -435,6 +499,61 @@ type UserRestaurant struct {
 	Position   string    `json:"position"`
 	IsBanned   bool      `json:"IsBanned"`
 	JoinedAt   time.Time `json:"JoinedAt"`
+}
+
+type ConversationType string
+
+const (
+	ConversationTypeDirect ConversationType = "DIRECT"
+	ConversationTypeGroup  ConversationType = "GROUP"
+)
+
+var AllConversationType = []ConversationType{
+	ConversationTypeDirect,
+	ConversationTypeGroup,
+}
+
+func (e ConversationType) IsValid() bool {
+	switch e {
+	case ConversationTypeDirect, ConversationTypeGroup:
+		return true
+	}
+	return false
+}
+
+func (e ConversationType) String() string {
+	return string(e)
+}
+
+func (e *ConversationType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ConversationType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ConversationType", str)
+	}
+	return nil
+}
+
+func (e ConversationType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ConversationType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ConversationType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 type ReactionAction string

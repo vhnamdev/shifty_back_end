@@ -17,10 +17,15 @@ type Conversation struct {
 	Type          string        `gorm:"type:varchar(20);default:'DIRECT';index" json:"type"`
 	Name          *string       `gorm:"type:varchar(100)" json:"name,omitempty"`
 	Avatar        *string       `gorm:"type:text" json:"image_url,omitempty"`
+	RestaurantID  uuid.UUID     `gorm:"type:uuid;not null;index" json:"restaurant_id"`
+	Restaurant    Restaurant    `gorm:"foreignKey:RestaurantID" json:"restaurant,omitempty"`
 	LastMessageAt *time.Time    `gorm:"index" json:"last_message_at"`
 	Participants  []Participant `gorm:"foreignKey:ConversationID" json:"participants,omitempty"`
+	Messages      []Message     `gorm:"foreignKey:ConversationID" json:"messages,omitempty"`
+	IsDeleted     bool          `gorm:"default:false" json:"is_deleted"`
 	CreatedAt     time.Time     `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt     time.Time     `json:"updated_at"`
+	DeletedAt     *time.Time    `json:"deleted_at"`
 }
 
 func (c *Conversation) BeforeCreate(tx *gorm.DB) (err error) {
