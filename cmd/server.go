@@ -108,6 +108,14 @@ func main() {
 	schedulRepo := repository.NewScheduleRepository(db)
 	shiftRepo := repository.NewShiftRepository(db)
 	shiftRequirementRepo := repository.NewShiftRequirementRepository(db)
+	shiftRuleRepo := repository.NewShiftRuleRepository(db)
+	shiftAssignmentRepo := repository.NewShiftAssignmentRepository(db)
+	shiftRequestRepo := repository.NewShiftRequestRepository(db)
+	postRepo := repository.NewPostRepository(db)
+	commentRepo := repository.NewCommentRepository(db)
+	reactionRepo := repository.NewReactionRepository(db)
+	feedbackRepo := repository.NewFeedbackRepository(db)
+	conversationRepo := repository.NewConversationRepository(db)
 	// ------------------------------USECASE----------------------------------
 
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenMaster, timeoutContext, redisRepo, emailService, googleService)
@@ -118,6 +126,14 @@ func main() {
 	scheduleUseCase := usecase.NewScheduleUseCase(schedulRepo, userRestaurantRepo)
 	shiftUseCase := usecase.NewShiftUseCase(shiftRepo, userRestaurantRepo)
 	shiftRequirementUseCase := usecase.NewShiftRequirementUseCase(shiftRequirementRepo, userRestaurantRepo)
+	shiftRuleUseCase := usecase.NewShiftRuleUseCase(shiftRuleRepo, userRestaurantRepo)
+	shiftAssignmentUseCase := usecase.NewShiftAssignmentUseCase(shiftAssignmentRepo, userRestaurantRepo)
+	shiftRequestUseCase := usecase.NewShiftRequestUseCase(shiftRequestRepo, userRestaurantRepo)
+	postUseCase := usecase.NewPostUseCase(postRepo, userRestaurantRepo)
+	commentUseCase := usecase.NewCommentUseCase(commentRepo, postRepo, userRestaurantRepo)
+	reactionUseCase := usecase.NewReactionUseCase(reactionRepo, postRepo, userRestaurantRepo)
+	feedbackUseCase := usecase.NewFeedbackUseCase(feedbackRepo, userRestaurantRepo)
+	conversationUseCase := usecase.NewConversationUseCase(conversationRepo, userRestaurantRepo)
 	// ------------------------------HANDLER----------------------------------
 
 	authHandler := handler.NewAuthHandler(authUseCase, cloudinaryService, emailService)
@@ -134,6 +150,14 @@ func main() {
 		ScheduleUseCase:         scheduleUseCase,
 		ShiftUseCase:            shiftUseCase,
 		ShiftRequirementUseCase: shiftRequirementUseCase,
+		ShiftRuleUseCase:        shiftRuleUseCase,
+		ShiftAssignmentUseCase:  shiftAssignmentUseCase,
+		ShiftRequestUseCase:     shiftRequestUseCase,
+		PostUseCase:             postUseCase,
+		CommentUseCase:          commentUseCase,
+		ReactionUseCase:         reactionUseCase,
+		FeedbackUseCase:         feedbackUseCase,
+		ConversationUseCase:     conversationUseCase,
 	}
 
 	playgroundHandler, queryHandler := graphql.NewGraphQLHandler(gqlResolver)

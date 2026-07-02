@@ -3,8 +3,75 @@
 package model
 
 import (
+	"bytes"
+	"fmt"
+	"io"
+	"strconv"
 	"time"
 )
+
+type Comment struct {
+	ID        string     `json:"id"`
+	Content   string     `json:"content"`
+	ImageURL  *string    `json:"imageUrl,omitempty"`
+	PostID    string     `json:"postID"`
+	AuthorID  string     `json:"authorID"`
+	ParentID  *string    `json:"parentID,omitempty"`
+	Replies   []*Comment `json:"replies"`
+	IsDeleted bool       `json:"isDeleted"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+	DeletedAt *time.Time `json:"deletedAt,omitempty"`
+}
+
+type CommentPagination struct {
+	Data        []*Comment `json:"data"`
+	Total       int        `json:"total"`
+	CurrentPage int        `json:"currentPage"`
+	TotalPages  int        `json:"totalPages"`
+}
+
+type Conversation struct {
+	ID            string           `json:"id"`
+	Type          ConversationType `json:"type"`
+	Name          *string          `json:"name,omitempty"`
+	Avatar        *string          `json:"avatar,omitempty"`
+	RestaurantID  string           `json:"restaurantID"`
+	LastMessageAt *time.Time       `json:"lastMessageAt,omitempty"`
+	Participants  []*Participant   `json:"participants"`
+	IsDeleted     bool             `json:"isDeleted"`
+	CreatedAt     time.Time        `json:"createdAt"`
+	UpdatedAt     time.Time        `json:"updatedAt"`
+	DeletedAt     *time.Time       `json:"deletedAt,omitempty"`
+}
+
+type ConversationPagination struct {
+	Data        []*Conversation `json:"data"`
+	Total       int             `json:"total"`
+	CurrentPage int             `json:"currentPage"`
+	TotalPages  int             `json:"totalPages"`
+}
+
+type CreateCommentInput struct {
+	ResID    string  `json:"resID"`
+	PostID   string  `json:"postID"`
+	Content  string  `json:"content"`
+	ImageURL *string `json:"imageUrl,omitempty"`
+	ParentID *string `json:"parentID,omitempty"`
+}
+
+type CreateFeedbackInput struct {
+	ResID    string `json:"resID"`
+	MemberID string `json:"memberID"`
+	Content  string `json:"content"`
+}
+
+type CreateGroupConversationInput struct {
+	ResID          string   `json:"resID"`
+	Name           string   `json:"name"`
+	Avatar         *string  `json:"avatar,omitempty"`
+	ParticipantIDs []string `json:"participantIDs"`
+}
 
 type CreateInviteCodeInput struct {
 	Email      string `json:"email"`
@@ -20,6 +87,12 @@ type CreatePositionInput struct {
 	Salary              *int   `json:"salary,omitempty"`
 	CanUpdateRestaurant *bool  `json:"canUpdateRestaurant,omitempty"`
 	CanDeleteRestaurant *bool  `json:"canDeleteRestaurant,omitempty"`
+}
+
+type CreatePostInput struct {
+	ResID    string  `json:"resID"`
+	Content  string  `json:"content"`
+	ImageURL *string `json:"imageUrl,omitempty"`
 }
 
 type CreateRequirementInput struct {
@@ -45,6 +118,16 @@ type CreateScheduleInput struct {
 	RestaurantID string    `json:"restaurantID"`
 }
 
+type CreateShiftAssignmentInput struct {
+	ResID        string     `json:"resID"`
+	ShiftID      string     `json:"shiftID"`
+	UserID       string     `json:"userID"`
+	PositionID   *string    `json:"positionID,omitempty"`
+	CheckInTime  *time.Time `json:"checkInTime,omitempty"`
+	CheckOutTime *time.Time `json:"checkOutTime,omitempty"`
+	Note         *string    `json:"note,omitempty"`
+}
+
 type CreateShiftInput struct {
 	ResID           string    `json:"resID"`
 	ScheduleID      string    `json:"scheduleID"`
@@ -54,6 +137,42 @@ type CreateShiftInput struct {
 	Type            string    `json:"type"`
 	IsHoliday       *bool     `json:"isHoliday,omitempty"`
 	WageMultiplier  *float64  `json:"wageMultiplier,omitempty"`
+}
+
+type CreateShiftRequestInput struct {
+	ResID      string    `json:"resID"`
+	ShiftID    string    `json:"shiftID"`
+	UserID     string    `json:"userID"`
+	PositionID *string   `json:"positionID,omitempty"`
+	StartTime  time.Time `json:"startTime"`
+	EndTime    time.Time `json:"endTime"`
+	Note       *string   `json:"note,omitempty"`
+}
+
+type CreateShiftRuleInput struct {
+	ResID  string `json:"resID"`
+	Type   string `json:"type"`
+	Name   string `json:"name"`
+	Config string `json:"config"`
+}
+
+type Feedback struct {
+	ID           string     `json:"id"`
+	Content      string     `json:"content"`
+	RestaurantID string     `json:"restaurantID"`
+	MemberID     string     `json:"memberID"`
+	ReviewerID   string     `json:"reviewerID"`
+	IsDeleted    bool       `json:"isDeleted"`
+	CreatedAt    time.Time  `json:"createdAt"`
+	UpdatedAt    time.Time  `json:"updatedAt"`
+	DeletedAt    *time.Time `json:"deletedAt,omitempty"`
+}
+
+type FeedbackPagination struct {
+	Data        []*Feedback `json:"data"`
+	Total       int         `json:"total"`
+	CurrentPage int         `json:"currentPage"`
+	TotalPages  int         `json:"totalPages"`
 }
 
 type JoinRestaurantInput struct {
@@ -69,11 +188,36 @@ type Law struct {
 	CreatedAt     time.Time `json:"createdAt"`
 }
 
-type Mutatio struct {
-	Empty *string `json:"_empty,omitempty"`
+type Message struct {
+	ID             string     `json:"id"`
+	ConversationID string     `json:"conversationID"`
+	SenderID       string     `json:"senderID"`
+	Content        string     `json:"content"`
+	ImageURL       *string    `json:"imageUrl,omitempty"`
+	IsDeleted      bool       `json:"isDeleted"`
+	CreatedAt      time.Time  `json:"createdAt"`
+	UpdatedAt      time.Time  `json:"updatedAt"`
+	DeletedAt      *time.Time `json:"deletedAt,omitempty"`
+}
+
+type MessagePagination struct {
+	Data        []*Message `json:"data"`
+	Total       int        `json:"total"`
+	CurrentPage int        `json:"currentPage"`
+	TotalPages  int        `json:"totalPages"`
 }
 
 type Mutation struct {
+}
+
+type Participant struct {
+	ID             string     `json:"id"`
+	ConversationID string     `json:"conversationID"`
+	AuthorID       string     `json:"authorID"`
+	IsDeleted      bool       `json:"isDeleted"`
+	CreatedAt      time.Time  `json:"createdAt"`
+	UpdatedAt      time.Time  `json:"updatedAt"`
+	DeletedAt      *time.Time `json:"deletedAt,omitempty"`
 }
 
 type Position struct {
@@ -89,7 +233,53 @@ type Position struct {
 	UpdatedAt           time.Time `json:"updatedAt"`
 }
 
+type Post struct {
+	ID           string     `json:"id"`
+	Content      string     `json:"content"`
+	ImageURL     string     `json:"imageUrl"`
+	RestaurantID string     `json:"restaurantID"`
+	AuthorID     string     `json:"authorID"`
+	IsDeleted    bool       `json:"isDeleted"`
+	CreatedAt    time.Time  `json:"createdAt"`
+	UpdatedAt    time.Time  `json:"updatedAt"`
+	DeletedAt    *time.Time `json:"deletedAt,omitempty"`
+}
+
+type PostPagination struct {
+	Data        []*Post `json:"data"`
+	Total       int     `json:"total"`
+	CurrentPage int     `json:"currentPage"`
+	TotalPages  int     `json:"totalPages"`
+}
+
 type Query struct {
+}
+
+type Reaction struct {
+	ID        string       `json:"id"`
+	Type      ReactionType `json:"type"`
+	PostID    string       `json:"postID"`
+	AuthorID  string       `json:"authorID"`
+	CreatedAt time.Time    `json:"createdAt"`
+	UpdatedAt time.Time    `json:"updatedAt"`
+}
+
+type ReactionCount struct {
+	Type  ReactionType `json:"type"`
+	Count int          `json:"count"`
+}
+
+type ReactionResult struct {
+	Action   ReactionAction   `json:"action"`
+	Reaction *Reaction        `json:"reaction,omitempty"`
+	Summary  *ReactionSummary `json:"summary"`
+}
+
+type ReactionSummary struct {
+	PostID     string           `json:"postID"`
+	Total      int              `json:"total"`
+	Counts     []*ReactionCount `json:"counts"`
+	MyReaction *Reaction        `json:"myReaction,omitempty"`
 }
 
 type Restaurant struct {
@@ -116,6 +306,13 @@ type Schedule struct {
 	CreatedAt       time.Time `json:"createdAt"`
 }
 
+type SendMessageInput struct {
+	ConversationID string  `json:"conversationID"`
+	ResID          string  `json:"resID"`
+	Content        *string `json:"content,omitempty"`
+	ImageURL       *string `json:"imageUrl,omitempty"`
+}
+
 type Shift struct {
 	ID              string    `json:"id"`
 	StartTime       time.Time `json:"startTime"`
@@ -128,6 +325,33 @@ type Shift struct {
 	IsDeleted       bool      `json:"isDeleted"`
 	CreatedAt       time.Time `json:"createdAt"`
 	UpdatedAt       time.Time `json:"updatedAt"`
+}
+
+type ShiftAssignment struct {
+	ID           string     `json:"id"`
+	CheckInTime  *time.Time `json:"checkInTime,omitempty"`
+	CheckOutTime *time.Time `json:"checkOutTime,omitempty"`
+	UserID       string     `json:"userID"`
+	ShiftID      string     `json:"shiftID"`
+	PositionID   *string    `json:"positionID,omitempty"`
+	Note         *string    `json:"note,omitempty"`
+	IsDeleted    bool       `json:"isDeleted"`
+	CreatedAt    time.Time  `json:"createdAt"`
+	UpdatedAt    time.Time  `json:"updatedAt"`
+}
+
+type ShiftRequest struct {
+	ID         string    `json:"id"`
+	StartTime  time.Time `json:"startTime"`
+	EndTime    time.Time `json:"endTime"`
+	Status     string    `json:"status"`
+	UserID     string    `json:"userID"`
+	ShiftID    string    `json:"shiftID"`
+	PositionID *string   `json:"positionID,omitempty"`
+	Note       *string   `json:"note,omitempty"`
+	IsDeleted  bool      `json:"isDeleted"`
+	CreatedAt  time.Time `json:"createdAt"`
+	UpdatedAt  time.Time `json:"updatedAt"`
 }
 
 type ShiftRequirement struct {
@@ -143,6 +367,31 @@ type ShiftRequirement struct {
 	UpdatedAt  time.Time `json:"updatedAt"`
 }
 
+type ShiftRule struct {
+	ID           string    `json:"id"`
+	Type         string    `json:"type"`
+	Name         string    `json:"name"`
+	Config       string    `json:"config"`
+	IsDeleted    bool      `json:"isDeleted"`
+	RestaurantID string    `json:"restaurantID"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
+}
+
+type UpdateCommentInput struct {
+	ID       string  `json:"id"`
+	ResID    string  `json:"resID"`
+	PostID   string  `json:"postID"`
+	Content  *string `json:"content,omitempty"`
+	ImageURL *string `json:"imageUrl,omitempty"`
+}
+
+type UpdateFeedbackInput struct {
+	ID      string `json:"id"`
+	ResID   string `json:"resID"`
+	Content string `json:"content"`
+}
+
 type UpdatePositionInput struct {
 	ID                  string  `json:"id"`
 	RestaurantID        string  `json:"restaurantID"`
@@ -152,6 +401,13 @@ type UpdatePositionInput struct {
 	Salary              *int    `json:"salary,omitempty"`
 	CanUpdateRestaurant *bool   `json:"canUpdateRestaurant,omitempty"`
 	CanDeleteRestaurant *bool   `json:"canDeleteRestaurant,omitempty"`
+}
+
+type UpdatePostInput struct {
+	ID       string  `json:"id"`
+	ResID    string  `json:"resID"`
+	Content  *string `json:"content,omitempty"`
+	ImageURL *string `json:"imageUrl,omitempty"`
 }
 
 type UpdateRequirementInput struct {
@@ -181,6 +437,16 @@ type UpdateScheduleInput struct {
 	EndTime      *time.Time `json:"endTime,omitempty"`
 }
 
+type UpdateShiftAssignmentInput struct {
+	ID           string     `json:"id"`
+	ResID        string     `json:"resID"`
+	ShiftID      string     `json:"shiftID"`
+	PositionID   *string    `json:"positionID,omitempty"`
+	CheckInTime  *time.Time `json:"checkInTime,omitempty"`
+	CheckOutTime *time.Time `json:"checkOutTime,omitempty"`
+	Note         *string    `json:"note,omitempty"`
+}
+
 type UpdateShiftInput struct {
 	ID              string     `json:"id"`
 	ResID           string     `json:"resID"`
@@ -191,6 +457,25 @@ type UpdateShiftInput struct {
 	Type            *string    `json:"type,omitempty"`
 	IsHoliday       *bool      `json:"isHoliday,omitempty"`
 	WageMultiplier  *float64   `json:"wageMultiplier,omitempty"`
+}
+
+type UpdateShiftRequestInput struct {
+	ID         string     `json:"id"`
+	ResID      string     `json:"resID"`
+	ShiftID    string     `json:"shiftID"`
+	PositionID *string    `json:"positionID,omitempty"`
+	StartTime  *time.Time `json:"startTime,omitempty"`
+	EndTime    *time.Time `json:"endTime,omitempty"`
+	Status     *string    `json:"status,omitempty"`
+	Note       *string    `json:"note,omitempty"`
+}
+
+type UpdateShiftRuleInput struct {
+	ID     string  `json:"id"`
+	ResID  string  `json:"resID"`
+	Type   *string `json:"type,omitempty"`
+	Name   *string `json:"name,omitempty"`
+	Config *string `json:"config,omitempty"`
 }
 
 type UpdateStaffByManagerInput struct {
@@ -245,4 +530,181 @@ type UserRestaurant struct {
 	Position   string    `json:"position"`
 	IsBanned   bool      `json:"IsBanned"`
 	JoinedAt   time.Time `json:"JoinedAt"`
+}
+
+type ConversationType string
+
+const (
+	ConversationTypeDirect ConversationType = "DIRECT"
+	ConversationTypeGroup  ConversationType = "GROUP"
+)
+
+var AllConversationType = []ConversationType{
+	ConversationTypeDirect,
+	ConversationTypeGroup,
+}
+
+func (e ConversationType) IsValid() bool {
+	switch e {
+	case ConversationTypeDirect, ConversationTypeGroup:
+		return true
+	}
+	return false
+}
+
+func (e ConversationType) String() string {
+	return string(e)
+}
+
+func (e *ConversationType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ConversationType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ConversationType", str)
+	}
+	return nil
+}
+
+func (e ConversationType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ConversationType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ConversationType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type ReactionAction string
+
+const (
+	ReactionActionCreated ReactionAction = "CREATED"
+	ReactionActionUpdated ReactionAction = "UPDATED"
+	ReactionActionDeleted ReactionAction = "DELETED"
+)
+
+var AllReactionAction = []ReactionAction{
+	ReactionActionCreated,
+	ReactionActionUpdated,
+	ReactionActionDeleted,
+}
+
+func (e ReactionAction) IsValid() bool {
+	switch e {
+	case ReactionActionCreated, ReactionActionUpdated, ReactionActionDeleted:
+		return true
+	}
+	return false
+}
+
+func (e ReactionAction) String() string {
+	return string(e)
+}
+
+func (e *ReactionAction) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ReactionAction(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ReactionAction", str)
+	}
+	return nil
+}
+
+func (e ReactionAction) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ReactionAction) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ReactionAction) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type ReactionType string
+
+const (
+	ReactionTypeLike  ReactionType = "LIKE"
+	ReactionTypeLove  ReactionType = "LOVE"
+	ReactionTypeCare  ReactionType = "CARE"
+	ReactionTypeHaha  ReactionType = "HAHA"
+	ReactionTypeWow   ReactionType = "WOW"
+	ReactionTypeSad   ReactionType = "SAD"
+	ReactionTypeAngry ReactionType = "ANGRY"
+)
+
+var AllReactionType = []ReactionType{
+	ReactionTypeLike,
+	ReactionTypeLove,
+	ReactionTypeCare,
+	ReactionTypeHaha,
+	ReactionTypeWow,
+	ReactionTypeSad,
+	ReactionTypeAngry,
+}
+
+func (e ReactionType) IsValid() bool {
+	switch e {
+	case ReactionTypeLike, ReactionTypeLove, ReactionTypeCare, ReactionTypeHaha, ReactionTypeWow, ReactionTypeSad, ReactionTypeAngry:
+		return true
+	}
+	return false
+}
+
+func (e ReactionType) String() string {
+	return string(e)
+}
+
+func (e *ReactionType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ReactionType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ReactionType", str)
+	}
+	return nil
+}
+
+func (e ReactionType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ReactionType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ReactionType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }

@@ -1,0 +1,42 @@
+type Feedback {
+  id: ID!
+  content: String!
+  restaurantID: String!
+  memberID: String!
+  reviewerID: String!
+  isDeleted: Boolean!
+  createdAt: Time!
+  updatedAt: Time!
+  deletedAt: Time
+}
+
+type FeedbackPagination {
+  data: [Feedback!]!
+  total: Int!
+  currentPage: Int!
+  totalPages: Int!
+}
+
+input CreateFeedbackInput {
+  resID: String!
+  memberID: ID!
+  content: String!
+}
+
+input UpdateFeedbackInput {
+  id: ID!
+  resID: String!
+  content: String!
+}
+
+extend type Query {
+  feedback(feedbackID: ID!, resID: String!): Feedback!
+  feedbacksByMember(memberID: ID!, resID: String!, limit: Int = 10, page: Int = 1): FeedbackPagination!
+  feedbacksByRestaurant(resID: String!, limit: Int = 10, page: Int = 1): FeedbackPagination!
+}
+
+extend type Mutation {
+  createFeedback(input: CreateFeedbackInput!): Feedback!
+  updateFeedback(input: UpdateFeedbackInput!): Feedback!
+  deleteFeedback(feedbackID: ID!, resID: String!): Boolean!
+}

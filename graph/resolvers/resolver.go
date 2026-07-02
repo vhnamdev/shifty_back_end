@@ -1,10 +1,7 @@
 //go:generate go run github.com/99designs/gqlgen generate
 package resolvers
 
-import (
-	"shifty-backend/graph"
-	"shifty-backend/internal/usecase"
-)
+import "shifty-backend/internal/usecase"
 
 // This file will not be regenerated automatically.
 //
@@ -19,9 +16,12 @@ type Resolver struct {
 	ScheduleUseCase         usecase.ScheduleUseCase
 	ShiftUseCase            usecase.ShiftUseCase
 	ShiftRequirementUseCase usecase.ShiftRequirementUseCase
+	ShiftRuleUseCase        usecase.ShiftRuleUseCase
+	ShiftAssignmentUseCase  usecase.ShiftAssignmentUseCase
+	ShiftRequestUseCase     usecase.ShiftRequestUseCase
+	PostUseCase             usecase.PostUseCase
+	CommentUseCase          usecase.CommentUseCase
+	ReactionUseCase         usecase.ReactionUseCase
+	ConversationUseCase     usecase.ConversationUseCase
+	FeedbackUseCase         usecase.FeedbackUseCase
 }
-
-// Mutation returns graph.MutationResolver implementation.
-func (r *Resolver) Mutation() graph.MutationResolver { return &mutationResolver{r} }
-
-type mutationResolver struct{ *Resolver }
