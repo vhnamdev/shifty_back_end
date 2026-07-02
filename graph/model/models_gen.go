@@ -64,6 +64,8 @@ type CreateFeedbackInput struct {
 	ResID    string `json:"resID"`
 	MemberID string `json:"memberID"`
 	Content  string `json:"content"`
+}
+
 type CreateGroupConversationInput struct {
 	ResID          string   `json:"resID"`
 	Name           string   `json:"name"`

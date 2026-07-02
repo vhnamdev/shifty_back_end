@@ -58,19 +58,6 @@ type ComplexityRoot struct {
 		TotalPages  func(childComplexity int) int
 	}
 
-	Feedback struct {
-		Content      func(childComplexity int) int
-		CreatedAt    func(childComplexity int) int
-		DeletedAt    func(childComplexity int) int
-		ID           func(childComplexity int) int
-		IsDeleted    func(childComplexity int) int
-		MemberID     func(childComplexity int) int
-		RestaurantID func(childComplexity int) int
-		ReviewerID   func(childComplexity int) int
-		UpdatedAt    func(childComplexity int) int
-	}
-
-	FeedbackPagination struct {
 	Conversation struct {
 		Avatar        func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
@@ -86,6 +73,25 @@ type ComplexityRoot struct {
 	}
 
 	ConversationPagination struct {
+		CurrentPage func(childComplexity int) int
+		Data        func(childComplexity int) int
+		Total       func(childComplexity int) int
+		TotalPages  func(childComplexity int) int
+	}
+
+	Feedback struct {
+		Content      func(childComplexity int) int
+		CreatedAt    func(childComplexity int) int
+		DeletedAt    func(childComplexity int) int
+		ID           func(childComplexity int) int
+		IsDeleted    func(childComplexity int) int
+		MemberID     func(childComplexity int) int
+		RestaurantID func(childComplexity int) int
+		ReviewerID   func(childComplexity int) int
+		UpdatedAt    func(childComplexity int) int
+	}
+
+	FeedbackPagination struct {
 		CurrentPage func(childComplexity int) int
 		Data        func(childComplexity int) int
 		Total       func(childComplexity int) int
@@ -121,48 +127,9 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateComment          func(childComplexity int, input model.CreateCommentInput) int
-		CreateFeedback         func(childComplexity int, input model.CreateFeedbackInput) int
-		CreateInviteCode       func(childComplexity int, input model.CreateInviteCodeInput) int
-		CreatePosition         func(childComplexity int, input model.CreatePositionInput) int
-		CreatePost             func(childComplexity int, input model.CreatePostInput) int
-		CreateRestaurant       func(childComplexity int, input model.CreateRestaurantInput) int
-		CreateSchedule         func(childComplexity int, input model.CreateScheduleInput) int
-		CreateShift            func(childComplexity int, input model.CreateShiftInput) int
-		CreateShiftAssignment  func(childComplexity int, input model.CreateShiftAssignmentInput) int
-		CreateShiftRequest     func(childComplexity int, input model.CreateShiftRequestInput) int
-		CreateShiftRequirement func(childComplexity int, input model.CreateRequirementInput) int
-		CreateShiftRule        func(childComplexity int, input model.CreateShiftRuleInput) int
-		Delete                 func(childComplexity int) int
-		DeleteComment          func(childComplexity int, commentID string, postID string, resID string) int
-		DeleteFeedback         func(childComplexity int, feedbackID string, resID string) int
-		DeletePosition         func(childComplexity int, posID string, resID string) int
-		DeletePost             func(childComplexity int, postID string, resID string) int
-		DeleteRestaurant       func(childComplexity int, resID string) int
-		DeleteSchedule         func(childComplexity int, resID string, scheID string) int
-		DeleteShift            func(childComplexity int, shiftID string, scheID string, resID string) int
-		DeleteShiftAssignment  func(childComplexity int, assignmentID string, shiftID string, resID string) int
-		DeleteShiftRequest     func(childComplexity int, requestID string, shiftID string, resID string) int
-		DeleteShiftRequirement func(childComplexity int, reqID string, shiftID string, resID string) int
-		DeleteShiftRule        func(childComplexity int, ruleID string, resID string) int
-		Empty                  func(childComplexity int) int
-		JoinRestaurant         func(childComplexity int, input model.JoinRestaurantInput) int
-		ReactToPost            func(childComplexity int, postID string, resID string, typeArg model.ReactionType) int
-		UpdateComment          func(childComplexity int, input model.UpdateCommentInput) int
-		UpdateFeedback         func(childComplexity int, input model.UpdateFeedbackInput) int
-		UpdatePosition         func(childComplexity int, input model.UpdatePositionInput) int
-		UpdatePost             func(childComplexity int, input model.UpdatePostInput) int
-		UpdateRestaurant       func(childComplexity int, input model.UpdateRestaurantInput) int
-		UpdateSchedule         func(childComplexity int, input model.UpdateScheduleInput) int
-		UpdateShift            func(childComplexity int, input model.UpdateShiftInput) int
-		UpdateShiftAssignment  func(childComplexity int, input model.UpdateShiftAssignmentInput) int
-		UpdateShiftRequest     func(childComplexity int, input model.UpdateShiftRequestInput) int
-		UpdateShiftRequirement func(childComplexity int, input model.UpdateRequirementInput) int
-		UpdateShiftRule        func(childComplexity int, input model.UpdateShiftRuleInput) int
-		UpdateStaffByManager   func(childComplexity int, input *model.UpdateStaffByManagerInput) int
-		UpdateUser             func(childComplexity int, input *model.UpdateUserInput) int
 		CreateComment            func(childComplexity int, input model.CreateCommentInput) int
 		CreateDirectConversation func(childComplexity int, resID string, targetUserID string) int
+		CreateFeedback           func(childComplexity int, input model.CreateFeedbackInput) int
 		CreateGroupConversation  func(childComplexity int, input model.CreateGroupConversationInput) int
 		CreateInviteCode         func(childComplexity int, input model.CreateInviteCodeInput) int
 		CreatePosition           func(childComplexity int, input model.CreatePositionInput) int
@@ -176,6 +143,7 @@ type ComplexityRoot struct {
 		CreateShiftRule          func(childComplexity int, input model.CreateShiftRuleInput) int
 		Delete                   func(childComplexity int) int
 		DeleteComment            func(childComplexity int, commentID string, postID string, resID string) int
+		DeleteFeedback           func(childComplexity int, feedbackID string, resID string) int
 		DeletePosition           func(childComplexity int, posID string, resID string) int
 		DeletePost               func(childComplexity int, postID string, resID string) int
 		DeleteRestaurant         func(childComplexity int, resID string) int
@@ -191,6 +159,7 @@ type ComplexityRoot struct {
 		ReactToPost              func(childComplexity int, postID string, resID string, typeArg model.ReactionType) int
 		SendMessage              func(childComplexity int, input model.SendMessageInput) int
 		UpdateComment            func(childComplexity int, input model.UpdateCommentInput) int
+		UpdateFeedback           func(childComplexity int, input model.UpdateFeedbackInput) int
 		UpdatePosition           func(childComplexity int, input model.UpdatePositionInput) int
 		UpdatePost               func(childComplexity int, input model.UpdatePostInput) int
 		UpdateRestaurant         func(childComplexity int, input model.UpdateRestaurantInput) int
@@ -436,13 +405,13 @@ type MutationResolver interface {
 	CreateComment(ctx context.Context, input model.CreateCommentInput) (*model.Comment, error)
 	UpdateComment(ctx context.Context, input model.UpdateCommentInput) (*model.Comment, error)
 	DeleteComment(ctx context.Context, commentID string, postID string, resID string) (bool, error)
-	CreateFeedback(ctx context.Context, input model.CreateFeedbackInput) (*model.Feedback, error)
-	UpdateFeedback(ctx context.Context, input model.UpdateFeedbackInput) (*model.Feedback, error)
-	DeleteFeedback(ctx context.Context, feedbackID string, resID string) (bool, error)
 	CreateDirectConversation(ctx context.Context, resID string, targetUserID string) (*model.Conversation, error)
 	CreateGroupConversation(ctx context.Context, input model.CreateGroupConversationInput) (*model.Conversation, error)
 	HideConversation(ctx context.Context, conversationID string, resID string) (bool, error)
 	SendMessage(ctx context.Context, input model.SendMessageInput) (*model.Message, error)
+	CreateFeedback(ctx context.Context, input model.CreateFeedbackInput) (*model.Feedback, error)
+	UpdateFeedback(ctx context.Context, input model.UpdateFeedbackInput) (*model.Feedback, error)
+	DeleteFeedback(ctx context.Context, feedbackID string, resID string) (bool, error)
 	CreatePosition(ctx context.Context, input model.CreatePositionInput) (*model.Position, error)
 	UpdatePosition(ctx context.Context, input model.UpdatePositionInput) (*model.Position, error)
 	DeletePosition(ctx context.Context, posID string, resID string) (bool, error)
@@ -481,12 +450,12 @@ type QueryResolver interface {
 	Empty(ctx context.Context) (*string, error)
 	Comment(ctx context.Context, commentID string, postID string, resID string) (*model.Comment, error)
 	CommentsByPost(ctx context.Context, postID string, resID string, limit *int, page *int) (*model.CommentPagination, error)
-	Feedback(ctx context.Context, feedbackID string, resID string) (*model.Feedback, error)
-	FeedbacksByMember(ctx context.Context, memberID string, resID string, limit *int, page *int) (*model.FeedbackPagination, error)
-	FeedbacksByRestaurant(ctx context.Context, resID string, limit *int, page *int) (*model.FeedbackPagination, error)
 	Conversation(ctx context.Context, conversationID string, resID string) (*model.Conversation, error)
 	MyConversations(ctx context.Context, resID string, limit *int, page *int) (*model.ConversationPagination, error)
 	Messages(ctx context.Context, conversationID string, resID string, limit *int, page *int) (*model.MessagePagination, error)
+	Feedback(ctx context.Context, feedbackID string, resID string) (*model.Feedback, error)
+	FeedbacksByMember(ctx context.Context, memberID string, resID string, limit *int, page *int) (*model.FeedbackPagination, error)
+	FeedbacksByRestaurant(ctx context.Context, resID string, limit *int, page *int) (*model.FeedbackPagination, error)
 	Position(ctx context.Context, posID string, resID string) (*model.Position, error)
 	PositionsByRestaurant(ctx context.Context, resID string) ([]*model.Position, error)
 	Post(ctx context.Context, postID string, resID string) (*model.Post, error)
@@ -617,85 +586,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.CommentPagination.TotalPages(childComplexity), true
 
-	case "Feedback.content":
-		if e.ComplexityRoot.Feedback.Content == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Feedback.Content(childComplexity), true
-	case "Feedback.createdAt":
-		if e.ComplexityRoot.Feedback.CreatedAt == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Feedback.CreatedAt(childComplexity), true
-	case "Feedback.deletedAt":
-		if e.ComplexityRoot.Feedback.DeletedAt == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Feedback.DeletedAt(childComplexity), true
-	case "Feedback.id":
-		if e.ComplexityRoot.Feedback.ID == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Feedback.ID(childComplexity), true
-	case "Feedback.isDeleted":
-		if e.ComplexityRoot.Feedback.IsDeleted == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Feedback.IsDeleted(childComplexity), true
-	case "Feedback.memberID":
-		if e.ComplexityRoot.Feedback.MemberID == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Feedback.MemberID(childComplexity), true
-	case "Feedback.restaurantID":
-		if e.ComplexityRoot.Feedback.RestaurantID == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Feedback.RestaurantID(childComplexity), true
-	case "Feedback.reviewerID":
-		if e.ComplexityRoot.Feedback.ReviewerID == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Feedback.ReviewerID(childComplexity), true
-	case "Feedback.updatedAt":
-		if e.ComplexityRoot.Feedback.UpdatedAt == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Feedback.UpdatedAt(childComplexity), true
-
-	case "FeedbackPagination.currentPage":
-		if e.ComplexityRoot.FeedbackPagination.CurrentPage == nil {
-			break
-		}
-
-		return e.ComplexityRoot.FeedbackPagination.CurrentPage(childComplexity), true
-	case "FeedbackPagination.data":
-		if e.ComplexityRoot.FeedbackPagination.Data == nil {
-			break
-		}
-
-		return e.ComplexityRoot.FeedbackPagination.Data(childComplexity), true
-	case "FeedbackPagination.total":
-		if e.ComplexityRoot.FeedbackPagination.Total == nil {
-			break
-		}
-
-		return e.ComplexityRoot.FeedbackPagination.Total(childComplexity), true
-	case "FeedbackPagination.totalPages":
-		if e.ComplexityRoot.FeedbackPagination.TotalPages == nil {
-			break
-		}
-
-		return e.ComplexityRoot.FeedbackPagination.TotalPages(childComplexity), true
 	case "Conversation.avatar":
 		if e.ComplexityRoot.Conversation.Avatar == nil {
 			break
@@ -787,6 +677,86 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.ConversationPagination.TotalPages(childComplexity), true
+
+	case "Feedback.content":
+		if e.ComplexityRoot.Feedback.Content == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Feedback.Content(childComplexity), true
+	case "Feedback.createdAt":
+		if e.ComplexityRoot.Feedback.CreatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Feedback.CreatedAt(childComplexity), true
+	case "Feedback.deletedAt":
+		if e.ComplexityRoot.Feedback.DeletedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Feedback.DeletedAt(childComplexity), true
+	case "Feedback.id":
+		if e.ComplexityRoot.Feedback.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Feedback.ID(childComplexity), true
+	case "Feedback.isDeleted":
+		if e.ComplexityRoot.Feedback.IsDeleted == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Feedback.IsDeleted(childComplexity), true
+	case "Feedback.memberID":
+		if e.ComplexityRoot.Feedback.MemberID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Feedback.MemberID(childComplexity), true
+	case "Feedback.restaurantID":
+		if e.ComplexityRoot.Feedback.RestaurantID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Feedback.RestaurantID(childComplexity), true
+	case "Feedback.reviewerID":
+		if e.ComplexityRoot.Feedback.ReviewerID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Feedback.ReviewerID(childComplexity), true
+	case "Feedback.updatedAt":
+		if e.ComplexityRoot.Feedback.UpdatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Feedback.UpdatedAt(childComplexity), true
+
+	case "FeedbackPagination.currentPage":
+		if e.ComplexityRoot.FeedbackPagination.CurrentPage == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FeedbackPagination.CurrentPage(childComplexity), true
+	case "FeedbackPagination.data":
+		if e.ComplexityRoot.FeedbackPagination.Data == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FeedbackPagination.Data(childComplexity), true
+	case "FeedbackPagination.total":
+		if e.ComplexityRoot.FeedbackPagination.Total == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FeedbackPagination.Total(childComplexity), true
+	case "FeedbackPagination.totalPages":
+		if e.ComplexityRoot.FeedbackPagination.TotalPages == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FeedbackPagination.TotalPages(childComplexity), true
 
 	case "Law.createdAt":
 		if e.ComplexityRoot.Law.CreatedAt == nil {
@@ -916,12 +886,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.CreateComment(childComplexity, args["input"].(model.CreateCommentInput)), true
-	case "Mutation.createFeedback":
-		if e.ComplexityRoot.Mutation.CreateFeedback == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createFeedback_args(ctx, rawArgs)
 	case "Mutation.createDirectConversation":
 		if e.ComplexityRoot.Mutation.CreateDirectConversation == nil {
 			break
@@ -932,8 +896,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.CreateFeedback(childComplexity, args["input"].(model.CreateFeedbackInput)), true
 		return e.ComplexityRoot.Mutation.CreateDirectConversation(childComplexity, args["resID"].(string), args["targetUserID"].(string)), true
+	case "Mutation.createFeedback":
+		if e.ComplexityRoot.Mutation.CreateFeedback == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createFeedback_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CreateFeedback(childComplexity, args["input"].(model.CreateFeedbackInput)), true
 	case "Mutation.createGroupConversation":
 		if e.ComplexityRoot.Mutation.CreateGroupConversation == nil {
 			break
@@ -2644,8 +2618,7 @@ func newExecutionContext(
 	}
 }
 
-//go:embed "schema/comment.graphqls" "schema/feedback.graphqls" "schema/law.graphqls" "schema/position.graphqls" "schema/post.graphqls" "schema/reaction.graphqls" "schema/restaurant.graphqls" "schema/schedule.graphqls" "schema/schema.graphqls" "schema/shift.graphqls" "schema/shift_assignment.graphqls" "schema/shift_request.graphqls" "schema/shift_requirement.graphqls" "schema/shift_rule.graphqls" "schema/user.graphqls" "schema/user_restaurant.graphqls"
-//go:embed "schema/comment.graphqls" "schema/conversation.graphqls" "schema/law.graphqls" "schema/position.graphqls" "schema/post.graphqls" "schema/reaction.graphqls" "schema/restaurant.graphqls" "schema/schedule.graphqls" "schema/schema.graphqls" "schema/shift.graphqls" "schema/shift_assignment.graphqls" "schema/shift_request.graphqls" "schema/shift_requirement.graphqls" "schema/shift_rule.graphqls" "schema/user.graphqls" "schema/user_restaurant.graphqls"
+//go:embed "schema/comment.graphqls" "schema/conversation.graphqls" "schema/feedback.graphqls" "schema/law.graphqls" "schema/position.graphqls" "schema/post.graphqls" "schema/reaction.graphqls" "schema/restaurant.graphqls" "schema/schedule.graphqls" "schema/schema.graphqls" "schema/shift.graphqls" "schema/shift_assignment.graphqls" "schema/shift_request.graphqls" "schema/shift_requirement.graphqls" "schema/shift_rule.graphqls" "schema/user.graphqls" "schema/user_restaurant.graphqls"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -2658,8 +2631,8 @@ func sourceData(filename string) string {
 
 var sources = []*ast.Source{
 	{Name: "schema/comment.graphqls", Input: sourceData("schema/comment.graphqls"), BuiltIn: false},
-	{Name: "schema/feedback.graphqls", Input: sourceData("schema/feedback.graphqls"), BuiltIn: false},
 	{Name: "schema/conversation.graphqls", Input: sourceData("schema/conversation.graphqls"), BuiltIn: false},
+	{Name: "schema/feedback.graphqls", Input: sourceData("schema/feedback.graphqls"), BuiltIn: false},
 	{Name: "schema/law.graphqls", Input: sourceData("schema/law.graphqls"), BuiltIn: false},
 	{Name: "schema/position.graphqls", Input: sourceData("schema/position.graphqls"), BuiltIn: false},
 	{Name: "schema/post.graphqls", Input: sourceData("schema/post.graphqls"), BuiltIn: false},
@@ -2692,10 +2665,6 @@ func (ec *executionContext) field_Mutation_createComment_args(ctx context.Contex
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createFeedback_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateFeedbackInput2shiftyᚑbackendᚋgraphᚋmodelᚐCreateFeedbackInput)
 func (ec *executionContext) field_Mutation_createDirectConversation_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2709,6 +2678,17 @@ func (ec *executionContext) field_Mutation_createDirectConversation_args(ctx con
 		return nil, err
 	}
 	args["targetUserID"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createFeedback_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateFeedbackInput2shiftyᚑbackendᚋgraphᚋmodelᚐCreateFeedbackInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -3300,14 +3280,6 @@ func (ec *executionContext) field_Query_commentsByPost_args(ctx context.Context,
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_feedback_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "feedbackID", ec.unmarshalNID2string)
-	if err != nil {
-		return nil, err
-	}
-	args["feedbackID"] = arg0
 func (ec *executionContext) field_Query_conversation_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -3324,6 +3296,22 @@ func (ec *executionContext) field_Query_conversation_args(ctx context.Context, r
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_feedback_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "feedbackID", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["feedbackID"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "resID", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["resID"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_feedbacksByMember_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -3332,6 +3320,45 @@ func (ec *executionContext) field_Query_feedbacksByMember_args(ctx context.Conte
 		return nil, err
 	}
 	args["memberID"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "resID", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["resID"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "page", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["page"] = arg3
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_feedbacksByRestaurant_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "resID", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["resID"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "page", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["page"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_messages_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -3358,7 +3385,6 @@ func (ec *executionContext) field_Query_messages_args(ctx context.Context, rawAr
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_feedbacksByRestaurant_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 func (ec *executionContext) field_Query_myConversations_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -4239,13 +4265,11 @@ func (ec *executionContext) fieldContext_CommentPagination_totalPages(_ context.
 	return fc, nil
 }
 
-func (ec *executionContext) _Feedback_id(ctx context.Context, field graphql.CollectedField, obj *model.Feedback) (ret graphql.Marshaler) {
 func (ec *executionContext) _Conversation_id(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Feedback_id,
 		ec.fieldContext_Conversation_id,
 		func(ctx context.Context) (any, error) {
 			return obj.ID, nil
@@ -4257,9 +4281,6 @@ func (ec *executionContext) _Conversation_id(ctx context.Context, field graphql.
 	)
 }
 
-func (ec *executionContext) fieldContext_Feedback_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Feedback",
 func (ec *executionContext) fieldContext_Conversation_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Conversation",
@@ -4273,18 +4294,11 @@ func (ec *executionContext) fieldContext_Conversation_id(_ context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Feedback_content(ctx context.Context, field graphql.CollectedField, obj *model.Feedback) (ret graphql.Marshaler) {
 func (ec *executionContext) _Conversation_type(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Feedback_content,
-		func(ctx context.Context) (any, error) {
-			return obj.Content, nil
-		},
-		nil,
-		ec.marshalNString2string,
 		ec.fieldContext_Conversation_type,
 		func(ctx context.Context) (any, error) {
 			return obj.Type, nil
@@ -4296,9 +4310,6 @@ func (ec *executionContext) _Conversation_type(ctx context.Context, field graphq
 	)
 }
 
-func (ec *executionContext) fieldContext_Feedback_content(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Feedback",
 func (ec *executionContext) fieldContext_Conversation_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Conversation",
@@ -4341,13 +4352,11 @@ func (ec *executionContext) fieldContext_Conversation_name(_ context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Feedback_restaurantID(ctx context.Context, field graphql.CollectedField, obj *model.Feedback) (ret graphql.Marshaler) {
 func (ec *executionContext) _Conversation_avatar(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Feedback_restaurantID,
 		ec.fieldContext_Conversation_avatar,
 		func(ctx context.Context) (any, error) {
 			return obj.Avatar, nil
@@ -4388,9 +4397,6 @@ func (ec *executionContext) _Conversation_restaurantID(ctx context.Context, fiel
 	)
 }
 
-func (ec *executionContext) fieldContext_Feedback_restaurantID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Feedback",
 func (ec *executionContext) fieldContext_Conversation_restaurantID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Conversation",
@@ -4404,18 +4410,11 @@ func (ec *executionContext) fieldContext_Conversation_restaurantID(_ context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _Feedback_memberID(ctx context.Context, field graphql.CollectedField, obj *model.Feedback) (ret graphql.Marshaler) {
 func (ec *executionContext) _Conversation_lastMessageAt(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Feedback_memberID,
-		func(ctx context.Context) (any, error) {
-			return obj.MemberID, nil
-		},
-		nil,
-		ec.marshalNString2string,
 		ec.fieldContext_Conversation_lastMessageAt,
 		func(ctx context.Context) (any, error) {
 			return obj.LastMessageAt, nil
@@ -4456,9 +4455,6 @@ func (ec *executionContext) _Conversation_participants(ctx context.Context, fiel
 	)
 }
 
-func (ec *executionContext) fieldContext_Feedback_memberID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Feedback",
 func (ec *executionContext) fieldContext_Conversation_participants(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Conversation",
@@ -4466,7 +4462,6 @@ func (ec *executionContext) fieldContext_Conversation_participants(_ context.Con
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Participant_id(ctx, field)
@@ -4489,8 +4484,379 @@ func (ec *executionContext) fieldContext_Conversation_participants(_ context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _Feedback_reviewerID(ctx context.Context, field graphql.CollectedField, obj *model.Feedback) (ret graphql.Marshaler) {
 func (ec *executionContext) _Conversation_isDeleted(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Conversation_isDeleted,
+		func(ctx context.Context) (any, error) {
+			return obj.IsDeleted, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Conversation_isDeleted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Conversation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Conversation_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Conversation_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Conversation_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Conversation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Conversation_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Conversation_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Conversation_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Conversation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Conversation_deletedAt(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Conversation_deletedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.DeletedAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Conversation_deletedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Conversation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ConversationPagination_data(ctx context.Context, field graphql.CollectedField, obj *model.ConversationPagination) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ConversationPagination_data,
+		func(ctx context.Context) (any, error) {
+			return obj.Data, nil
+		},
+		nil,
+		ec.marshalNConversation2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐConversationᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ConversationPagination_data(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ConversationPagination",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Conversation_id(ctx, field)
+			case "type":
+				return ec.fieldContext_Conversation_type(ctx, field)
+			case "name":
+				return ec.fieldContext_Conversation_name(ctx, field)
+			case "avatar":
+				return ec.fieldContext_Conversation_avatar(ctx, field)
+			case "restaurantID":
+				return ec.fieldContext_Conversation_restaurantID(ctx, field)
+			case "lastMessageAt":
+				return ec.fieldContext_Conversation_lastMessageAt(ctx, field)
+			case "participants":
+				return ec.fieldContext_Conversation_participants(ctx, field)
+			case "isDeleted":
+				return ec.fieldContext_Conversation_isDeleted(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Conversation_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Conversation_updatedAt(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_Conversation_deletedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Conversation", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ConversationPagination_total(ctx context.Context, field graphql.CollectedField, obj *model.ConversationPagination) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ConversationPagination_total,
+		func(ctx context.Context) (any, error) {
+			return obj.Total, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ConversationPagination_total(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ConversationPagination",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ConversationPagination_currentPage(ctx context.Context, field graphql.CollectedField, obj *model.ConversationPagination) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ConversationPagination_currentPage,
+		func(ctx context.Context) (any, error) {
+			return obj.CurrentPage, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ConversationPagination_currentPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ConversationPagination",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ConversationPagination_totalPages(ctx context.Context, field graphql.CollectedField, obj *model.ConversationPagination) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ConversationPagination_totalPages,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalPages, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ConversationPagination_totalPages(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ConversationPagination",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Feedback_id(ctx context.Context, field graphql.CollectedField, obj *model.Feedback) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Feedback_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Feedback_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Feedback",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Feedback_content(ctx context.Context, field graphql.CollectedField, obj *model.Feedback) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Feedback_content,
+		func(ctx context.Context) (any, error) {
+			return obj.Content, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Feedback_content(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Feedback",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Feedback_restaurantID(ctx context.Context, field graphql.CollectedField, obj *model.Feedback) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Feedback_restaurantID,
+		func(ctx context.Context) (any, error) {
+			return obj.RestaurantID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Feedback_restaurantID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Feedback",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Feedback_memberID(ctx context.Context, field graphql.CollectedField, obj *model.Feedback) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Feedback_memberID,
+		func(ctx context.Context) (any, error) {
+			return obj.MemberID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Feedback_memberID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Feedback",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Feedback_reviewerID(ctx context.Context, field graphql.CollectedField, obj *model.Feedback) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
@@ -4525,7 +4891,6 @@ func (ec *executionContext) _Feedback_isDeleted(ctx context.Context, field graph
 		ec.OperationContext,
 		field,
 		ec.fieldContext_Feedback_isDeleted,
-		ec.fieldContext_Conversation_isDeleted,
 		func(ctx context.Context) (any, error) {
 			return obj.IsDeleted, nil
 		},
@@ -4539,9 +4904,6 @@ func (ec *executionContext) _Feedback_isDeleted(ctx context.Context, field graph
 func (ec *executionContext) fieldContext_Feedback_isDeleted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Feedback",
-func (ec *executionContext) fieldContext_Conversation_isDeleted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Conversation",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -4553,13 +4915,11 @@ func (ec *executionContext) fieldContext_Conversation_isDeleted(_ context.Contex
 }
 
 func (ec *executionContext) _Feedback_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Feedback) (ret graphql.Marshaler) {
-func (ec *executionContext) _Conversation_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		ec.fieldContext_Feedback_createdAt,
-		ec.fieldContext_Conversation_createdAt,
 		func(ctx context.Context) (any, error) {
 			return obj.CreatedAt, nil
 		},
@@ -4573,9 +4933,6 @@ func (ec *executionContext) _Conversation_createdAt(ctx context.Context, field g
 func (ec *executionContext) fieldContext_Feedback_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Feedback",
-func (ec *executionContext) fieldContext_Conversation_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Conversation",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -4587,13 +4944,11 @@ func (ec *executionContext) fieldContext_Conversation_createdAt(_ context.Contex
 }
 
 func (ec *executionContext) _Feedback_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Feedback) (ret graphql.Marshaler) {
-func (ec *executionContext) _Conversation_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		ec.fieldContext_Feedback_updatedAt,
-		ec.fieldContext_Conversation_updatedAt,
 		func(ctx context.Context) (any, error) {
 			return obj.UpdatedAt, nil
 		},
@@ -4607,9 +4962,6 @@ func (ec *executionContext) _Conversation_updatedAt(ctx context.Context, field g
 func (ec *executionContext) fieldContext_Feedback_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Feedback",
-func (ec *executionContext) fieldContext_Conversation_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Conversation",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -4621,13 +4973,11 @@ func (ec *executionContext) fieldContext_Conversation_updatedAt(_ context.Contex
 }
 
 func (ec *executionContext) _Feedback_deletedAt(ctx context.Context, field graphql.CollectedField, obj *model.Feedback) (ret graphql.Marshaler) {
-func (ec *executionContext) _Conversation_deletedAt(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		ec.fieldContext_Feedback_deletedAt,
-		ec.fieldContext_Conversation_deletedAt,
 		func(ctx context.Context) (any, error) {
 			return obj.DeletedAt, nil
 		},
@@ -4641,9 +4991,6 @@ func (ec *executionContext) _Conversation_deletedAt(ctx context.Context, field g
 func (ec *executionContext) fieldContext_Feedback_deletedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Feedback",
-func (ec *executionContext) fieldContext_Conversation_deletedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Conversation",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -4655,19 +5002,16 @@ func (ec *executionContext) fieldContext_Conversation_deletedAt(_ context.Contex
 }
 
 func (ec *executionContext) _FeedbackPagination_data(ctx context.Context, field graphql.CollectedField, obj *model.FeedbackPagination) (ret graphql.Marshaler) {
-func (ec *executionContext) _ConversationPagination_data(ctx context.Context, field graphql.CollectedField, obj *model.ConversationPagination) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		ec.fieldContext_FeedbackPagination_data,
-		ec.fieldContext_ConversationPagination_data,
 		func(ctx context.Context) (any, error) {
 			return obj.Data, nil
 		},
 		nil,
 		ec.marshalNFeedback2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐFeedbackᚄ,
-		ec.marshalNConversation2ᚕᚖshiftyᚑbackendᚋgraphᚋmodelᚐConversationᚄ,
 		true,
 		true,
 	)
@@ -4676,9 +5020,6 @@ func (ec *executionContext) _ConversationPagination_data(ctx context.Context, fi
 func (ec *executionContext) fieldContext_FeedbackPagination_data(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "FeedbackPagination",
-func (ec *executionContext) fieldContext_ConversationPagination_data(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ConversationPagination",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -4704,42 +5045,17 @@ func (ec *executionContext) fieldContext_ConversationPagination_data(_ context.C
 				return ec.fieldContext_Feedback_deletedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Feedback", field.Name)
-				return ec.fieldContext_Conversation_id(ctx, field)
-			case "type":
-				return ec.fieldContext_Conversation_type(ctx, field)
-			case "name":
-				return ec.fieldContext_Conversation_name(ctx, field)
-			case "avatar":
-				return ec.fieldContext_Conversation_avatar(ctx, field)
-			case "restaurantID":
-				return ec.fieldContext_Conversation_restaurantID(ctx, field)
-			case "lastMessageAt":
-				return ec.fieldContext_Conversation_lastMessageAt(ctx, field)
-			case "participants":
-				return ec.fieldContext_Conversation_participants(ctx, field)
-			case "isDeleted":
-				return ec.fieldContext_Conversation_isDeleted(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Conversation_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Conversation_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Conversation_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Conversation", field.Name)
 		},
 	}
 	return fc, nil
 }
 
 func (ec *executionContext) _FeedbackPagination_total(ctx context.Context, field graphql.CollectedField, obj *model.FeedbackPagination) (ret graphql.Marshaler) {
-func (ec *executionContext) _ConversationPagination_total(ctx context.Context, field graphql.CollectedField, obj *model.ConversationPagination) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		ec.fieldContext_FeedbackPagination_total,
-		ec.fieldContext_ConversationPagination_total,
 		func(ctx context.Context) (any, error) {
 			return obj.Total, nil
 		},
@@ -4753,9 +5069,6 @@ func (ec *executionContext) _ConversationPagination_total(ctx context.Context, f
 func (ec *executionContext) fieldContext_FeedbackPagination_total(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "FeedbackPagination",
-func (ec *executionContext) fieldContext_ConversationPagination_total(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ConversationPagination",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -4767,13 +5080,11 @@ func (ec *executionContext) fieldContext_ConversationPagination_total(_ context.
 }
 
 func (ec *executionContext) _FeedbackPagination_currentPage(ctx context.Context, field graphql.CollectedField, obj *model.FeedbackPagination) (ret graphql.Marshaler) {
-func (ec *executionContext) _ConversationPagination_currentPage(ctx context.Context, field graphql.CollectedField, obj *model.ConversationPagination) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		ec.fieldContext_FeedbackPagination_currentPage,
-		ec.fieldContext_ConversationPagination_currentPage,
 		func(ctx context.Context) (any, error) {
 			return obj.CurrentPage, nil
 		},
@@ -4787,9 +5098,6 @@ func (ec *executionContext) _ConversationPagination_currentPage(ctx context.Cont
 func (ec *executionContext) fieldContext_FeedbackPagination_currentPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "FeedbackPagination",
-func (ec *executionContext) fieldContext_ConversationPagination_currentPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ConversationPagination",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -4801,13 +5109,11 @@ func (ec *executionContext) fieldContext_ConversationPagination_currentPage(_ co
 }
 
 func (ec *executionContext) _FeedbackPagination_totalPages(ctx context.Context, field graphql.CollectedField, obj *model.FeedbackPagination) (ret graphql.Marshaler) {
-func (ec *executionContext) _ConversationPagination_totalPages(ctx context.Context, field graphql.CollectedField, obj *model.ConversationPagination) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		ec.fieldContext_FeedbackPagination_totalPages,
-		ec.fieldContext_ConversationPagination_totalPages,
 		func(ctx context.Context) (any, error) {
 			return obj.TotalPages, nil
 		},
@@ -4821,9 +5127,6 @@ func (ec *executionContext) _ConversationPagination_totalPages(ctx context.Conte
 func (ec *executionContext) fieldContext_FeedbackPagination_totalPages(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "FeedbackPagination",
-func (ec *executionContext) fieldContext_ConversationPagination_totalPages(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ConversationPagination",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -5605,19 +5908,11 @@ func (ec *executionContext) fieldContext_Mutation_deleteComment(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createFeedback(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 func (ec *executionContext) _Mutation_createDirectConversation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_createFeedback,
-		func(ctx context.Context) (any, error) {
-			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().CreateFeedback(ctx, fc.Args["input"].(model.CreateFeedbackInput))
-		},
-		nil,
-		ec.marshalNFeedback2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐFeedback,
 		ec.fieldContext_Mutation_createDirectConversation,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
@@ -5630,7 +5925,6 @@ func (ec *executionContext) _Mutation_createDirectConversation(ctx context.Conte
 	)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createFeedback(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 func (ec *executionContext) fieldContext_Mutation_createDirectConversation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5640,25 +5934,6 @@ func (ec *executionContext) fieldContext_Mutation_createDirectConversation(ctx c
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Feedback_id(ctx, field)
-			case "content":
-				return ec.fieldContext_Feedback_content(ctx, field)
-			case "restaurantID":
-				return ec.fieldContext_Feedback_restaurantID(ctx, field)
-			case "memberID":
-				return ec.fieldContext_Feedback_memberID(ctx, field)
-			case "reviewerID":
-				return ec.fieldContext_Feedback_reviewerID(ctx, field)
-			case "isDeleted":
-				return ec.fieldContext_Feedback_isDeleted(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Feedback_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Feedback_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Feedback_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Feedback", field.Name)
 				return ec.fieldContext_Conversation_id(ctx, field)
 			case "type":
 				return ec.fieldContext_Conversation_type(ctx, field)
@@ -5691,7 +5966,6 @@ func (ec *executionContext) fieldContext_Mutation_createDirectConversation(ctx c
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createFeedback_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 	if fc.Args, err = ec.field_Mutation_createDirectConversation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
@@ -5699,19 +5973,11 @@ func (ec *executionContext) fieldContext_Mutation_createDirectConversation(ctx c
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_updateFeedback(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 func (ec *executionContext) _Mutation_createGroupConversation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_updateFeedback,
-		func(ctx context.Context) (any, error) {
-			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().UpdateFeedback(ctx, fc.Args["input"].(model.UpdateFeedbackInput))
-		},
-		nil,
-		ec.marshalNFeedback2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐFeedback,
 		ec.fieldContext_Mutation_createGroupConversation,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
@@ -5724,7 +5990,6 @@ func (ec *executionContext) _Mutation_createGroupConversation(ctx context.Contex
 	)
 }
 
-func (ec *executionContext) fieldContext_Mutation_updateFeedback(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 func (ec *executionContext) fieldContext_Mutation_createGroupConversation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5734,25 +5999,6 @@ func (ec *executionContext) fieldContext_Mutation_createGroupConversation(ctx co
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Feedback_id(ctx, field)
-			case "content":
-				return ec.fieldContext_Feedback_content(ctx, field)
-			case "restaurantID":
-				return ec.fieldContext_Feedback_restaurantID(ctx, field)
-			case "memberID":
-				return ec.fieldContext_Feedback_memberID(ctx, field)
-			case "reviewerID":
-				return ec.fieldContext_Feedback_reviewerID(ctx, field)
-			case "isDeleted":
-				return ec.fieldContext_Feedback_isDeleted(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Feedback_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Feedback_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Feedback_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Feedback", field.Name)
 				return ec.fieldContext_Conversation_id(ctx, field)
 			case "type":
 				return ec.fieldContext_Conversation_type(ctx, field)
@@ -5785,7 +6031,6 @@ func (ec *executionContext) fieldContext_Mutation_createGroupConversation(ctx co
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateFeedback_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 	if fc.Args, err = ec.field_Mutation_createGroupConversation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
@@ -5793,16 +6038,11 @@ func (ec *executionContext) fieldContext_Mutation_createGroupConversation(ctx co
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_deleteFeedback(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 func (ec *executionContext) _Mutation_hideConversation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_deleteFeedback,
-		func(ctx context.Context) (any, error) {
-			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().DeleteFeedback(ctx, fc.Args["feedbackID"].(string), fc.Args["resID"].(string))
 		ec.fieldContext_Mutation_hideConversation,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
@@ -5815,7 +6055,6 @@ func (ec *executionContext) _Mutation_hideConversation(ctx context.Context, fiel
 	)
 }
 
-func (ec *executionContext) fieldContext_Mutation_deleteFeedback(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 func (ec *executionContext) fieldContext_Mutation_hideConversation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5833,7 +6072,6 @@ func (ec *executionContext) fieldContext_Mutation_hideConversation(ctx context.C
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteFeedback_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 	if fc.Args, err = ec.field_Mutation_hideConversation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
@@ -5896,6 +6134,169 @@ func (ec *executionContext) fieldContext_Mutation_sendMessage(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_sendMessage_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createFeedback(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createFeedback,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CreateFeedback(ctx, fc.Args["input"].(model.CreateFeedbackInput))
+		},
+		nil,
+		ec.marshalNFeedback2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐFeedback,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createFeedback(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Feedback_id(ctx, field)
+			case "content":
+				return ec.fieldContext_Feedback_content(ctx, field)
+			case "restaurantID":
+				return ec.fieldContext_Feedback_restaurantID(ctx, field)
+			case "memberID":
+				return ec.fieldContext_Feedback_memberID(ctx, field)
+			case "reviewerID":
+				return ec.fieldContext_Feedback_reviewerID(ctx, field)
+			case "isDeleted":
+				return ec.fieldContext_Feedback_isDeleted(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Feedback_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Feedback_updatedAt(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_Feedback_deletedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Feedback", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createFeedback_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateFeedback(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateFeedback,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().UpdateFeedback(ctx, fc.Args["input"].(model.UpdateFeedbackInput))
+		},
+		nil,
+		ec.marshalNFeedback2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐFeedback,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateFeedback(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Feedback_id(ctx, field)
+			case "content":
+				return ec.fieldContext_Feedback_content(ctx, field)
+			case "restaurantID":
+				return ec.fieldContext_Feedback_restaurantID(ctx, field)
+			case "memberID":
+				return ec.fieldContext_Feedback_memberID(ctx, field)
+			case "reviewerID":
+				return ec.fieldContext_Feedback_reviewerID(ctx, field)
+			case "isDeleted":
+				return ec.fieldContext_Feedback_isDeleted(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Feedback_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Feedback_updatedAt(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_Feedback_deletedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Feedback", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateFeedback_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteFeedback(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_deleteFeedback,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().DeleteFeedback(ctx, fc.Args["feedbackID"].(string), fc.Args["resID"].(string))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteFeedback(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteFeedback_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -8704,19 +9105,11 @@ func (ec *executionContext) fieldContext_Query_commentsByPost(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_feedback(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 func (ec *executionContext) _Query_conversation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_feedback,
-		func(ctx context.Context) (any, error) {
-			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Query().Feedback(ctx, fc.Args["feedbackID"].(string), fc.Args["resID"].(string))
-		},
-		nil,
-		ec.marshalNFeedback2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐFeedback,
 		ec.fieldContext_Query_conversation,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
@@ -8729,7 +9122,6 @@ func (ec *executionContext) _Query_conversation(ctx context.Context, field graph
 	)
 }
 
-func (ec *executionContext) fieldContext_Query_feedback(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 func (ec *executionContext) fieldContext_Query_conversation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -8739,25 +9131,6 @@ func (ec *executionContext) fieldContext_Query_conversation(ctx context.Context,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Feedback_id(ctx, field)
-			case "content":
-				return ec.fieldContext_Feedback_content(ctx, field)
-			case "restaurantID":
-				return ec.fieldContext_Feedback_restaurantID(ctx, field)
-			case "memberID":
-				return ec.fieldContext_Feedback_memberID(ctx, field)
-			case "reviewerID":
-				return ec.fieldContext_Feedback_reviewerID(ctx, field)
-			case "isDeleted":
-				return ec.fieldContext_Feedback_isDeleted(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Feedback_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Feedback_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Feedback_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Feedback", field.Name)
 				return ec.fieldContext_Conversation_id(ctx, field)
 			case "type":
 				return ec.fieldContext_Conversation_type(ctx, field)
@@ -8790,7 +9163,6 @@ func (ec *executionContext) fieldContext_Query_conversation(ctx context.Context,
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_feedback_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 	if fc.Args, err = ec.field_Query_conversation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
@@ -8798,19 +9170,11 @@ func (ec *executionContext) fieldContext_Query_conversation(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_feedbacksByMember(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 func (ec *executionContext) _Query_myConversations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_feedbacksByMember,
-		func(ctx context.Context) (any, error) {
-			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Query().FeedbacksByMember(ctx, fc.Args["memberID"].(string), fc.Args["resID"].(string), fc.Args["limit"].(*int), fc.Args["page"].(*int))
-		},
-		nil,
-		ec.marshalNFeedbackPagination2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐFeedbackPagination,
 		ec.fieldContext_Query_myConversations,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
@@ -8823,7 +9187,6 @@ func (ec *executionContext) _Query_myConversations(ctx context.Context, field gr
 	)
 }
 
-func (ec *executionContext) fieldContext_Query_feedbacksByMember(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 func (ec *executionContext) fieldContext_Query_myConversations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -8833,15 +9196,6 @@ func (ec *executionContext) fieldContext_Query_myConversations(ctx context.Conte
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "data":
-				return ec.fieldContext_FeedbackPagination_data(ctx, field)
-			case "total":
-				return ec.fieldContext_FeedbackPagination_total(ctx, field)
-			case "currentPage":
-				return ec.fieldContext_FeedbackPagination_currentPage(ctx, field)
-			case "totalPages":
-				return ec.fieldContext_FeedbackPagination_totalPages(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type FeedbackPagination", field.Name)
 				return ec.fieldContext_ConversationPagination_data(ctx, field)
 			case "total":
 				return ec.fieldContext_ConversationPagination_total(ctx, field)
@@ -8860,7 +9214,6 @@ func (ec *executionContext) fieldContext_Query_myConversations(ctx context.Conte
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_feedbacksByMember_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 	if fc.Args, err = ec.field_Query_myConversations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
@@ -8868,19 +9221,11 @@ func (ec *executionContext) fieldContext_Query_myConversations(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_feedbacksByRestaurant(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 func (ec *executionContext) _Query_messages(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_feedbacksByRestaurant,
-		func(ctx context.Context) (any, error) {
-			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Query().FeedbacksByRestaurant(ctx, fc.Args["resID"].(string), fc.Args["limit"].(*int), fc.Args["page"].(*int))
-		},
-		nil,
-		ec.marshalNFeedbackPagination2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐFeedbackPagination,
 		ec.fieldContext_Query_messages,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
@@ -8893,7 +9238,6 @@ func (ec *executionContext) _Query_messages(ctx context.Context, field graphql.C
 	)
 }
 
-func (ec *executionContext) fieldContext_Query_feedbacksByRestaurant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 func (ec *executionContext) fieldContext_Query_messages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -8903,15 +9247,6 @@ func (ec *executionContext) fieldContext_Query_messages(ctx context.Context, fie
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "data":
-				return ec.fieldContext_FeedbackPagination_data(ctx, field)
-			case "total":
-				return ec.fieldContext_FeedbackPagination_total(ctx, field)
-			case "currentPage":
-				return ec.fieldContext_FeedbackPagination_currentPage(ctx, field)
-			case "totalPages":
-				return ec.fieldContext_FeedbackPagination_totalPages(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type FeedbackPagination", field.Name)
 				return ec.fieldContext_MessagePagination_data(ctx, field)
 			case "total":
 				return ec.fieldContext_MessagePagination_total(ctx, field)
@@ -8930,8 +9265,170 @@ func (ec *executionContext) fieldContext_Query_messages(ctx context.Context, fie
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_feedbacksByRestaurant_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 	if fc.Args, err = ec.field_Query_messages_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_feedback(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_feedback,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().Feedback(ctx, fc.Args["feedbackID"].(string), fc.Args["resID"].(string))
+		},
+		nil,
+		ec.marshalNFeedback2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐFeedback,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_feedback(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Feedback_id(ctx, field)
+			case "content":
+				return ec.fieldContext_Feedback_content(ctx, field)
+			case "restaurantID":
+				return ec.fieldContext_Feedback_restaurantID(ctx, field)
+			case "memberID":
+				return ec.fieldContext_Feedback_memberID(ctx, field)
+			case "reviewerID":
+				return ec.fieldContext_Feedback_reviewerID(ctx, field)
+			case "isDeleted":
+				return ec.fieldContext_Feedback_isDeleted(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Feedback_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Feedback_updatedAt(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_Feedback_deletedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Feedback", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_feedback_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_feedbacksByMember(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_feedbacksByMember,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().FeedbacksByMember(ctx, fc.Args["memberID"].(string), fc.Args["resID"].(string), fc.Args["limit"].(*int), fc.Args["page"].(*int))
+		},
+		nil,
+		ec.marshalNFeedbackPagination2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐFeedbackPagination,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_feedbacksByMember(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "data":
+				return ec.fieldContext_FeedbackPagination_data(ctx, field)
+			case "total":
+				return ec.fieldContext_FeedbackPagination_total(ctx, field)
+			case "currentPage":
+				return ec.fieldContext_FeedbackPagination_currentPage(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_FeedbackPagination_totalPages(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FeedbackPagination", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_feedbacksByMember_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_feedbacksByRestaurant(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_feedbacksByRestaurant,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().FeedbacksByRestaurant(ctx, fc.Args["resID"].(string), fc.Args["limit"].(*int), fc.Args["page"].(*int))
+		},
+		nil,
+		ec.marshalNFeedbackPagination2ᚖshiftyᚑbackendᚋgraphᚋmodelᚐFeedbackPagination,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_feedbacksByRestaurant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "data":
+				return ec.fieldContext_FeedbackPagination_data(ctx, field)
+			case "total":
+				return ec.fieldContext_FeedbackPagination_total(ctx, field)
+			case "currentPage":
+				return ec.fieldContext_FeedbackPagination_currentPage(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_FeedbackPagination_totalPages(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FeedbackPagination", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_feedbacksByRestaurant_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -15043,15 +15540,12 @@ func (ec *executionContext) unmarshalInputCreateCommentInput(ctx context.Context
 
 func (ec *executionContext) unmarshalInputCreateFeedbackInput(ctx context.Context, obj any) (model.CreateFeedbackInput, error) {
 	var it model.CreateFeedbackInput
-func (ec *executionContext) unmarshalInputCreateGroupConversationInput(ctx context.Context, obj any) (model.CreateGroupConversationInput, error) {
-	var it model.CreateGroupConversationInput
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
 	fieldsInOrder := [...]string{"resID", "memberID", "content"}
-	fieldsInOrder := [...]string{"resID", "name", "avatar", "participantIDs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -15074,13 +15568,43 @@ func (ec *executionContext) unmarshalInputCreateGroupConversationInput(ctx conte
 			it.MemberID = data
 		case "content":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Content = data
+		}
+	}
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateGroupConversationInput(ctx context.Context, obj any) (model.CreateGroupConversationInput, error) {
+	var it model.CreateGroupConversationInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"resID", "name", "avatar", "participantIDs"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "resID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resID"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ResID = data
 		case "name":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Content = data
 			it.Name = data
 		case "avatar":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("avatar"))
@@ -16703,14 +17227,141 @@ func (ec *executionContext) _CommentPagination(ctx context.Context, sel ast.Sele
 	return out
 }
 
-var feedbackImplementors = []string{"Feedback"}
-
-func (ec *executionContext) _Feedback(ctx context.Context, sel ast.SelectionSet, obj *model.Feedback) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, feedbackImplementors)
 var conversationImplementors = []string{"Conversation"}
 
 func (ec *executionContext) _Conversation(ctx context.Context, sel ast.SelectionSet, obj *model.Conversation) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, conversationImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Conversation")
+		case "id":
+			out.Values[i] = ec._Conversation_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "type":
+			out.Values[i] = ec._Conversation_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Conversation_name(ctx, field, obj)
+		case "avatar":
+			out.Values[i] = ec._Conversation_avatar(ctx, field, obj)
+		case "restaurantID":
+			out.Values[i] = ec._Conversation_restaurantID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "lastMessageAt":
+			out.Values[i] = ec._Conversation_lastMessageAt(ctx, field, obj)
+		case "participants":
+			out.Values[i] = ec._Conversation_participants(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isDeleted":
+			out.Values[i] = ec._Conversation_isDeleted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._Conversation_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._Conversation_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deletedAt":
+			out.Values[i] = ec._Conversation_deletedAt(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var conversationPaginationImplementors = []string{"ConversationPagination"}
+
+func (ec *executionContext) _ConversationPagination(ctx context.Context, sel ast.SelectionSet, obj *model.ConversationPagination) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, conversationPaginationImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ConversationPagination")
+		case "data":
+			out.Values[i] = ec._ConversationPagination_data(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "total":
+			out.Values[i] = ec._ConversationPagination_total(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currentPage":
+			out.Values[i] = ec._ConversationPagination_currentPage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalPages":
+			out.Values[i] = ec._ConversationPagination_totalPages(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var feedbackImplementors = []string{"Feedback"}
+
+func (ec *executionContext) _Feedback(ctx context.Context, sel ast.SelectionSet, obj *model.Feedback) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, feedbackImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
@@ -16740,54 +17391,26 @@ func (ec *executionContext) _Conversation(ctx context.Context, sel ast.Selection
 			}
 		case "reviewerID":
 			out.Values[i] = ec._Feedback_reviewerID(ctx, field, obj)
-			out.Values[i] = graphql.MarshalString("Conversation")
-		case "id":
-			out.Values[i] = ec._Conversation_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "type":
-			out.Values[i] = ec._Conversation_type(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "name":
-			out.Values[i] = ec._Conversation_name(ctx, field, obj)
-		case "avatar":
-			out.Values[i] = ec._Conversation_avatar(ctx, field, obj)
-		case "restaurantID":
-			out.Values[i] = ec._Conversation_restaurantID(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "lastMessageAt":
-			out.Values[i] = ec._Conversation_lastMessageAt(ctx, field, obj)
-		case "participants":
-			out.Values[i] = ec._Conversation_participants(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "isDeleted":
 			out.Values[i] = ec._Feedback_isDeleted(ctx, field, obj)
-			out.Values[i] = ec._Conversation_isDeleted(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "createdAt":
 			out.Values[i] = ec._Feedback_createdAt(ctx, field, obj)
-			out.Values[i] = ec._Conversation_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "updatedAt":
 			out.Values[i] = ec._Feedback_updatedAt(ctx, field, obj)
-			out.Values[i] = ec._Conversation_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "deletedAt":
 			out.Values[i] = ec._Feedback_deletedAt(ctx, field, obj)
-			out.Values[i] = ec._Conversation_deletedAt(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -16815,10 +17438,6 @@ var feedbackPaginationImplementors = []string{"FeedbackPagination"}
 
 func (ec *executionContext) _FeedbackPagination(ctx context.Context, sel ast.SelectionSet, obj *model.FeedbackPagination) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, feedbackPaginationImplementors)
-var conversationPaginationImplementors = []string{"ConversationPagination"}
-
-func (ec *executionContext) _ConversationPagination(ctx context.Context, sel ast.SelectionSet, obj *model.ConversationPagination) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, conversationPaginationImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
@@ -16828,27 +17447,21 @@ func (ec *executionContext) _ConversationPagination(ctx context.Context, sel ast
 			out.Values[i] = graphql.MarshalString("FeedbackPagination")
 		case "data":
 			out.Values[i] = ec._FeedbackPagination_data(ctx, field, obj)
-			out.Values[i] = graphql.MarshalString("ConversationPagination")
-		case "data":
-			out.Values[i] = ec._ConversationPagination_data(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "total":
 			out.Values[i] = ec._FeedbackPagination_total(ctx, field, obj)
-			out.Values[i] = ec._ConversationPagination_total(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "currentPage":
 			out.Values[i] = ec._FeedbackPagination_currentPage(ctx, field, obj)
-			out.Values[i] = ec._ConversationPagination_currentPage(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "totalPages":
 			out.Values[i] = ec._FeedbackPagination_totalPages(ctx, field, obj)
-			out.Values[i] = ec._ConversationPagination_totalPages(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -17110,9 +17723,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "createFeedback":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createFeedback(ctx, field)
 		case "createDirectConversation":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createDirectConversation(ctx, field)
@@ -17120,9 +17730,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "updateFeedback":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateFeedback(ctx, field)
 		case "createGroupConversation":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createGroupConversation(ctx, field)
@@ -17130,9 +17737,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "deleteFeedback":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteFeedback(ctx, field)
 		case "hideConversation":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_hideConversation(ctx, field)
@@ -17143,6 +17747,27 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "sendMessage":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_sendMessage(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createFeedback":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createFeedback(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateFeedback":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateFeedback(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteFeedback":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteFeedback(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -17760,7 +18385,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "feedback":
 		case "conversation":
 			field := field
 
@@ -17770,7 +18394,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_feedback(ctx, field)
 				res = ec._Query_conversation(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
@@ -17784,7 +18407,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "feedbacksByMember":
 		case "myConversations":
 			field := field
 
@@ -17794,7 +18416,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_feedbacksByMember(ctx, field)
 				res = ec._Query_myConversations(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
@@ -17808,7 +18429,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "feedbacksByRestaurant":
 		case "messages":
 			field := field
 
@@ -17818,8 +18438,73 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_feedbacksByRestaurant(ctx, field)
 				res = ec._Query_messages(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "feedback":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_feedback(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "feedbacksByMember":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_feedbacksByMember(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "feedbacksByRestaurant":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_feedbacksByRestaurant(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -19793,6 +20478,9 @@ func (ec *executionContext) unmarshalNCreateCommentInput2shiftyᚑbackendᚋgrap
 
 func (ec *executionContext) unmarshalNCreateFeedbackInput2shiftyᚑbackendᚋgraphᚋmodelᚐCreateFeedbackInput(ctx context.Context, v any) (model.CreateFeedbackInput, error) {
 	res, err := ec.unmarshalInputCreateFeedbackInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNCreateGroupConversationInput2shiftyᚑbackendᚋgraphᚋmodelᚐCreateGroupConversationInput(ctx context.Context, v any) (model.CreateGroupConversationInput, error) {
 	res, err := ec.unmarshalInputCreateGroupConversationInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)

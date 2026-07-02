@@ -23,4 +23,5 @@ type Resolver struct {
 	CommentUseCase          usecase.CommentUseCase
 	ReactionUseCase         usecase.ReactionUseCase
 	ConversationUseCase     usecase.ConversationUseCase
+	FeedbackUseCase         usecase.FeedbackUseCase
 }
